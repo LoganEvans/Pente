@@ -8,6 +8,7 @@ namespace PenteCommonInterfaces {
   // This can represent the player or the identity of the player that placed a stone in a spot.
   public enum player_t {black, white, neither};
 
+
   public interface BoardInterface {
     // The assumption will be that the current player is making the move. If the move was
     // successfully made, return true. Else, return false.
