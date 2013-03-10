@@ -37,13 +37,5 @@ namespace BaseClasses {
     public abstract Tuple<int, int> getMove();
     public abstract void setOpponentMove(player_t move);
   }
-
-  public abstract class HeuristicBase {
-    public abstract player_t predictWinner(BoardBase board);
-    public abstract double getHeuristic(BoardBase board, double valueWhiteWin=1.0, double valueBlackWin=1.0);
-    public abstract double getUncertainty();
-    public abstract double getHeuristicWin(player_t player);
-    public abstract double getHeuristicLoss(player_t player);
-  }
 }
 
