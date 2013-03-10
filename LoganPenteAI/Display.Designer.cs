@@ -29,10 +29,10 @@
       // 
       this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
       this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-      this.ClientSize = new System.Drawing.Size(284, 261);
+      this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+      this.ClientSize = new System.Drawing.Size(684, 661);
       this.Name = "Display";
       this.Text = "Display";
-      this.Load += new System.EventHandler(this.gT);
       this.Paint += new System.Windows.Forms.PaintEventHandler(this.Display_Paint);
       this.ResumeLayout(false);
 
