@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-using PenteCommonInterfaces;
+using CommonInterfaces;
 
 namespace LoganPenteAI {
   class LPE_AI {

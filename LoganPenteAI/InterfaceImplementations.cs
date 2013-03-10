@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using PenteCommonInterfaces;
+using CommonInterfaces;
 
 namespace LoganPenteAI {
   struct Board : BoardInterface {
