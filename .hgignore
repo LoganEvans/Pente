@@ -1,8 +1,0 @@
-syntax: regexp
-.*\.pyc$
-.*\.sw[op]$
-.*\.o$
-.*\.out$
-.*\.class$
-.*latex.*
-.*html.*
