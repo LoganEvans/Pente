@@ -15,7 +15,7 @@ namespace LoganPenteAI {
       // TODO: It would be nice if the program could be threaded in a way that would allow the
       // Display class to handle display issues and the main thread to handle game control issues.
       // Read up on delegates and thread-safe multithreading.
-      Board board;
+      Board board = new Board();
       PlayerAI ai1 = new PlayerAI();
       PlayerAI ai2 = new PlayerAI();
       Display display = new Display(board, ai1, ai2);
