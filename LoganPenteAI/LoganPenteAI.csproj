@@ -44,6 +44,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PlayerHuman.cs" />
+    <Compile Include="PlayerAI.cs" />
     <Compile Include="Display.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -51,7 +53,7 @@
       <DependentUpon>Display.cs</DependentUpon>
     </Compile>
     <Compile Include="LPE_AI.cs" />
-    <Compile Include="InterfaceImplementations.cs" />
+    <Compile Include="Board.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

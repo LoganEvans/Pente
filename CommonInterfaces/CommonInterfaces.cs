@@ -26,6 +26,6 @@ namespace CommonInterfaces {
   public interface PlayerInterface {
     // The order of the Tuple is <row, col>
     Tuple<int, int> getMove();
-    void setOpponentMove(player_t move);
+    void setOpponentMove(Tuple<int, int> move);
   }
 }

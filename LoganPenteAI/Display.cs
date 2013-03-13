@@ -16,7 +16,7 @@ namespace LoganPenteAI {
     public const int ROWS = 19;
     public const int COLS = 19;
     public const int PAD_H = 40;
-    public const int PAD_W = 20;
+    public const int PAD_W = 10;
     private Board mBoard;
     private PlayerInterface mPlayerWhite;
     private PlayerInterface mPlayerBlack;
@@ -37,6 +37,31 @@ namespace LoganPenteAI {
       setBoard(board);
       mPlayerWhite = playerWhite;
       mPlayerBlack = playerBlack;
+
+      gameLoop();
+    }
+
+    private void gameLoop() {
+      Invalidate();
+      if (getBoard().getWinner() != player_t.neither) {
+        MessageBox.Show("Winner: " + getBoard().getWinner());
+      }
+
+      if (getBoard().getCurrentPlayer() == player_t.white &&
+          (mPlayerWhite is PlayerHuman)) {
+        // Wait for a mouse click.
+        return;
+      } else if (getBoard().getCurrentPlayer() == player_t.black &&
+                 mPlayerBlack is PlayerHuman) {
+        // Again, wait for mouse click...
+        return;
+      } else if (getBoard().getCurrentPlayer() == player_t.white) {
+        // White is an AI...
+        mBoard.move(mPlayerWhite.getMove());
+      } else {
+        // Black is an AI...
+        mBoard.move(mPlayerBlack.getMove());
+      }
     }
 
     public void setBoard(Board board) {
@@ -101,13 +126,26 @@ namespace LoganPenteAI {
     // Handles the board click.
     private void onClick(object sender, EventArgs e) {
       Tuple<int, int> spot = getClickedSpot();
-      if (spot == null) {
-        return;
+      if (getBoard().getCurrentPlayer() == player_t.white) {
+        if (mPlayerWhite is PlayerHuman) {
+          if (spot == null) {
+            return;
+          } else {
+            mPlayerWhite.setOpponentMove(spot);
+          }
+        }
+      } else {
+        if (mPlayerBlack is PlayerHuman) {
+          if (spot == null) {
+            return;
+          } else {
+            mPlayerBlack.setOpponentMove(spot);
+          }
+        }
       }
-      getBoard().move(spot.Item1, spot.Item2);
-      Console.WriteLine(spot);
-      // Redraw...
-      this.Invalidate();
+
+      mBoard.move(spot);
+      gameLoop();
     }
 
     // Returns <row, col> or null

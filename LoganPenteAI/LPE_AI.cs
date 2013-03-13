@@ -16,9 +16,9 @@ namespace LoganPenteAI {
       // Display class to handle display issues and the main thread to handle game control issues.
       // Read up on delegates and thread-safe multithreading.
       Board board = new Board();
-      PlayerAI ai1 = new PlayerAI();
-      PlayerAI ai2 = new PlayerAI();
-      Display display = new Display(board, ai1, ai2);
+      PlayerInterface pi1 = new PlayerHuman(player_t.white);
+      PlayerInterface pi2 = new PlayerHuman(player_t.black);
+      Display display = new Display(board, pi1, pi2);
 
       Application.EnableVisualStyles();
       Application.Run(display);

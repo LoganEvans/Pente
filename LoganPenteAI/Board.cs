@@ -67,6 +67,13 @@ namespace LoganPenteAI {
       return true;
     }
 
+    public bool move(Tuple<int, int> spot) {
+      if (spot == null) {
+        return false;
+      }
+      return move(spot.Item1, spot.Item2);
+    }
+
     private bool performCaptures(int row, int col) {
       List<Tuple<int, int>> directions = new List<Tuple<int, int>>();
       directions.Add(new Tuple<int, int>(0, 1));  // horizontal
@@ -221,16 +228,6 @@ namespace LoganPenteAI {
       }
 
       return true;
-    }
-  }
-
-  public class PlayerAI : PlayerInterface {
-    // The order of the Tuple is <row, col>
-    public Tuple<int, int> getMove() {
-      return null;
-    }
-
-    public void setOpponentMove(player_t move) {
     }
   }
 }
