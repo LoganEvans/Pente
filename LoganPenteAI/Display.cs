@@ -104,6 +104,7 @@ namespace LoganPenteAI {
       if (spot == null) {
         return;
       }
+      getBoard().move(spot.Item1, spot.Item2);
       Console.WriteLine(spot);
       // Redraw...
       this.Invalidate();
