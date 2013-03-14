@@ -23,9 +23,12 @@ namespace CommonInterfaces {
     bool isLegal(int row, int col);
   }
 
+  // The PlayerInterface shouldn't assume that when getMove is called that the move
+  // will be made. It isn't made until setMove is called. This will allow the game controller
+  // to synchronize the boards in a uniform fashion.
   public interface PlayerInterface {
     // The order of the Tuple is <row, col>
     Tuple<int, int> getMove();
-    void setOpponentMove(Tuple<int, int> move);
+    void setMove(Tuple<int, int> move);
   }
 }

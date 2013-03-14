@@ -11,8 +11,8 @@ namespace LoganPenteAI {
     private Board mBoard;
     private player_t mColor;
 
-    public PlayerHuman(player_t color) {
-      mBoard = new Board();
+    public PlayerHuman(player_t color, Board board) {
+      mBoard = board;
       mColor = color;
     }
 
@@ -21,7 +21,7 @@ namespace LoganPenteAI {
       return null;
     }
 
-    public void setOpponentMove(Tuple<int, int> move) {
+    public void setMove(Tuple<int, int> move) {
       mBoard.move(move);
     }
   }

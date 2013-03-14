@@ -49,17 +49,20 @@ namespace LoganPenteAI {
         for (int col_dex = 0; col_dex < Board.COLS; col_dex++) {
           //Console.WriteLine(" influence map: " + row_dex + ", " + col_dex);
           Tuple<int, int> key = new Tuple<int, int>(row_dex, col_dex);
-          mInfluenceMap.Add(new KeyValuePair<Tuple<int, int>, double>(key, getInfluenceValue(key)));
+          if (isLegal(key.Item1, key.Item2)) {
+            mInfluenceMap.Add(new KeyValuePair<Tuple<int, int>, double>(key, getInfluenceValue(key)));
+          }
         }
       }
 
+      // Reverse order!
       mInfluenceMap.Sort(
           delegate(KeyValuePair<Tuple<int, int>, double> first, KeyValuePair<Tuple<int, int>, double> second) {
-            return first.Value.CompareTo(second.Value);
+            return -first.Value.CompareTo(second.Value);
           });
     }
 
-    private double? getHeuristicValue() {
+    public double? getHeuristicValue() {
       initializeInfluenceMap();
       if (mDepthPermitted > 0) {
         lookahead();
@@ -76,7 +79,13 @@ namespace LoganPenteAI {
             return -1 * HeuristicValues.getWin();
           }
         } else {
-          mBestMove = mInfluenceMap[0].Key;
+          foreach (KeyValuePair<Tuple<int, int>, double> scoredSpot in mInfluenceMap) {
+            mBestMove = mInfluenceMap[0].Key;
+            if (isLegal(mBestMove.Item1, mBestMove.Item2)) {
+              break;
+            }
+          }
+
           if (getCurrentPlayer() == player_t.white) {
             return mInfluenceMap[0].Value;
           } else {
@@ -90,12 +99,12 @@ namespace LoganPenteAI {
       int index = 0;
       double? roundValue;
       foreach (KeyValuePair<Tuple<int, int>, double> scoredSpot in mInfluenceMap) {
-        try {
+        if (isLegal(scoredSpot.Key.Item1, scoredSpot.Key.Item2)) {
           //Console.WriteLine("branching check... " + index + ", " + scoredSpot.Key);
           if (index <= branchingCategories[0]) {
             if (mDepthPermitted <= 0) {
 
-          //Console.WriteLine("branching check... broken" + index);
+              //Console.WriteLine("branching check... broken" + index);
               break;
             }
 
@@ -116,13 +125,11 @@ namespace LoganPenteAI {
             }
             roundValue = new GameState(copyFrom: this, row: scoredSpot.Key.Item1, col: scoredSpot.Key.Item2, depthPermitted: this.mDepthPermitted - 4).getHeuristicValue();
           }
-        } catch (Exception) {
-          continue;
-        }
 
-        if ((mHeuristicValue == null) || (roundValue > mHeuristicValue)) {
-          mHeuristicValue = roundValue;
-          mBestMove = scoredSpot.Key;
+          if ((mHeuristicValue == null) || (roundValue > mHeuristicValue)) {
+            mHeuristicValue = roundValue;
+            mBestMove = scoredSpot.Key;
+          }
         }
       }
     }
@@ -189,32 +196,56 @@ namespace LoganPenteAI {
       // 1 represents where current player must have a stone
       // 2 represents where opponent must have a stone
       // X represents where it doesn't matter if there is a stone
+
+      // Wins
       _heuristics.Add(new Tuple<int, int, int, double>(0x6c, 0x0, 0x183, win));  // 0bXX11.11XX
       _heuristics.Add(new Tuple<int, int, int, double>(0x2e, 0x0, 0x1c1, win));  // 0bXXX1.111X
       _heuristics.Add(new Tuple<int, int, int, double>(0xf, 0x0, 0x1e0, win));  // 0bXXXX.1111
+
+      // Block wins
       _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0xf, 0x1e0, win / 5.0));  // 0bXXXX.2222
       _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0x2e, 0x1c1, win / 5.0));  // 0bXXX2.222X
       _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0x6c, 0x183, win / 5.0));  // 0bXX22.22XX
+
+      // Block 3
       _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0xe, 0x1e1, bigDelta + delta));  // 0bXXXX.222X
       _heuristics.Add(new Tuple<int, int, int, double>(0x28, 0x0, 0x183, bigDelta));  // 0bXX01.10XX
+
+      // Prevent unblocked 4
       _heuristics.Add(new Tuple<int, int, int, double>(0x2c, 0x0, 0x181, bigDelta));  // 0bXX01.110X
       _heuristics.Add(new Tuple<int, int, int, double>(0xe, 0x0, 0x1e1, bigDelta));  // 0bXXXX.111X
+
+      // Prevent capture
       _heuristics.Add(new Tuple<int, int, int, double>(0xc, 0x2, 0x1e1, bigDelta / 2 - delta));  // 0bXXXX.112X
+
+      // Create split 3
       _heuristics.Add(new Tuple<int, int, int, double>(0x4, 0x0, 0x1e3, 10 * delta));  // 0bXXXX.01XX
+
+      // Create double split 3
       _heuristics.Add(new Tuple<int, int, int, double>(0x44, 0x0, 0x183, 10 * delta));  // 0bXX10.01XX
       _heuristics.Add(new Tuple<int, int, int, double>(0x5, 0x0, 0x1e0, 10 * delta));  // 0bXXXX.0101
+
+      // Create split 5
       _heuristics.Add(new Tuple<int, int, int, double>(0x1, 0x0, 0x1e0, 6 * delta));  // 0bXXXX.0001
+
+      // Create split 4
       _heuristics.Add(new Tuple<int, int, int, double>(0x2, 0x0, 0x1e1, 3 * delta));  // 0bXXXX.001X
+
+      // Create 2 in a row
       _heuristics.Add(new Tuple<int, int, int, double>(0x8, 0x0, 0x1e7, delta));  // 0bXXXX.1XXX
+
+      // Try to avoid allowing a capture
       _heuristics.Add(new Tuple<int, int, int, double>(0x8, 0x4, 0x1e3, -delta));  // 0bXXXX.12XX
+
+      // Another stone (of either type) is in the vacinity
       _heuristics.Add(new Tuple<int, int, int, double>(0x1, 0x0, 0x1ee, delta / 10));  // 0bXXXX.XXX1
       _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0x1, 0x1ee, delta / 10));  // 0bXXXX.XXX2
       _heuristics.Add(new Tuple<int, int, int, double>(0x2, 0x0, 0x1ed, delta / 10));  // 0bXXXX.XX1X
       _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0x2, 0x1ed, delta / 10));  // 0bXXXX.XX2X
       _heuristics.Add(new Tuple<int, int, int, double>(0x4, 0x0, 0x1eb, delta / 10));  // 0bXXXX.X1XX
       _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0x4, 0x1eb, delta / 10));  // 0bXXXX.X2XX
-      _heuristics.Add(new Tuple<int, int, int, double>(0x8, 0x0, 0x1e7, delta / 10));  // 0bXXXX.1XXX
-      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0x8, 0x1e7, delta / 10));  // 0bXXXX.2XXX
+      _heuristics.Add(new Tuple<int, int, int, double>(0x8, 0x0, 0x1e7, delta / 9));  // 0bXXXX.1XXX
+      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0x8, 0x1e7, delta / 9));  // 0bXXXX.2XXX
 
       List<Tuple<int, int, int, double> > reversed = new List<Tuple<int, int, int, double> >();
 

@@ -135,18 +135,14 @@ namespace LoganPenteAI {
           inspectedCol = col + (direction.Item1 * i);
           inspectedRow = row + (direction.Item2 * i);
 
-          try {
+          if (0 <= inspectedRow && inspectedRow < ROWS && 0 <= inspectedCol && inspectedCol < COLS) {
             if ((mRowsWhite[inspectedRow] & COL_MASKS[inspectedCol]) != 0) {
               windowWhite |= COL_MASKS[index];
             }
-          } catch (IndexOutOfRangeException) {
-          }
 
-          try {
             if ((mRowsBlack[inspectedRow] & COL_MASKS[inspectedCol]) != 0) {
               windowBlack |= COL_MASKS[index];
             }
-          } catch (IndexOutOfRangeException) {
           }
 
           index++;
@@ -206,12 +202,10 @@ namespace LoganPenteAI {
           inspectedCol = col + (direction.Item1 * i);
           inspectedRow = row + (direction.Item2 * i);
 
-          try {
+          if (0 <= inspectedRow && inspectedRow < ROWS && 0 <= inspectedCol && inspectedCol < COLS) {
             if ((boardRows[inspectedRow] & COL_MASKS[inspectedCol]) != 0) {
               window |= COL_MASKS[index];
             }
-          } catch (IndexOutOfRangeException) {
-            break;
           }
 
           index++;
@@ -226,7 +220,7 @@ namespace LoganPenteAI {
     }
 
     public player_t getSpot(int row, int col) {
-      try {
+      if (0 <= row && row < ROWS && 0 <= col && col < COLS) {
         if ((mRowsWhite[row] & COL_MASKS[col]) != 0) {
           return player_t.white;
         } else if ((mRowsBlack[row] & COL_MASKS[col]) != 0) {
@@ -234,7 +228,7 @@ namespace LoganPenteAI {
         } else {
           return player_t.neither;
         }
-      } catch (IndexOutOfRangeException) {
+      } else {
         return player_t.neither;
       }
     }

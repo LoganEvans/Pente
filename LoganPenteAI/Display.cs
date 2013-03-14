@@ -42,26 +42,43 @@ namespace LoganPenteAI {
     }
 
     private void gameLoop() {
-      Invalidate();
-      if (getBoard().getWinner() != player_t.neither) {
-        MessageBox.Show("Winner: " + getBoard().getWinner());
-      }
+      while (mBoard.getWinner() == player_t.neither) {
+        Console.WriteLine(" > gameLoop.loop... ");
+        Invalidate();
+        if (getBoard().getWinner() != player_t.neither) {
+          MessageBox.Show("Winner: " + getBoard().getWinner());
+        }
 
-      if (getBoard().getCurrentPlayer() == player_t.white &&
-          (mPlayerWhite is PlayerHuman)) {
-        // Wait for a mouse click.
-        return;
-      } else if (getBoard().getCurrentPlayer() == player_t.black &&
-                 mPlayerBlack is PlayerHuman) {
-        // Again, wait for mouse click...
-        return;
-      } else if (getBoard().getCurrentPlayer() == player_t.white) {
-        // White is an AI...
-        mBoard.move(mPlayerWhite.getMove());
-      } else {
-        // Black is an AI...
-        mBoard.move(mPlayerBlack.getMove());
+        if (getBoard().getCurrentPlayer() == player_t.white &&
+            (mPlayerWhite is PlayerHuman)) {
+          // Wait for a mouse click.
+          Console.WriteLine("Player white (human)");
+          return;
+        } else if (getBoard().getCurrentPlayer() == player_t.black &&
+                   mPlayerBlack is PlayerHuman) {
+          // Again, wait for mouse click...
+          Console.WriteLine("Player black (human)");
+          return;
+        } else if (getBoard().getCurrentPlayer() == player_t.white) {
+          // White is an AI...
+          Tuple<int, int> move = mPlayerWhite.getMove();
+          Console.WriteLine("Player white (AI). move: " + move);
+          setMoveForAll(move);
+          //mPlayerBlack.setOpponentMove(move);
+        } else {
+          // Black is an AI...
+          Tuple<int, int> move = mPlayerBlack.getMove();
+          Console.WriteLine("Player black (AI). move: " + move);
+          setMoveForAll(move);
+          //mPlayerWhite.setOpponentMove(move);
+        }
       }
+    }
+
+    private void setMoveForAll(Tuple<int, int> move) {
+      mBoard.move(move);
+      mPlayerWhite.setMove(move);
+      mPlayerBlack.setMove(move);
     }
 
     public void setBoard(Board board) {
@@ -126,25 +143,17 @@ namespace LoganPenteAI {
     // Handles the board click.
     private void onClick(object sender, EventArgs e) {
       Tuple<int, int> spot = getClickedSpot();
-      if (getBoard().getCurrentPlayer() == player_t.white) {
-        if (mPlayerWhite is PlayerHuman) {
-          if (spot == null) {
-            return;
-          } else {
-            mPlayerWhite.setOpponentMove(spot);
-          }
-        }
-      } else {
-        if (mPlayerBlack is PlayerHuman) {
-          if (spot == null) {
-            return;
-          } else {
-            mPlayerBlack.setOpponentMove(spot);
-          }
+      if ((getBoard().getCurrentPlayer() == player_t.white && mPlayerWhite is PlayerHuman) ||
+          (getBoard().getCurrentPlayer() == player_t.black && mPlayerBlack is PlayerHuman)) {
+        if (spot == null) {
+          return;
+        } else {
+          //mPlayerWhite.setOpponentMove(spot);
+          //mPlayerBlack.setOpponentMove(spot);
+          setMoveForAll(spot);
         }
       }
 
-      mBoard.move(spot);
       gameLoop();
     }
 
