@@ -17,7 +17,8 @@ namespace LoganPenteAI {
       // Read up on delegates and thread-safe multithreading.
       Board board = new Board();
       PlayerInterface pi1 = new PlayerHuman(player_t.white);
-      PlayerInterface pi2 = new PlayerHuman(player_t.black);
+      //PlayerInterface pi2 = new PlayerHuman(player_t.black);
+      PlayerInterface pi2 = new PlayerAI(player_t.black);
       Display display = new Display(board, pi1, pi2);
 
       Application.EnableVisualStyles();

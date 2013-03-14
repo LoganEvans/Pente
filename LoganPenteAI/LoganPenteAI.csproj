@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GameState.cs" />
     <Compile Include="PlayerHuman.cs" />
     <Compile Include="PlayerAI.cs" />
     <Compile Include="Display.cs">

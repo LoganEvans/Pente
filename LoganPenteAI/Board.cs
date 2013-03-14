@@ -10,8 +10,8 @@ namespace LoganPenteAI {
   public class Board : BoardInterface {
     public const int ROWS = 19;
     public const int COLS = 19;
-    private const int ROW_MASK = 0x7FFFF;
-    private readonly int[] COL_MASKS = {0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80,
+    public const int ROW_MASK = 0x7FFFF;
+    public readonly int[] COL_MASKS = {0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80,
                                         0x100, 0x200, 0x400, 0x800, 0x1000, 0x2000,
                                         0x4000, 0x8000, 0x10000, 0x20000, 0x40000};
 
@@ -64,6 +64,7 @@ namespace LoganPenteAI {
         mWinner = current_player;
       }
       mMoveNumber++;
+
       return true;
     }
 
@@ -114,6 +115,58 @@ namespace LoganPenteAI {
       return retval;
     }
 
+    public List<Tuple<int, int> > getWindows(int row, int col) {
+      List<Tuple<int, int>> windows = new List<Tuple<int, int>>();
+      List<Tuple<int, int>> directions = new List<Tuple<int, int>>();
+      directions.Add(new Tuple<int, int>(0, 1));  // horizontal
+      directions.Add(new Tuple<int, int>(1, 0));  // vertical
+      directions.Add(new Tuple<int, int>(1, 1));  // forward slash
+      directions.Add(new Tuple<int, int>(1, -1));  // back slash
+
+      int index = 0;
+      foreach (Tuple<int, int> direction in directions) {
+        int windowWhite = 0;
+        int windowBlack = 0;
+        int inspectedCol;
+        int inspectedRow;
+        index = 0;
+
+        for (int i = -4; i <= 4; i++) {
+          inspectedCol = col + (direction.Item1 * i);
+          inspectedRow = row + (direction.Item2 * i);
+
+          try {
+            if ((mRowsWhite[inspectedRow] & COL_MASKS[inspectedCol]) != 0) {
+              windowWhite |= COL_MASKS[index];
+            }
+          } catch (IndexOutOfRangeException) {
+          }
+
+          try {
+            if ((mRowsBlack[inspectedRow] & COL_MASKS[inspectedCol]) != 0) {
+              windowBlack |= COL_MASKS[index];
+            }
+          } catch (IndexOutOfRangeException) {
+          }
+
+          index++;
+        }
+        windows.Add(new Tuple<int, int>(windowWhite, windowBlack));
+      }
+      return windows;
+    }
+
+    // patternLength should be an odd number
+    public bool matchesPattern(int windowWhite, int windowBlack,
+                               int patternWhite, int patternBlack, int patternIgnore) {
+      if (((windowWhite | patternIgnore) == (patternWhite | patternIgnore)) &&
+          ((windowBlack | patternIgnore) == (patternBlack | patternIgnore))) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+
     // Specifies the row of the last move. This allows the method to shorten its
     // check for a game over.
     private bool isGameOver(int row, int col) {
@@ -157,7 +210,7 @@ namespace LoganPenteAI {
             if ((boardRows[inspectedRow] & COL_MASKS[inspectedCol]) != 0) {
               window |= COL_MASKS[index];
             }
-          } catch (IndexOutOfRangeException err) {
+          } catch (IndexOutOfRangeException) {
             break;
           }
 
@@ -181,7 +234,7 @@ namespace LoganPenteAI {
         } else {
           return player_t.neither;
         }
-      } catch (IndexOutOfRangeException err) {
+      } catch (IndexOutOfRangeException) {
         return player_t.neither;
       }
     }

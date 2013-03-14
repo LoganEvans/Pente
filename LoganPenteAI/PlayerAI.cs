@@ -8,21 +8,21 @@ using CommonInterfaces;
 
 namespace LoganPenteAI {
   public class PlayerAI : PlayerInterface {
-    private Board mBoard;
+    private GameState mGameState;
     private player_t mColor;
 
     public PlayerAI(player_t color) {
-      mBoard = new Board();
+      mGameState = new GameState(new Board(), 1);
       mColor = color;
     }
 
     // The order of the Tuple is <row, col>
     public Tuple<int, int> getMove() {
-      return null;
+      return mGameState.getBestMove();
     }
 
     public void setOpponentMove(Tuple<int, int> move) {
-      mBoard.move(move);
+      mGameState.move(move);
     }
   }
 }
