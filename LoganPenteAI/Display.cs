@@ -76,7 +76,7 @@ namespace LoganPenteAI {
     }
 
     private void setMoveForAll(Tuple<int, int> move) {
-      mBoard.move(move);
+      mBoard.move(move.Item1, move.Item2);
       mPlayerWhite.setMove(move);
       mPlayerBlack.setMove(move);
     }

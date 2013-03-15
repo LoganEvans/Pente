@@ -47,7 +47,7 @@ namespace LoganPenteAI {
       mCapturesBlack = copyFrom.mCapturesBlack;
     }
 
-    public bool move(int row, int col) {
+    public virtual bool move(int row, int col) {
       if (!isLegal(row, col)) {
         return false;
       }
@@ -66,13 +66,6 @@ namespace LoganPenteAI {
       mMoveNumber++;
 
       return true;
-    }
-
-    public bool move(Tuple<int, int> spot) {
-      if (spot == null) {
-        return false;
-      }
-      return move(spot.Item1, spot.Item2);
     }
 
     private bool performCaptures(int row, int col) {

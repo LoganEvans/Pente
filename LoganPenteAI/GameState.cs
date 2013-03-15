@@ -8,7 +8,12 @@ using CommonInterfaces;
 
 namespace LoganPenteAI {
   class GameState : Board {
-    private List<KeyValuePair<Tuple<int, int>, double> > mInfluenceMap;
+    private List<int[]> mInfluenceMapsWhite;
+    private List<int[]> mInfluenceMapsBlack;
+    private int[] mCaptureMapWhite;
+    private int[] mCaptureMapBlack;
+    private int[] mProximityMapWhite;
+    private int[] mProximityMapBlack;
 
     private readonly int[] branchingCategories = {3, 10, 50, ROWS * COLS};
 
@@ -21,6 +26,7 @@ namespace LoganPenteAI {
     public GameState(Board board, int depthPermitted) : base(board) {
       mDepthPermitted = depthPermitted;
       mHeuristicValue = null;
+      initializeInfluenceMaps();
     }
 
     public GameState(GameState copyFrom) : base(copyFrom) {
@@ -36,34 +42,137 @@ namespace LoganPenteAI {
       mHeuristicValue = null;
     }
 
+    // TODO:
+    // This method isn't quite doing the correct thing... what's happening here should only occure
+    // at a depth limit. Otherwise, the lookahead method should initialize a few new maps that are
+    // generated from the minimax recursive approach. Perhaps only one map should be kept... but this
+    // would require that the heuristics list the desirability of each level. That way, only results
+    // at the top desirability level will be recorded.
     public Tuple<int, int> getBestMove() {
-      // Triggers the update of mBestMove.
+      List<int[]> influenceMaps;
+      if (getCurrentPlayer() == player_t.white) {
+        influenceMaps = mInfluenceMapsWhite;
+      } else {
+        influenceMaps = mInfluenceMapsBlack;
+      }
+
+      for (int level = 0; level < influenceMaps.Count; level++) {
+        List<Tuple<int, int>> movesThisLevel = new List<Tuple<int, int>>();
+
+        for (int row_dex = 0; row_dex < ROWS; row_dex++) {
+          for (int col_dex = 0; col_dex < COLS; col_dex++) {
+            if (isOnMap(row_dex, col_dex, influenceMaps[level])) {
+              movesThisLevel.Add(Tuple.Create(row_dex, col_dex));
+              continue;
+            }
+
+            if ((getCurrentPlayer() == player_t.white && isOnMap(row_dex, col_dex, mCaptureMapWhite)) ||
+                (getCurrentPlayer() == player_t.black && isOnMap(row_dex, col_dex, mCaptureMapBlack))) {
+              if (level == 0 && getCaptures(getCurrentPlayer()) == 4) {
+                // Will win with one more capture
+                movesThisLevel.Add(Tuple.Create(row_dex, col_dex));
+              } else if (level == 2 && getCaptures(getCurrentPlayer()) == 3) {
+                // Will possibly threaten a win
+                movesThisLevel.Add(Tuple.Create(row_dex, col_dex));
+              } else if (level >= 3) {
+                // This is the same level as preventing or threatening a capture.
+                movesThisLevel.Add(Tuple.Create(row_dex, col_dex));
+              }
+            }
+          }
+        }
+
+        if (movesThisLevel.Count > 0) {
+          // Select random move from the level
+          Random rand = new Random();
+          return movesThisLevel[rand.Next(movesThisLevel.Count];
+        }
+      }
+
+      // TODO
+      // Proximity check if nothing else has triggered.
+
       getHeuristicValue();
       return mBestMove;
     }
 
-    private void initializeInfluenceMap() {
-      mInfluenceMap = new List<KeyValuePair<Tuple<int, int>, double> >();
+    private bool isOnMap(int row, int col, int[] map) {
+      if ((map[row] & COL_MASKS[col]) != 0) {
+        return true;
+      } else {
+        return false;
+      }
+    }
 
-      for (int row_dex = 0; row_dex < Board.ROWS; row_dex++) {
-        for (int col_dex = 0; col_dex < Board.COLS; col_dex++) {
-          //Console.WriteLine(" influence map: " + row_dex + ", " + col_dex);
-          Tuple<int, int> key = new Tuple<int, int>(row_dex, col_dex);
-          if (isLegal(key.Item1, key.Item2)) {
-            mInfluenceMap.Add(new KeyValuePair<Tuple<int, int>, double>(key, getInfluenceValue(key)));
+    // This function should (almost) never need to be called. Use updateInfluenceMap instead if possible.
+    private void initializeInfluenceMaps() {
+      List<List<Tuple<int, int, int, double> > > heuristics = HeuristicValues.getHeuristics();
+      mInfluenceMapsWhite = new List<int[]>();
+      mInfluenceMapsBlack = new List<int[]>();
+      mCaptureMapWhite = new int[ROWS];
+      mCaptureMapBlack = new int[ROWS];
+      mProximityMapWhite = new int[ROWS];
+      mProximityMapBlack = new int[ROWS];
+
+      for (int row_dex = 0; row_dex < ROWS; row_dex++) {
+        for (int col_dex = 0; col_dex < COLS; col_dex++) {
+          updateMaps(row_dex, col_dex);
+        }
+      }
+    }
+
+    private void updateMaps(int row, int col) {
+      foreach (Tuple<int, int> window in getWindows(row, col)) {
+        // Influence maps
+        int level = 0;
+        foreach (List<Tuple<int, int, int, double>> level in heuristics) {
+          mInfluenceMapsWhite.Add(new int[ROWS]);
+          mInfluenceMapsBlack.Add(new int[ROWS]);
+
+          foreach (Tuple<int, int, int, double> pattern in level) {
+            if (matchesPattern(windowWhite: window.Item1, windowBlack: window.Item2,
+                               patternWhite: pattern.Item1, patternBlack: pattern.Item2, patternIgnore: pattern.Item3)) {
+              mInfluenceMapsWhite[level][row] |= COL_MASKS[col];
+            }
+            if (matchesPattern(windowWhite: window.Item2, windowBlack: window.Item1,
+                               patternWhite: pattern.Item2, patternBlack: pattern.Item1, patternIgnore: pattern.Item3)) {
+              // Swapped black and white players
+              mInfluenceMapsBlack[level][row] |= COL_MASKS[col];
+            }
+          }
+          level++;
+        }
+
+        // Capture maps
+        Tuple<int, int, int> capturePattern = HeuristicValues.getCaptureCheck();
+        if (matchesPattern(windowWhite: window.Item1, windowBlack: window.Item2,
+                           patternWhite: capturePattern.Item1, patternBlack: capturePattern.Item2, patternIgnore: capturePattern.Item3)) {
+          mCaptureMapWhite[row] |= COL_MASKS[col];
+        }
+        // Swapped black and white
+        if (matchesPattern(windowWhite: window.Item2, windowBlack: window.Item1,
+                           patternWhite: capturePattern.Item2, patternBlack: capturePattern.Item1, patternIgnore: capturePattern.Item3)) {
+          mCaptureMapWhite[row] |= COL_MASKS[col];
+        }
+
+        // Capture maps and proximity maps
+        List<Tuple<int, int, int, double> > proximityMaps = HeuristicValues.getProximityChecks();
+        foreach (Tuple<int, int, int, double> pattern in proximityMaps) {
+          if (matchesPattern(windowWhite: window.Item1, windowBlack: window.Item2,
+                             patternWhite: pattern.Item1, patternBlack: pattern.Item2, patternIgnore: pattern.Item3)) {
+            mProximityMapWhite[row] |= COL_MASKS[col];
+          }
+          // Swapped black and white
+          if (matchesPattern(windowWhite: window.Item2, windowBlack: window.Item1,
+                             patternWhite: pattern.Item2, patternBlack: pattern.Item1, patternIgnore: pattern.Item3)) {
+            mProximityMapBlack[row] |= COL_MASKS[col];
           }
         }
       }
-
-      // Reverse order!
-      mInfluenceMap.Sort(
-          delegate(KeyValuePair<Tuple<int, int>, double> first, KeyValuePair<Tuple<int, int>, double> second) {
-            return -first.Value.CompareTo(second.Value);
-          });
     }
 
     public double? getHeuristicValue() {
-      initializeInfluenceMap();
+      initializeInfluenceMaps();
       if (mDepthPermitted > 0) {
         lookahead();
         if (getCurrentPlayer() == player_t.white) {
@@ -177,129 +286,34 @@ namespace LoganPenteAI {
 
       return retval;
     }
-  }
 
-  static class HeuristicValues {
-    private static List<Tuple<int, int, int, double> > _heuristics;
-    private static Tuple<int, int, int, int> _captureParams;
- 
-    // The Heuristics are primarily to identify spots to look at so that the branching
-    // factor will be kept low.
-    static HeuristicValues() {
-      _heuristics = new List<Tuple<int, int, int, double> >();
-      double win = getWin();
-      double delta = getDelta();
-      double bigDelta = getBigDelta();
+    public override bool move(int row, int col) {
+      bool retval = move(row, col);
+      moveTriggeredMapsUpdate(row, col);
+      return retval;
+    }
 
-      // Shorthand: 0b is a collection of 3 binary masks.
-      // . represents the middle spot (where the next piece will go)
-      // 1 represents where current player must have a stone
-      // 2 represents where opponent must have a stone
-      // X represents where it doesn't matter if there is a stone
+    public void moveTriggeredMapsUpdate(int row, int col) {
+      List<Tuple<int, int>> directions = new List<Tuple<int, int>>();
+      directions.Add(new Tuple<int, int>(0, 1));  // horizontal
+      directions.Add(new Tuple<int, int>(1, 0));  // vertical
+      directions.Add(new Tuple<int, int>(1, 1));  // forward slash
+      directions.Add(new Tuple<int, int>(1, -1));  // back slash
 
-      // Wins
-      _heuristics.Add(new Tuple<int, int, int, double>(0x6c, 0x0, 0x183, win));  // 0bXX11.11XX
-      _heuristics.Add(new Tuple<int, int, int, double>(0x2e, 0x0, 0x1c1, win));  // 0bXXX1.111X
-      _heuristics.Add(new Tuple<int, int, int, double>(0xf, 0x0, 0x1e0, win));  // 0bXXXX.1111
+      int index = 0;
+      foreach (Tuple<int, int> direction in directions) {
+        int inspectedCol;
+        int inspectedRow;
 
-      // Block wins
-      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0xf, 0x1e0, win / 5.0));  // 0bXXXX.2222
-      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0x2e, 0x1c1, win / 5.0));  // 0bXXX2.222X
-      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0x6c, 0x183, win / 5.0));  // 0bXX22.22XX
+        for (int i = -4; i <= 4; i++) {
+          inspectedCol = col + (direction.Item1 * i);
+          inspectedRow = row + (direction.Item2 * i);
 
-      // Block 3
-      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0xe, 0x1e1, bigDelta + delta));  // 0bXXXX.222X
-      _heuristics.Add(new Tuple<int, int, int, double>(0x28, 0x0, 0x183, bigDelta));  // 0bXX01.10XX
-
-      // Prevent unblocked 4
-      _heuristics.Add(new Tuple<int, int, int, double>(0x2c, 0x0, 0x181, bigDelta));  // 0bXX01.110X
-      _heuristics.Add(new Tuple<int, int, int, double>(0xe, 0x0, 0x1e1, bigDelta));  // 0bXXXX.111X
-
-      // Prevent capture
-      _heuristics.Add(new Tuple<int, int, int, double>(0xc, 0x2, 0x1e1, bigDelta / 2 - delta));  // 0bXXXX.112X
-
-      // Create split 3
-      _heuristics.Add(new Tuple<int, int, int, double>(0x4, 0x0, 0x1e3, 10 * delta));  // 0bXXXX.01XX
-
-      // Create double split 3
-      _heuristics.Add(new Tuple<int, int, int, double>(0x44, 0x0, 0x183, 10 * delta));  // 0bXX10.01XX
-      _heuristics.Add(new Tuple<int, int, int, double>(0x5, 0x0, 0x1e0, 10 * delta));  // 0bXXXX.0101
-
-      // Create split 5
-      _heuristics.Add(new Tuple<int, int, int, double>(0x1, 0x0, 0x1e0, 6 * delta));  // 0bXXXX.0001
-
-      // Create split 4
-      _heuristics.Add(new Tuple<int, int, int, double>(0x2, 0x0, 0x1e1, 3 * delta));  // 0bXXXX.001X
-
-      // Create 2 in a row
-      _heuristics.Add(new Tuple<int, int, int, double>(0x8, 0x0, 0x1e7, delta));  // 0bXXXX.1XXX
-
-      // Try to avoid allowing a capture
-      _heuristics.Add(new Tuple<int, int, int, double>(0x8, 0x4, 0x1e3, -delta));  // 0bXXXX.12XX
-
-      // Another stone (of either type) is in the vacinity
-      _heuristics.Add(new Tuple<int, int, int, double>(0x1, 0x0, 0x1ee, delta / 10));  // 0bXXXX.XXX1
-      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0x1, 0x1ee, delta / 10));  // 0bXXXX.XXX2
-      _heuristics.Add(new Tuple<int, int, int, double>(0x2, 0x0, 0x1ed, delta / 10));  // 0bXXXX.XX1X
-      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0x2, 0x1ed, delta / 10));  // 0bXXXX.XX2X
-      _heuristics.Add(new Tuple<int, int, int, double>(0x4, 0x0, 0x1eb, delta / 10));  // 0bXXXX.X1XX
-      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0x4, 0x1eb, delta / 10));  // 0bXXXX.X2XX
-      _heuristics.Add(new Tuple<int, int, int, double>(0x8, 0x0, 0x1e7, delta / 9));  // 0bXXXX.1XXX
-      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0x8, 0x1e7, delta / 9));  // 0bXXXX.2XXX
-
-      List<Tuple<int, int, int, double> > reversed = new List<Tuple<int, int, int, double> >();
-
-      int reversedPatternWhite, reversedPatternBlack, reversedPatternIgnore;
-
-      Board board = new Board();  // Used to reverence COL_MASKS
-      foreach (Tuple<int, int, int, double> regular in _heuristics) {
-        reversedPatternWhite = 0;
-        reversedPatternBlack = 0;
-        reversedPatternIgnore = 0;
-
-        int index = 0;
-        for (int i = 8; i >= 0; i--) {
-          if ((regular.Item1 & board.COL_MASKS[index]) != 0) {
-            reversedPatternWhite |= board.COL_MASKS[index];
+          if (0 <= inspectedRow && inspectedRow < ROWS && 0 <= inspectedCol && inspectedCol < COLS) {
+            updateMaps(inspectedRow, inspectedCol);
           }
-          if ((regular.Item2 & board.COL_MASKS[index]) != 0) {
-            reversedPatternBlack |= board.COL_MASKS[index];
-          }
-          if ((regular.Item3 & board.COL_MASKS[index]) != 0) {
-            reversedPatternIgnore |= board.COL_MASKS[index];
-          }
-          index++;
         }
-
-        reversed.Add(new Tuple<int, int, int, double>(reversedPatternWhite, reversedPatternBlack,
-                                                      reversedPatternIgnore, regular.Item4));
       }
-
-      _heuristics.AddRange(reversed);
-
-      _captureParams = new Tuple<int, int, int, int>(0x7, 0x1, 0x6, 0x70);  // 0bXXX.221 => 0x1, 0x6, 0x70
-    }
-
-    // Order is:
-    // patternLength, patternCurrentPlayer, patternOpponentPlayer, patternIgnore, score
-    public static List<Tuple<int, int, int, double> > getHeuristics() {
-      return _heuristics;
-    }
-
-    public static Tuple<int, int, int, int> getCaptureParams() {
-      return _captureParams;
-    }
-
-    public static double getDelta() {
-      return getWin() / 1000.0;
-    }
-
-    public static double getWin() {
-      return 1.0;
-    }
-
-    public static double getBigDelta() {
-      return getWin() / 10.0;
     }
   }
 }

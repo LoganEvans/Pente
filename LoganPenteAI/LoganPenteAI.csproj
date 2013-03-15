@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GameState.cs" />
+    <Compile Include="HeuristicValues.cs" />
     <Compile Include="PlayerHuman.cs" />
     <Compile Include="PlayerAI.cs" />
     <Compile Include="Display.cs">
