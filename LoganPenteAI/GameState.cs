@@ -218,6 +218,8 @@ namespace LoganPenteAI {
         // Both moves are losing moves, so pick the one with a higher uncertainty
         if (a.Item2.Item2 > b.Item2.Item2) {
           return a;
+        } else if (a.Item1.Item1 - (ROWS / 2) + a.Item1.Item2 - (COLS / 2) <= b.Item1.Item1 - (COLS / 2) + b.Item1.Item2) {
+          return a;
         } else {
           return b;
         }
@@ -225,19 +227,18 @@ namespace LoganPenteAI {
     }
 
     private Tuple<Tuple<int, int>, Tuple<player_t, double>> minimax() {
-      Console.WriteLine(" > minimax(), moveNumber: " + getMoveNumber() + ", permittedExploreSteps: " + mPermittedExploreSteps);
+      //Console.WriteLine(" > minimax(), moveNumber: " + getMoveNumber() + ", permittedExploreSteps: " + mPermittedExploreSteps);
       if (mPermittedExploreSteps <= 0) {
         return estimateWinnerAndUncertaintyAtDepth();
       }
 
       List<int[]> influenceMaps;
       int[] explored = new int[ROWS];
+      int[] captureMap;
 
       Tuple<Tuple<int, int>, Tuple<player_t, double>> bestSoFar = null;
       Tuple<Tuple<int, int>, Tuple<player_t, double>> chump = null;
       Tuple<int, int> spot;
-
-      int[] captureMap;
 
       if (getCurrentPlayer() == player_t.white) {
         influenceMaps = mInfluenceMapsWhite;
@@ -252,13 +253,12 @@ namespace LoganPenteAI {
           spot = Tuple.Create(row_dex, col_dex);
           for (int level = 0; level < influenceMaps.Count; level++) {
             if (isOnMap(row_dex, col_dex, explored)) {
-              // This move has already triggered a recursive call
+              // This move has already triggered a recursive call or is illegal.
               break;
-            }
-
-            if (!isLegal(row_dex, col_dex)) {
-              // Spot is not legal, so try next spot
-              break;;
+            } else if (!isLegal(row_dex, col_dex)) {
+              // Spot is not legal, so try next spot. It is faster to check the explored map than to check legality.
+              explored[row_dex] |= COL_MASKS[col_dex];
+              break;
             } else if (bestSoFar == null) {
               bestSoFar = Tuple.Create(spot, HeuristicValues.estimateQuality(level, getCurrentPlayer()));
             }
@@ -267,7 +267,7 @@ namespace LoganPenteAI {
               explored[row_dex] |= COL_MASKS[col_dex];
               if (level < HeuristicValues.explorationLevel) {
                 // The branching factor should be really low here, so permit a full lookahead
-                chump = new GameState(this, row_dex, col_dex, mPermittedExploreSteps).minimax();
+                chump = new GameState(this, row_dex, col_dex, mPermittedExploreSteps - 1).minimax();
               } else if (level == HeuristicValues.explorationLevel) {
                 // Branching is significantly higher, so decrement permitted explore steps
                 chump = new GameState(this, row_dex, col_dex, mPermittedExploreSteps - PENALTY_PROXIMITY).minimax();
@@ -296,6 +296,7 @@ namespace LoganPenteAI {
           if (bestSoFar == null) {
             bestSoFar = chump;
           } else {
+            Console.WriteLine("Champ: " + bestSoFar + ", chump: " + chump);
             bestSoFar = chooseBest(bestSoFar, chump);
           }
         }

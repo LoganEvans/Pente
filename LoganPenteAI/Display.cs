@@ -45,10 +45,6 @@ namespace LoganPenteAI {
       while (mBoard.getWinner() == player_t.neither) {
         Console.WriteLine(" > gameLoop.loop... ");
         Invalidate();
-        if (getBoard().getWinner() != player_t.neither) {
-          MessageBox.Show("Winner: " + getBoard().getWinner());
-        }
-
         if (getBoard().getCurrentPlayer() == player_t.white &&
             (mPlayerWhite is PlayerHuman)) {
           // Wait for a mouse click.
@@ -73,6 +69,8 @@ namespace LoganPenteAI {
           //mPlayerWhite.setOpponentMove(move);
         }
       }
+      Invalidate();
+      MessageBox.Show("Winner: " + getBoard().getWinner());
     }
 
     private void setMoveForAll(Tuple<int, int> move) {
@@ -150,6 +148,7 @@ namespace LoganPenteAI {
         } else {
           //mPlayerWhite.setOpponentMove(spot);
           //mPlayerBlack.setOpponentMove(spot);
+          Console.WriteLine("Human played at: " + spot);
           setMoveForAll(spot);
         }
       }
