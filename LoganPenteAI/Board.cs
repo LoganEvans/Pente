@@ -226,8 +226,19 @@ namespace LoganPenteAI {
       }
     }
 
-    public int getCaptures(player_t player) { return -1; }
-    public int getMoveNumber() { return mMoveNumber; }
+    public int getCaptures(player_t player) {
+      if (player == player_t.white) {
+        return mCapturesWhite;
+      } else {
+        return mCapturesBlack;
+      }
+    }
+
+
+    public int getMoveNumber() {
+      return mMoveNumber;
+    }
+
     public player_t getCurrentPlayer() {
       if (mMoveNumber % 2 == 0) {
         return player_t.white;

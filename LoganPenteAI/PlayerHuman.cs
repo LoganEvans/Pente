@@ -22,7 +22,7 @@ namespace LoganPenteAI {
     }
 
     public void setMove(Tuple<int, int> move) {
-      mBoard.move(move);
+      mBoard.move(move.Item1, move.Item2);
     }
   }
 }

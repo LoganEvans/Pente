@@ -4,17 +4,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using CommonInterfaces;
+
 namespace LoganPenteAI {
   static class HeuristicValues {
     private static List<List<Tuple<int, int, int, double> > > _heuristics;
     private static Tuple<int, int, int> _captureCheck;
-    private static List<Tuple<int, int, int, double> > _proximityChecks;
+    public readonly static int explorationLevel = 4;
  
     // The Heuristics are primarily to identify spots to look at so that the branching
     // factor will be kept low.
     static HeuristicValues() {
       _heuristics = new List<List<Tuple<int, int, int, double> > >();
-      _proximityChecks = new List<Tuple<int, int, int, double> >();
       double win = getWin();
       double delta = getDelta();
       double bigDelta = getBigDelta();
@@ -65,8 +66,16 @@ namespace LoganPenteAI {
       _heuristics[3].Add(new Tuple<int, int, int, double>(0xc, 0x2, 0x1e1, bigDelta / 2 - delta));  // 0bXXXX.112X
       _heuristics[3].Add(new Tuple<int, int, int, double>(0x0, 0xc, 0x1e1, bigDelta));  // 0bXXXX.220X
 
-      // Lower level patterns, such as a split 3, split 4, or split 5, should be investigated due to the proximity
-      // checks. 
+      // Proximity checks
+      _heuristics.Add(new List<Tuple<int, int, int, double> >());
+      _heuristics[4].Add(new Tuple<int, int, int, double>(0x1, 0x0, 0x1ee, delta / 10));  // 0bXXXX.XXX1
+      _heuristics[4].Add(new Tuple<int, int, int, double>(0x0, 0x1, 0x1ee, delta / 10));  // 0bXXXX.XXX2
+      _heuristics[4].Add(new Tuple<int, int, int, double>(0x2, 0x0, 0x1ed, delta / 10));  // 0bXXXX.XX1X
+      _heuristics[4].Add(new Tuple<int, int, int, double>(0x0, 0x2, 0x1ed, delta / 10));  // 0bXXXX.XX2X
+      _heuristics[4].Add(new Tuple<int, int, int, double>(0x4, 0x0, 0x1eb, delta / 10));  // 0bXXXX.X1XX
+      _heuristics[4].Add(new Tuple<int, int, int, double>(0x0, 0x4, 0x1eb, delta / 10));  // 0bXXXX.X2XX
+      _heuristics[4].Add(new Tuple<int, int, int, double>(0x8, 0x0, 0x1e7, delta / 9));  // 0bXXXX.1XXX
+      _heuristics[4].Add(new Tuple<int, int, int, double>(0x0, 0x8, 0x1e7, delta / 9));  // 0bXXXX.2XXX
 
       List<Tuple<int, int, int, double> > reversed = new List<Tuple<int, int, int, double> >();
       int reversedPatternWhite, reversedPatternBlack, reversedPatternIgnore;
@@ -100,28 +109,12 @@ namespace LoganPenteAI {
       }
 
       _captureCheck = new Tuple<int, int, int>(0x2, 0xc, 0x1e1);  // 0bXXXX.221X
-
-      // Another stone (of either type) is in the vacinity
-      _proximityChecks.Add(new Tuple<int, int, int, double>(0x1, 0x0, 0x1ee, delta / 10));  // 0bXXXX.XXX1
-      _proximityChecks.Add(new Tuple<int, int, int, double>(0x0, 0x1, 0x1ee, delta / 10));  // 0bXXXX.XXX2
-      _proximityChecks.Add(new Tuple<int, int, int, double>(0x2, 0x0, 0x1ed, delta / 10));  // 0bXXXX.XX1X
-      _proximityChecks.Add(new Tuple<int, int, int, double>(0x0, 0x2, 0x1ed, delta / 10));  // 0bXXXX.XX2X
-      _proximityChecks.Add(new Tuple<int, int, int, double>(0x4, 0x0, 0x1eb, delta / 10));  // 0bXXXX.X1XX
-      _proximityChecks.Add(new Tuple<int, int, int, double>(0x0, 0x4, 0x1eb, delta / 10));  // 0bXXXX.X2XX
-      _proximityChecks.Add(new Tuple<int, int, int, double>(0x8, 0x0, 0x1e7, delta / 9));  // 0bXXXX.1XXX
-      _proximityChecks.Add(new Tuple<int, int, int, double>(0x0, 0x8, 0x1e7, delta / 9));  // 0bXXXX.2XXX
     }
 
     // Order is:
     // patternLength, patternCurrentPlayer, patternOpponentPlayer, patternIgnore, score
     public static List<List<Tuple<int, int, int, double> > > getHeuristics() {
       return _heuristics;
-    }
-
-    // The common case is that a spot isn't anywhere near anything interesting. The proximityChecks tests
-    // will identify that this stone can "see" something else within a distance of 5.
-    public static List<Tuple<int, int, int, double> > getProximityChecks() {
-      return _proximityChecks;
     }
 
     public static Tuple<int, int, int> getCaptureCheck() {
@@ -138,6 +131,47 @@ namespace LoganPenteAI {
 
     public static double getBigDelta() {
       return getWin() / 10.0;
+    }
+
+    // This does not evaluate captures
+    // Return is: <exptectedWinner, uncertainty>
+    public static Tuple<player_t, double> estimateQuality(int ruleLevel, player_t currentPlayer) {
+      player_t otherPlayer = (currentPlayer == player_t.white) ? player_t.black : player_t.white;
+
+      if (ruleLevel == 0) {
+        return Tuple.Create(currentPlayer, 0.0);
+      } else if (ruleLevel == 1) {
+        // The only reason this would be evaluated is if the lookahead branch took some appearantly poor choices.
+        // Since the rules don't distinguish between a blockable four and an unblockable four, we can't say all that much
+        return Tuple.Create(otherPlayer, 0.5);
+      } else if (ruleLevel == 2) {
+        return Tuple.Create(currentPlayer, 0.3);
+      } else if (ruleLevel == 3) {
+        return Tuple.Create(otherPlayer, 0.7);
+      } else {
+        // Triggers off proximity checks. If this is the quality, then we can't say much of anything, except that
+        // white likely has an advantage.
+        return Tuple.Create(player_t.white, 1.0);
+      }
+    }
+
+    public static Tuple<player_t, double> estimateQualityOfCapture(player_t currentPlayer, int capturesWhite, int capturesBlack) {
+      player_t otherPlayer = (currentPlayer == player_t.white) ? player_t.black : player_t.white;
+      int capturesCurrent, capturesOther;
+      if (currentPlayer == player_t.white) {
+        capturesCurrent = capturesWhite;
+        capturesOther = capturesBlack;
+      } else {
+        capturesCurrent = capturesBlack;
+        capturesOther = capturesWhite;
+      }
+
+      if (capturesCurrent >= capturesOther) {
+        // E.g., if 4 captures, uncertainty is 0.0. If 3 captures, uncertainty is 0.2
+        return Tuple.Create(currentPlayer, 1.0 - 0.2 * (capturesCurrent + 1));
+      } else {
+        return Tuple.Create(otherPlayer, 1.0 - 0.2 * (capturesOther));
+      }
     }
   }
 }

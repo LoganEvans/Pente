@@ -12,14 +12,14 @@ namespace LoganPenteAI {
     private player_t mColor;
 
     public PlayerAI(player_t color, Board board) {
-      mGameState = new GameState(board, 1);
+      mGameState = new GameState(board, 0);
       mColor = color;
     }
 
     // The order of the Tuple is <row, col>
     public Tuple<int, int> getMove() {
       Tuple<int, int> move = mGameState.getBestMove();
-      Console.WriteLine("move number: " + mGameState.getMoveNumber() + " color: " + mColor + ", best move: " + move + ", heuristic: " + mGameState.getHeuristicValue());
+      Console.WriteLine("move number: " + mGameState.getMoveNumber() + " color: " + mColor + ", best move: " + move);
       return move;
     }
 
