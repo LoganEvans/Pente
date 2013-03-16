@@ -8,8 +8,8 @@ using CommonInterfaces;
 
 namespace LoganPenteAI {
   class GameState : Board {
-    private List<int[]> mInfluenceMapsWhite;
-    private List<int[]> mInfluenceMapsBlack;
+    private int[] mInfluenceMapWhite;
+    private int[] mInfluenceMapBlack;
     private static int mPossitionsEvaluated;
     private int[] mCaptureMapWhite;
     private int[] mCaptureMapBlack;
@@ -49,24 +49,13 @@ namespace LoganPenteAI {
     }
 
     private void copyMaps(GameState copyFrom) {
-      mInfluenceMapsWhite = new List<int[]>();
-      mInfluenceMapsBlack = new List<int[]>();
-      int[] toAddWhite;
-      int[] toAddBlack;
-      for (int i = 0; i < copyFrom.mInfluenceMapsWhite.Count; i++) {
-        toAddWhite = new int[ROWS];
-        toAddBlack = new int[ROWS];
-        for (int row_dex = 0; row_dex < ROWS; row_dex++) {
-          toAddWhite[row_dex] = copyFrom.mInfluenceMapsWhite[i][row_dex];
-          toAddBlack[row_dex] = copyFrom.mInfluenceMapsBlack[i][row_dex];
-        }
-        mInfluenceMapsWhite.Add(toAddWhite);        
-        mInfluenceMapsBlack.Add(toAddBlack);        
-      }
-
+      mInfluenceMapWhite = new int[ROWS];
+      mInfluenceMapBlack = new int[ROWS];
       mCaptureMapWhite = new int[ROWS];
       mCaptureMapBlack = new int[ROWS];
       for (int row_dex = 0; row_dex < ROWS; row_dex++) {
+        mInfluenceMapWhite[row_dex] = copyFrom.mInfluenceMapWhite[row_dex];
+        mInfluenceMapBlack[row_dex] = copyFrom.mInfluenceMapBlack[row_dex];
         mCaptureMapWhite[row_dex] = copyFrom.mCaptureMapWhite[row_dex];
         mCaptureMapBlack[row_dex] = copyFrom.mCaptureMapBlack[row_dex];
       }
@@ -81,51 +70,41 @@ namespace LoganPenteAI {
     }
 
     private Tuple<Tuple<int, int>, Tuple<player_t, double>> estimateWinnerAndUncertaintyAtDepth() {
-      List<int[]> influenceMaps;
+      int[] influenceMap;
       if (getCurrentPlayer() == player_t.white) {
-        influenceMaps = mInfluenceMapsWhite;
+        influenceMap = mInfluenceMapWhite;
       } else {
-        influenceMaps = mInfluenceMapsBlack;
+        influenceMap = mInfluenceMapBlack;
       }
+
+      Tuple<int, int, double> champ;
+      Tuple<int, int, double> chump;
       Tuple<int, int> spot;
-      Tuple<int, int> legalSpot = null;
 
-      for (int level = 0; level < influenceMaps.Count; level++) {
-        List<Tuple<int, int>> movesThisLevel = new List<Tuple<int, int>>();
+      for (int row_dex = 0; row_dex < ROWS; row_dex++) {
+        for (int col_dex = 0; col_dex < COLS; col_dex++) {
+          if (!isLegal(row_dex, col_dex)) {
+            continue;
+          }
+          spot = Tuple.Create(row_dex, col_dex);
+          chump = Tuple.Create(spot.Item1, spot.Item2, HeuristicValues.es
 
-        for (int row_dex = 0; row_dex < ROWS; row_dex++) {
-          for (int col_dex = 0; col_dex < COLS; col_dex++) {
-            if (!isLegal(row_dex, col_dex)) {
-              continue;
-            } else if (legalSpot == null) {
-              legalSpot = Tuple.Create(row_dex, col_dex);
-            }
-            spot = Tuple.Create(row_dex, col_dex);
+          if (isOnMap(row_dex, col_dex, influenceMap)) {
+            influenceMoves.Add(spot);
+            continue;
+          }
 
-            if (isOnMap(row_dex, col_dex, influenceMaps[level])) {
-              movesThisLevel.Add(spot);
-              continue;
-            }
-
-            if ((getCurrentPlayer() == player_t.white && isOnMap(row_dex, col_dex, mCaptureMapWhite)) ||
-                (getCurrentPlayer() == player_t.black && isOnMap(row_dex, col_dex, mCaptureMapBlack))) {
-              if (level == 0 && getCaptures(getCurrentPlayer()) == 4) {
-                // Will win with one more capture
-                movesThisLevel.Add(spot);
-              } else if (level == 2 && getCaptures(getCurrentPlayer()) == 3) {
-                // Will possibly threaten a win
-                movesThisLevel.Add(spot);
-              } else if (level >= 3) {
-                // This is the same level as preventing or threatening a capture.
-                movesThisLevel.Add(spot);
-              }
-            }
+          if ((getCurrentPlayer() == player_t.white && isOnMap(row_dex, col_dex, mCaptureMapWhite)) ||
+              (getCurrentPlayer() == player_t.black && isOnMap(row_dex, col_dex, mCaptureMapBlack))) {
+            influenceMoves.Add(spot);
           }
         }
+      }
 
-        if (movesThisLevel.Count > 0) {
-          return Tuple.Create(movesThisLevel[0], HeuristicValues.estimateQuality(level, getCurrentPlayer()));
-        }
+
+
+      if (influenceMoves.Count > 0) {
+        return Tuple.Create(influenceMoves[0], HeuristicValues.estimateQuality(level, getCurrentPlayer()));
       }
 
       return Tuple.Create(legalSpot, HeuristicValues.estimateQuality(HeuristicValues.explorationLevel + 1, getCurrentPlayer()));

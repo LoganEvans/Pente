@@ -10,15 +10,16 @@ namespace LoganPenteAI {
   static class HeuristicValues {
     private static List<Tuple<int, int, int, double>> _heuristics;
     private static List<Tuple<int, int, int, double>> _proximity;
-    private static Tuple<int, int, int> _captureChecks;
+    private static Tuple<int, int, int> _captureCheck;
+    private static double[] mWin;
  
     // The Heuristics are primarily to identify spots to look at so that the branching
     // factor will be kept low.
     static HeuristicValues() {
       _heuristics = new List<Tuple<int, int, int, double> >();
-      double win = getWin();
-      double bigDelta = getBigDelta();
-      double delta = getDelta();
+      double[] mWin = {1.0, 0.8, 0.6, 0.4, 0.2};
+      double bigDelta = mWin[0] / 100.0;
+      double delta = bigDelta / 100.0;
 
       // Shorthand: 0b is a collection of 3 binary masks.
       // . represents the middle spot (where the next piece will go)
@@ -35,46 +36,46 @@ namespace LoganPenteAI {
       // When searching for a win, all move up to and including level 2 should be considered.
 
       // Wins
-      _heuristics.Add(new Tuple<int, int, int, double>(0x6c, 0x0, 0x183, win));  // 0bXX11.11XX
-      _heuristics.Add(new Tuple<int, int, int, double>(0x2e, 0x0, 0x1c1, win));  // 0bXXX1.111X
-      _heuristics.Add(new Tuple<int, int, int, double>(0xf, 0x0, 0x1e0, win));  // 0bXXXX.1111
+      _heuristics.Add(new Tuple<int, int, int, double>(0x6c, 0x0, 0x183, mWin[0]));  // 0bXX11.11XX
+      _heuristics.Add(new Tuple<int, int, int, double>(0x2e, 0x0, 0x1c1, mWin[0]));  // 0bXXX1.111X
+      _heuristics.Add(new Tuple<int, int, int, double>(0xf, 0x0, 0x1e0, mWin[0]));  // 0bXXXX.1111
 
       // Block wins... generally a bad scenario
-      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0xf, 0x1e0, -2 * bigDelta));  // 0bXXXX.2222
-      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0x2e, 0x1c1, -2 * bigDelta));  // 0bXXX2.222X
-      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0x6c, 0x183, -2 * bigDelta));  // 0bXX22.22XX
+      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0xf, 0x1e0, -mWin[1]));  // 0bXXXX.2222
+      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0x2e, 0x1c1, -mWin[1]));  // 0bXXX2.222X
+      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0x6c, 0x183, -mWin[1]));  // 0bXX22.22XX
 
       // Create a four (could win in one)... generally a good scenario
       // Note: An unblocked 3 is also listen on this level because it generally needs to be addressed
       // immediately.
-      _heuristics.Add(new Tuple<int, int, int, double>(0xe, 0x0, 0x1c1, bigDelta));  // 0bXXX0.111X
-      _heuristics.Add(new Tuple<int, int, int, double>(0xe, 0x0, 0x1e0, bigDelta));  // 0bXXXX.1110
-      _heuristics.Add(new Tuple<int, int, int, double>(0x2c, 0x0, 0x183, bigDelta));  // 0bXX01.11XX
-      _heuristics.Add(new Tuple<int, int, int, double>(0x2c, 0x0, 0x1c1, bigDelta));  // 0bXXX1.110X
-      _heuristics.Add(new Tuple<int, int, int, double>(0x7, 0x0, 0x1e0, bigDelta));  // 0bXXXX.0111
-      _heuristics.Add(new Tuple<int, int, int, double>(0x4c, 0x0, 0x183, bigDelta));  // 0bXX10.11XX
-      _heuristics.Add(new Tuple<int, int, int, double>(0xa8, 0x0, 0x107, bigDelta));  // 0bX101.1XXX
-      _heuristics.Add(new Tuple<int, int, int, double>(0x160, 0x0, 0xf, bigDelta));  // 0b1011.XXXX
+      _heuristics.Add(new Tuple<int, int, int, double>(0xe, 0x0, 0x1c1, mWin[1] + delta));  // 0bXXX0.111X
+      _heuristics.Add(new Tuple<int, int, int, double>(0xe, 0x0, 0x1e0, mWin[1] + delta));  // 0bXXXX.1110
+      _heuristics.Add(new Tuple<int, int, int, double>(0x2c, 0x0, 0x183, mWin[1]));  // 0bXX01.11XX
+      _heuristics.Add(new Tuple<int, int, int, double>(0x2c, 0x0, 0x1c1, mWin[1]));  // 0bXXX1.110X
+      _heuristics.Add(new Tuple<int, int, int, double>(0x7, 0x0, 0x1e0, mWin[1]));  // 0bXXXX.0111
+      _heuristics.Add(new Tuple<int, int, int, double>(0x4c, 0x0, 0x183, mWin[1]));  // 0bXX10.11XX
+      _heuristics.Add(new Tuple<int, int, int, double>(0xa8, 0x0, 0x107, mWin[1]));  // 0bX101.1XXX
+      _heuristics.Add(new Tuple<int, int, int, double>(0x160, 0x0, 0xf, mWin[1]));  // 0b1011.XXXX
 
       // Block an unblocked 3 (Block any win in two) or capture... generally a bad (but not terrible) scenario
-      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0xb, 0x1e0, -bigDelta / 2));  // 0bXXXX.2022
-      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0xd, 0x1e0, -bigDelta / 2));  // 0bXXXX.2202
-      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0x2c, 0x181, delta - bigDelta / 2));  // 0bXX02.220X
-      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0xe, 0x1e0, 2 * delta - bigDelta / 2));  // 0bXXXX.2220
+      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0xb, 0x1e0, -mWin[2]));  // 0bXXXX.2022
+      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0xd, 0x1e0, -mWin[2]));  // 0bXXXX.2202
+      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0x2c, 0x181, -mWin[2]));  // 0bXX02.220X
+      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0xe, 0x1e0, -mWin[2]));  // 0bXXXX.2220
 
       // Set up a capture or set up an unblocked 3, or block a capture
-      _heuristics.Add(new Tuple<int, int, int, double>(0xc, 0x2, 0x1e1, bigDelta / 2));  // 0bXXXX.112X
-      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0xc, 0x1e1, bigDelta / 2));  // 0bXXXX.220X
-      _heuristics.Add(new Tuple<int, int, int, double>(0x28, 0x0, 0x183, bigDelta / 2));  // 0bXX01.10XX
-      _heuristics.Add(new Tuple<int, int, int, double>(0xc, 0x0, 0x1c1, bigDelta / 2));  // 0bXXX0.110X
+      _heuristics.Add(new Tuple<int, int, int, double>(0xc, 0x2, 0x1e1, mWin[2] + bigDelta));  // 0bXXXX.112X
+      _heuristics.Add(new Tuple<int, int, int, double>(0x0, 0xc, 0x1e1, mWin[2] + delta));  // 0bXXXX.220X
+      _heuristics.Add(new Tuple<int, int, int, double>(0x28, 0x0, 0x183, mWin[2] + bigDelta + delta));  // 0bXX01.10XX
+      _heuristics.Add(new Tuple<int, int, int, double>(0xc, 0x0, 0x1c1, mWin[2] + bigDelta + delta));  // 0bXXX0.110X
 
       // Proximity checks
       _proximity = new List<Tuple<int, int, int, double> >();
-      _proximity.Add(new Tuple<int, int, int, double>(0x1, 0x0, 0x1ee, delta / 10));  // 0bXXXX.XXX1
+      _proximity.Add(new Tuple<int, int, int, double>(0x1, 0x0, 0x1ee, delta / 6));  // 0bXXXX.XXX1
       _proximity.Add(new Tuple<int, int, int, double>(0x0, 0x1, 0x1ee, delta / 10));  // 0bXXXX.XXX2
-      _proximity.Add(new Tuple<int, int, int, double>(0x2, 0x0, 0x1ed, delta / 10));  // 0bXXXX.XX1X
+      _proximity.Add(new Tuple<int, int, int, double>(0x2, 0x0, 0x1ed, delta / 7));  // 0bXXXX.XX1X
       _proximity.Add(new Tuple<int, int, int, double>(0x0, 0x2, 0x1ed, delta / 10));  // 0bXXXX.XX2X
-      _proximity.Add(new Tuple<int, int, int, double>(0x4, 0x0, 0x1eb, delta / 10));  // 0bXXXX.X1XX
+      _proximity.Add(new Tuple<int, int, int, double>(0x4, 0x0, 0x1eb, delta / 5));  // 0bXXXX.X1XX
       _proximity.Add(new Tuple<int, int, int, double>(0x0, 0x4, 0x1eb, delta / 10));  // 0bXXXX.X2XX
       _proximity.Add(new Tuple<int, int, int, double>(0x8, 0x0, 0x1e7, delta / 9));  // 0bXXXX.1XXX
       _proximity.Add(new Tuple<int, int, int, double>(0x0, 0x8, 0x1e7, delta / 9));  // 0bXXXX.2XXX
@@ -84,7 +85,7 @@ namespace LoganPenteAI {
 
       Board board = new Board();  // Used to reference COL_MASKS
       for (int i = 0; i < _heuristics.Count; i++) {
-        foreach (Tuple<int, int, int, double> regular in _heuristics[i]) {
+        foreach (Tuple<int, int, int, double> regular in _heuristics) {
           reversedPatternWhite = 0;
           reversedPatternBlack = 0;
           reversedPatternIgnore = 0;
@@ -107,7 +108,7 @@ namespace LoganPenteAI {
                                                         reversedPatternIgnore, regular.Item4));
         }
 
-        _heuristics[i].AddRange(reversed);
+        _heuristics.AddRange(reversed);
       }
 
       _captureCheck = new Tuple<int, int, int>(0x2, 0xc, 0x1e1);  // 0bXXXX.221X
@@ -115,50 +116,12 @@ namespace LoganPenteAI {
 
     // Order is:
     // patternLength, patternCurrentPlayer, patternOpponentPlayer, patternIgnore, score
-    public static List<List<Tuple<int, int, int, double> > > getHeuristics() {
+    public static List<Tuple<int, int, int, double> > getHeuristics() {
       return _heuristics;
     }
 
     public static Tuple<int, int, int> getCaptureCheck() {
       return _captureCheck;
-    }
-
-    public static double getDelta() {
-      return getWin() / 1000.0;
-    }
-
-    public static double getWin() {
-      return 1.0;
-    }
-
-    public static double getBigDelta() {
-      return getWin() / 10.0;
-    }
-
-    // This does not evaluate captures
-    // Return is: <exptectedWinner, uncertainty>
-    public static Tuple<player_t, double> estimateQuality(int ruleLevel, player_t currentPlayer) {
-      player_t otherPlayer = (currentPlayer == player_t.white) ? player_t.black : player_t.white;
-
-      if (ruleLevel == 0) {
-        return Tuple.Create(currentPlayer, 0.0);
-      } else if (ruleLevel == 1) {
-        // The only reason this would be evaluated is if the lookahead branch took some appearantly poor choices.
-        // Since the rules don't distinguish between a blockable four and an unblockable four, we can't say all that much
-        return Tuple.Create(otherPlayer, 0.5);
-      } else if (ruleLevel == 2) {
-        return Tuple.Create(currentPlayer, 0.3);
-      } else if (ruleLevel == 3) {
-        return Tuple.Create(otherPlayer, 0.7);
-      } else if (ruleLevel == 4) {
-        return Tuple.Create(currentPlayer, 0.9);
-      } else if (ruleLevel == explorationLevel) {
-        return Tuple.Create(currentPlayer, 0.99);
-      } else {
-        // Triggers off proximity checks. If this is the quality, then we can't say much of anything, except that
-        // white likely has an advantage.
-        return Tuple.Create(player_t.white, 1.0);
-      }
     }
 
     public static Tuple<player_t, double> estimateQualityOfCapture(player_t currentPlayer, int capturesWhite, int capturesBlack) {
@@ -174,9 +137,9 @@ namespace LoganPenteAI {
 
       if (capturesCurrent >= capturesOther) {
         // E.g., if 4 captures, uncertainty is 0.0. If 3 captures, uncertainty is 0.2
-        return Tuple.Create(currentPlayer, 1.0 - 0.2 * (capturesCurrent + 1));
+        return Tuple.Create(currentPlayer, mWin[5 - (capturesCurrent + 1)]);
       } else {
-        return Tuple.Create(otherPlayer, 1.0 - 0.2 * (capturesOther));
+        return Tuple.Create(otherPlayer, mWin[0] - mWin[5 - capturesOther]);
       }
     }
   }
