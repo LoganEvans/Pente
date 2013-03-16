@@ -10,6 +10,7 @@ namespace LoganPenteAI {
   class GameState : Board {
     private List<int[]> mInfluenceMapsWhite;
     private List<int[]> mInfluenceMapsBlack;
+    private static int mPossitionsEvaluated;
     private int[] mCaptureMapWhite;
     private int[] mCaptureMapBlack;
     private int[] mProximityMapWhite;
@@ -73,7 +74,10 @@ namespace LoganPenteAI {
 
     // This method triggers the minimax search. It should only be called externally.
     public Tuple<int, int> getBestMove() {
-      return minimax().Item1;
+      mPossitionsEvaluated = 0;
+      Tuple<int, int> move = minimax().Item1;
+      Console.WriteLine("Possitions evaluated: " + mPossitionsEvaluated);
+      return move;
     }
 
     private Tuple<Tuple<int, int>, Tuple<player_t, double>> estimateWinnerAndUncertaintyAtDepth() {
@@ -124,7 +128,7 @@ namespace LoganPenteAI {
         }
       }
 
-      return Tuple.Create(legalSpot, HeuristicValues.estimateQuality(5, getCurrentPlayer()));
+      return Tuple.Create(legalSpot, HeuristicValues.estimateQuality(HeuristicValues.explorationLevel + 1, getCurrentPlayer()));
     }
 
     private bool isOnMap(int row, int col, int[] map) {
@@ -228,7 +232,12 @@ namespace LoganPenteAI {
 
     private Tuple<Tuple<int, int>, Tuple<player_t, double>> minimax() {
       //Console.WriteLine(" > minimax(), moveNumber: " + getMoveNumber() + ", permittedExploreSteps: " + mPermittedExploreSteps);
-      if (mPermittedExploreSteps <= 0) {
+      mPossitionsEvaluated++;
+      if (mPossitionsEvaluated % 1000 == 0) {
+        Console.WriteLine(mPossitionsEvaluated);
+      }
+
+      if (mPermittedExploreSteps < 0) {
         return estimateWinnerAndUncertaintyAtDepth();
       }
 
@@ -259,15 +268,17 @@ namespace LoganPenteAI {
               // Spot is not legal, so try next spot. It is faster to check the explored map than to check legality.
               explored[row_dex] |= COL_MASKS[col_dex];
               break;
-            } else if (bestSoFar == null) {
-              bestSoFar = Tuple.Create(spot, HeuristicValues.estimateQuality(level, getCurrentPlayer()));
             }
 
             if (isOnMap(row_dex, col_dex, influenceMaps[level])) {
               explored[row_dex] |= COL_MASKS[col_dex];
               if (level < HeuristicValues.explorationLevel) {
                 // The branching factor should be really low here, so permit a full lookahead
-                chump = new GameState(this, row_dex, col_dex, mPermittedExploreSteps - 1).minimax();
+                int nextPermittedExploreSteps = mPermittedExploreSteps;
+                if (mPermittedExploreSteps >= 0) {
+                  nextPermittedExploreSteps -= 1;
+                }
+                chump = new GameState(this, row_dex, col_dex, nextPermittedExploreSteps).minimax();
               } else if (level == HeuristicValues.explorationLevel) {
                 // Branching is significantly higher, so decrement permitted explore steps
                 chump = new GameState(this, row_dex, col_dex, mPermittedExploreSteps - PENALTY_PROXIMITY).minimax();
@@ -293,10 +304,9 @@ namespace LoganPenteAI {
           }
           */
 
-          if (bestSoFar == null) {
+          if (bestSoFar == null && chump != null) {
             bestSoFar = chump;
           } else {
-            Console.WriteLine("Champ: " + bestSoFar + ", chump: " + chump);
             bestSoFar = chooseBest(bestSoFar, chump);
           }
         }

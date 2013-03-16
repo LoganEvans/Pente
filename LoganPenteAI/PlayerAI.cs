@@ -12,7 +12,7 @@ namespace LoganPenteAI {
     private player_t mColor;
 
     public PlayerAI(player_t color, Board board) {
-      mGameState = new GameState(board, 1);
+      mGameState = new GameState(board, 2);
       mColor = color;
     }
 

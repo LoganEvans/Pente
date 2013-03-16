@@ -157,6 +157,8 @@ namespace LoganPenteAI {
         return Tuple.Create(otherPlayer, 0.7);
       } else if (ruleLevel == 4) {
         return Tuple.Create(currentPlayer, 0.9);
+      } else if (ruleLevel == explorationLevel) {
+        return Tuple.Create(currentPlayer, 0.99);
       } else {
         // Triggers off proximity checks. If this is the quality, then we can't say much of anything, except that
         // white likely has an advantage.
