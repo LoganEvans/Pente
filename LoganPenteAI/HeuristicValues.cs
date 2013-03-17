@@ -69,6 +69,8 @@ namespace LoganPenteAI {
       _heuristics.Add(new Tuple<int, int, int, double>(0x28, 0x0, 0x183, mWin[2] + bigDelta + delta));  // 0bXX01.10XX
       _heuristics.Add(new Tuple<int, int, int, double>(0xc, 0x0, 0x1c1, mWin[2] + bigDelta + delta));  // 0bXXX0.110X
 
+      appendReversedAndSort(_heuristics);
+
       // Proximity checks
       _proximity = new List<Tuple<int, int, int, double> >();
       _proximity.Add(new Tuple<int, int, int, double>(0x1, 0x0, 0x1ee, delta / 6));  // 0bXXXX.XXX1
@@ -80,12 +82,51 @@ namespace LoganPenteAI {
       _proximity.Add(new Tuple<int, int, int, double>(0x8, 0x0, 0x1e7, delta / 9));  // 0bXXXX.1XXX
       _proximity.Add(new Tuple<int, int, int, double>(0x0, 0x8, 0x1e7, delta / 9));  // 0bXXXX.2XXX
 
+      appendReversedAndSort(_proximity);
+
+      _captureCheck = new Tuple<int, int, int>(0x2, 0xc, 0x1e1);  // 0bXXXX.221X
+    }
+
+    // Order is:
+    // patternLength, patternCurrentPlayer, patternOpponentPlayer, patternIgnore, score
+    public static List<Tuple<int, int, int, double>> getHeuristics() {
+      return _heuristics;
+    }
+
+    public static Tuple<int, int, int> getCaptureCheck() {
+      return _captureCheck;
+    }
+
+    public static List<Tuple<int, int, int, double>> getProximity() {
+      return _proximity;
+    }
+
+    public static double estimateQualityOfCapture(player_t currentPlayer, int capturesWhite, int capturesBlack) {
+      player_t otherPlayer = (currentPlayer == player_t.white) ? player_t.black : player_t.white;
+      int capturesCurrent, capturesOther;
+      if (currentPlayer == player_t.white) {
+        capturesCurrent = capturesWhite;
+        capturesOther = capturesBlack;
+      } else {
+        capturesCurrent = capturesBlack;
+        capturesOther = capturesWhite;
+      }
+
+      if (capturesCurrent >= capturesOther) {
+        // E.g., if 4 captures, uncertainty is 0.0. If 3 captures, uncertainty is 0.2
+        return mWin[5 - (capturesCurrent + 1)];
+      } else {
+        return mWin[0] - mWin[5 - capturesOther];
+      }
+    }
+
+    private static void appendReversedAndSort(List<Tuple<int, int, int, double>> inputList) {
       List<Tuple<int, int, int, double> > reversed = new List<Tuple<int, int, int, double> >();
       int reversedPatternWhite, reversedPatternBlack, reversedPatternIgnore;
 
       Board board = new Board();  // Used to reference COL_MASKS
-      for (int i = 0; i < _heuristics.Count; i++) {
-        foreach (Tuple<int, int, int, double> regular in _heuristics) {
+      for (int i = 0; i < inputList.Count; i++) {
+        foreach (Tuple<int, int, int, double> regular in inputList) {
           reversedPatternWhite = 0;
           reversedPatternBlack = 0;
           reversedPatternIgnore = 0;
@@ -107,40 +148,12 @@ namespace LoganPenteAI {
           reversed.Add(new Tuple<int, int, int, double>(reversedPatternWhite, reversedPatternBlack,
                                                         reversedPatternIgnore, regular.Item4));
         }
-
-        _heuristics.AddRange(reversed);
       }
 
-      _captureCheck = new Tuple<int, int, int>(0x2, 0xc, 0x1e1);  // 0bXXXX.221X
-    }
+      inputList.AddRange(reversed);
 
-    // Order is:
-    // patternLength, patternCurrentPlayer, patternOpponentPlayer, patternIgnore, score
-    public static List<Tuple<int, int, int, double> > getHeuristics() {
-      return _heuristics;
-    }
-
-    public static Tuple<int, int, int> getCaptureCheck() {
-      return _captureCheck;
-    }
-
-    public static Tuple<player_t, double> estimateQualityOfCapture(player_t currentPlayer, int capturesWhite, int capturesBlack) {
-      player_t otherPlayer = (currentPlayer == player_t.white) ? player_t.black : player_t.white;
-      int capturesCurrent, capturesOther;
-      if (currentPlayer == player_t.white) {
-        capturesCurrent = capturesWhite;
-        capturesOther = capturesBlack;
-      } else {
-        capturesCurrent = capturesBlack;
-        capturesOther = capturesWhite;
-      }
-
-      if (capturesCurrent >= capturesOther) {
-        // E.g., if 4 captures, uncertainty is 0.0. If 3 captures, uncertainty is 0.2
-        return Tuple.Create(currentPlayer, mWin[5 - (capturesCurrent + 1)]);
-      } else {
-        return Tuple.Create(otherPlayer, mWin[0] - mWin[5 - capturesOther]);
-      }
+      // Sort by reversed absolute value
+      inputList.Sort((a, b) => -Math.Abs(a.Item4).CompareTo(Math.Abs(b.Item4)));
     }
   }
 }
