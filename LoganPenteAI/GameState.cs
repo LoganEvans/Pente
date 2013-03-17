@@ -8,6 +8,7 @@ using CommonInterfaces;
 
 namespace LoganPenteAI {
   class GameState : Board {
+    private List<double[]> mHeuristicMap;
     private int[] mInfluenceMapWhite;
     private int[] mInfluenceMapBlack;
     private static int mPossitionsEvaluated;
@@ -21,7 +22,6 @@ namespace LoganPenteAI {
 
     private readonly int[] branchingCategories = {3, 10, 50, ROWS * COLS};
 
-    private double? mHeuristicValue;
     private Tuple<int, int> mBestMove;
     private int mPermittedExploreSteps;
 
@@ -29,14 +29,12 @@ namespace LoganPenteAI {
     // recursion will occure.
     public GameState(Board board, int permittedExploreSteps) : base(board) {
       mPermittedExploreSteps = permittedExploreSteps;
-      mHeuristicValue = null;
       initializeInfluenceMaps();
     }
 
     public GameState(GameState copyFrom) : base(copyFrom) {
       copyMaps(copyFrom);
       mPermittedExploreSteps = copyFrom.mPermittedExploreSteps;
-      mHeuristicValue = null;
     }
 
     public GameState(GameState copyFrom, int row, int col, int permittedExploreSteps) : base(copyFrom) {
@@ -45,7 +43,6 @@ namespace LoganPenteAI {
         throw new Exception("Illegal move: (" + row + ", " + col + ")");
       }
       mPermittedExploreSteps = permittedExploreSteps;
-      mHeuristicValue = null;
     }
 
     private void copyMaps(GameState copyFrom) {
@@ -55,6 +52,8 @@ namespace LoganPenteAI {
       mCaptureMapBlack = new int[ROWS];
       mProximityMapWhite = new int[ROWS];
       mProximityMapBlack = new int[ROWS];
+      mHeuristicMap = new List<double[]>();
+
       for (int row_dex = 0; row_dex < ROWS; row_dex++) {
         mInfluenceMapWhite[row_dex] = copyFrom.mInfluenceMapWhite[row_dex];
         mInfluenceMapBlack[row_dex] = copyFrom.mInfluenceMapBlack[row_dex];
@@ -62,6 +61,11 @@ namespace LoganPenteAI {
         mCaptureMapBlack[row_dex] = copyFrom.mCaptureMapBlack[row_dex];
         mProximityMapWhite[row_dex] = copyFrom.mProximityMapWhite[row_dex];
         mProximityMapBlack[row_dex] = copyFrom.mProximityMapBlack[row_dex];
+
+        mHeuristicMap.Add(new double[COLS]);
+        for (int col_dex = 0; col_dex < COLS; col_dex++) {
+          mHeuristicMap[row_dex][col_dex] = copyFrom.mHeuristicMap[row_dex][col_dex];
+        }
       }
     }
 
@@ -75,7 +79,17 @@ namespace LoganPenteAI {
     }
 
     private Tuple<Tuple<int, int>, double> minimax() {
-      Console.WriteLine(" > minimax()");
+      GameState nextGamestate;
+      mPossitionsEvaluated++;
+      if (mPossitionsEvaluated % 512 == 0) {
+        Console.WriteLine(" > minimax(), evals: " + mPossitionsEvaluated);
+      }
+
+      if (getWinner() != player_t.neither) {
+        Console.WriteLine("terminal evaluated");
+        return Tuple.Create(Tuple.Create(-1, -1), (getWinner() == player_t.white) ? 1.0 : -1.0);
+      }
+
       int[] influenceMap;
       int[] captureMap;
       int[] proximityMap;
@@ -114,9 +128,11 @@ namespace LoganPenteAI {
 
           spot = Tuple.Create(row_dex, col_dex);
           if (nextPermittedExploreSteps >= 0) {
-            chump = new GameState(this, row_dex, col_dex, nextPermittedExploreSteps).minimax();
+            nextGamestate = new GameState(this, row_dex, col_dex, nextPermittedExploreSteps);
+///////////
+            chump = Tuple.Create(spot, nextGamestate.minimax().Item2);
           } else {
-            chump = Tuple.Create(spot, getHeuristicValue(row_dex, col_dex));
+            chump = Tuple.Create(spot, mHeuristicMap[row_dex][col_dex]);
             if ((getCurrentPlayer() == player_t.white && isOnMap(row_dex, col_dex, mCaptureMapWhite)) ||
                 (getCurrentPlayer() == player_t.black && isOnMap(row_dex, col_dex, mCaptureMapBlack))) {
               double captureValue = HeuristicValues.estimateQualityOfCapture(getCurrentPlayer(), getCaptures(player_t.white), getCaptures(player_t.black));
@@ -142,6 +158,7 @@ namespace LoganPenteAI {
 
     // This function should (almost) never need to be called. Use updateMaps instead if possible.
     private void initializeInfluenceMaps() {
+      mHeuristicMap = new List<double[]>();
       mInfluenceMapWhite = new int[ROWS];
       mInfluenceMapBlack = new int[ROWS];
       mCaptureMapWhite = new int[ROWS];
@@ -150,6 +167,7 @@ namespace LoganPenteAI {
       mProximityMapBlack = new int[ROWS];
 
       for (int row_dex = 0; row_dex < ROWS; row_dex++) {
+        mHeuristicMap.Add(new double[COLS]);
         for (int col_dex = 0; col_dex < COLS; col_dex++) {
           updateMaps(row_dex, col_dex);
         }
@@ -157,17 +175,55 @@ namespace LoganPenteAI {
     }
 
     private void updateMaps(int row, int col) {
+      bool isProximity;
+      bool whiteProximity, blackProximity;
+
       foreach (Tuple<int, int> window in getWindows(row, col)) {
+        isProximity = false;
+        whiteProximity = false;
+        blackProximity = false;
+        // Proximity maps
+        foreach (Tuple<int, int, int, double> proximity in HeuristicValues.getProximity()) {
+          if (whiteProximity || (mProximityMapWhite[row] & COL_MASKS[col]) != 0) {
+            // Pass
+            whiteProximity = true;
+            if (blackProximity) {
+              break;
+            }
+          } else if (matchesPattern(windowWhite: window.Item1, windowBlack: window.Item2,
+                             patternWhite: proximity.Item1, patternBlack: proximity.Item2, patternIgnore: proximity.Item3)) {
+            mProximityMapWhite[row] |= COL_MASKS[col];
+            isProximity = true;
+            whiteProximity = true;
+          }
+
+          if (blackProximity || (mProximityMapBlack[row] & COL_MASKS[col]) != 0) {
+            blackProximity = true;
+          } else if (matchesPattern(windowWhite: window.Item2, windowBlack: window.Item1,
+                             patternWhite: proximity.Item2, patternBlack: proximity.Item1, patternIgnore: proximity.Item3)) {
+            // Swapped black and white players
+            mProximityMapBlack[row] |= COL_MASKS[col];
+            isProximity = true;
+            blackProximity = true;
+          }
+        }
+
         // Influence maps
         foreach (Tuple<int, int, int, double> heuristic in HeuristicValues.getHeuristics()) {
-          if (matchesPattern(windowWhite: window.Item1, windowBlack: window.Item2,
-                             patternWhite: heuristic.Item1, patternBlack: heuristic.Item2, patternIgnore: heuristic.Item3)) {
+          if (whiteProximity && matchesPattern(windowWhite: window.Item1, windowBlack: window.Item2,
+                                               patternWhite: heuristic.Item1, patternBlack: heuristic.Item2, patternIgnore: heuristic.Item3)) {
             mInfluenceMapWhite[row] |= COL_MASKS[col];
+            whiteProximity = true;
           }
-          if (matchesPattern(windowWhite: window.Item2, windowBlack: window.Item1,
-                             patternWhite: heuristic.Item2, patternBlack: heuristic.Item1, patternIgnore: heuristic.Item3)) {
+          if (blackProximity && matchesPattern(windowWhite: window.Item2, windowBlack: window.Item1,
+                                               patternWhite: heuristic.Item2, patternBlack: heuristic.Item1, patternIgnore: heuristic.Item3)) {
             // Swapped black and white players
             mInfluenceMapBlack[row] |= COL_MASKS[col];
+            blackProximity = true;
+          }
+
+          if (whiteProximity && blackProximity) {
+            break;
           }
         }
 
@@ -183,19 +239,8 @@ namespace LoganPenteAI {
           mCaptureMapWhite[row] |= COL_MASKS[col];
         }
 
-        // Proximity maps
-        foreach (Tuple<int, int, int, double> proximity in HeuristicValues.getProximity()) {
-          if (matchesPattern(windowWhite: window.Item1, windowBlack: window.Item2,
-                             patternWhite: proximity.Item1, patternBlack: proximity.Item2, patternIgnore: proximity.Item3)) {
-            mProximityMapWhite[row] |= COL_MASKS[col];
-          }
-          if (matchesPattern(windowWhite: window.Item2, windowBlack: window.Item1,
-                             patternWhite: proximity.Item2, patternBlack: proximity.Item1, patternIgnore: proximity.Item3)) {
-            // Swapped black and white players
-            mProximityMapBlack[row] |= COL_MASKS[col];
-          }
-        }
       }
+      mHeuristicMap[row][col] = getHeuristicValue(row, col);
     }
 
     // After finding the expected winner and uncertainy (the second tuple) associated with a move (the first tuple), determine which one is better.
@@ -247,17 +292,17 @@ namespace LoganPenteAI {
         return 0.0;
       } else {
         int patternCurrent, patternOther;
-        foreach (Tuple<int, int, int, double> heuristic in HeuristicValues.getHeuristics()) {
-          if (getCurrentPlayer() == player_t.white) {
-            patternCurrent = heuristic.Item1;
-            patternOther = heuristic.Item2;
-          } else {
-            patternCurrent = heuristic.Item2;
-            patternOther = heuristic.Item1;
-          }
+        // Finds the largest absolute value. If the value is negative, then the guess is that the opponent wil win.
+        foreach (Tuple<int, int> window in getWindows(row, col)) {
+          foreach (Tuple<int, int, int, double> heuristic in HeuristicValues.getHeuristics()) {
+            if (getCurrentPlayer() == player_t.white) {
+              patternCurrent = heuristic.Item1;
+              patternOther = heuristic.Item2;
+            } else {
+              patternCurrent = heuristic.Item2;
+              patternOther = heuristic.Item1;
+            }
 
-          // Finds the largest absolute value. If the value is negative, then the guess is that the opponent wil win.
-          foreach (Tuple<int, int> window in getWindows(row, col)) {
             if (matchesPattern(window.Item1, window.Item2, patternCurrent, patternOther, heuristic.Item3)) {
               return heuristic.Item4;
             }
