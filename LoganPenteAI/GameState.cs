@@ -8,14 +8,11 @@ using CommonInterfaces;
 
 namespace LoganPenteAI {
   class GameState : Board {
-    private List<double[]> mHeuristicMap;
-    private int[] mInfluenceMapWhite;
-    private int[] mInfluenceMapBlack;
+    private Tuple<double, int>[][] mHeuristicMapCurrent;
+    private Tuple<double, int>[][] mHeuristicMapOther;
+    private int[] mInfluenceMap;
     private static int mPossitionsEvaluated;
-    private int[] mCaptureMapWhite;
-    private int[] mCaptureMapBlack;
-    private int[] mProximityMapWhite;
-    private int[] mProximityMapBlack;
+    private static int mBaseDepth;
 
     private readonly int PENALTY_PROXIMITY = 1;
     private readonly int PENALTY_NO_PROXIMITY = 3;
@@ -29,7 +26,7 @@ namespace LoganPenteAI {
     // recursion will occure.
     public GameState(Board board, int permittedExploreSteps) : base(board) {
       mPermittedExploreSteps = permittedExploreSteps;
-      initializeInfluenceMaps();
+      initializeMaps();
     }
 
     public GameState(GameState copyFrom) : base(copyFrom) {
@@ -46,25 +43,17 @@ namespace LoganPenteAI {
     }
 
     private void copyMaps(GameState copyFrom) {
-      mInfluenceMapWhite = new int[ROWS];
-      mInfluenceMapBlack = new int[ROWS];
-      mCaptureMapWhite = new int[ROWS];
-      mCaptureMapBlack = new int[ROWS];
-      mProximityMapWhite = new int[ROWS];
-      mProximityMapBlack = new int[ROWS];
-      mHeuristicMap = new List<double[]>();
+      mInfluenceMap = new int[ROWS];
+      mHeuristicMapCurrent = new Tuple<double, int>[ROWS][];
+      mHeuristicMapOther = new Tuple<double, int>[ROWS][];
 
       for (int row_dex = 0; row_dex < ROWS; row_dex++) {
-        mInfluenceMapWhite[row_dex] = copyFrom.mInfluenceMapWhite[row_dex];
-        mInfluenceMapBlack[row_dex] = copyFrom.mInfluenceMapBlack[row_dex];
-        mCaptureMapWhite[row_dex] = copyFrom.mCaptureMapWhite[row_dex];
-        mCaptureMapBlack[row_dex] = copyFrom.mCaptureMapBlack[row_dex];
-        mProximityMapWhite[row_dex] = copyFrom.mProximityMapWhite[row_dex];
-        mProximityMapBlack[row_dex] = copyFrom.mProximityMapBlack[row_dex];
-
-        mHeuristicMap.Add(new double[COLS]);
+        mInfluenceMap[row_dex] = copyFrom.mInfluenceMap[row_dex];
+        mHeuristicMapCurrent[row_dex] = new Tuple<double, int>[COLS];
+        mHeuristicMapOther[row_dex] = new Tuple<double, int>[COLS];
         for (int col_dex = 0; col_dex < COLS; col_dex++) {
-          mHeuristicMap[row_dex][col_dex] = copyFrom.mHeuristicMap[row_dex][col_dex];
+          mHeuristicMapCurrent[row_dex][col_dex] = copyFrom.mHeuristicMapCurrent[row_dex][col_dex];
+          mHeuristicMapOther[row_dex][col_dex] = copyFrom.mHeuristicMapOther[row_dex][col_dex];
         }
       }
     }
@@ -72,79 +61,94 @@ namespace LoganPenteAI {
     // This method triggers the minimax search. It should only be called externally.
     public Tuple<int, int> getBestMove() {
       Console.WriteLine(" > getBestMove()");
+      mBaseDepth = getMoveNumber();
       mPossitionsEvaluated = 0;
       Tuple<int, int> move = minimax().Item1;
       Console.WriteLine("Possitions evaluated: " + mPossitionsEvaluated);
       return move;
     }
 
-    private Tuple<Tuple<int, int>, double> minimax() {
+    private double totalHeuristic() {
+      double retval = 0.0;
+      for (int row_dex = 0; row_dex < ROWS; row_dex++) {
+        for (int col_dex = 0; col_dex < COLS; col_dex++) {
+          if (mHeuristicMapCurrent[row_dex][col_dex].Item2 == 0) {
+            return 1.0;
+          } else {
+            retval += mHeuristicMapCurrent[row_dex][col_dex].Item1;
+            retval -= mHeuristicMapOther[row_dex][col_dex].Item1;
+          }
+        }
+      }
+      return retval;
+    }
+
+    private Tuple<Tuple<int, int>, Tuple<double, int>> minimax() {
       GameState nextGamestate;
       mPossitionsEvaluated++;
+      int influenceCount = 0;
       if (mPossitionsEvaluated % 512 == 0) {
         Console.WriteLine(" > minimax(), evals: " + mPossitionsEvaluated);
       }
 
       if (getWinner() != player_t.neither) {
-        Console.WriteLine("terminal evaluated");
-        return Tuple.Create(Tuple.Create(-1, -1), (getWinner() == player_t.white) ? 1.0 : -1.0);
+        Console.WriteLine("terminal evaluated on move " + getMoveNumber());
+        double winnerVal = (getWinner() == player_t.white) ? 1.0 : -1.0;
+        Tuple<Tuple<int, int>, Tuple<double, int>> ret = new Tuple<Tuple<int, int>, Tuple<double, int>>(null, Tuple.Create(winnerVal, 0));
+        return ret;
       }
 
-      int[] influenceMap;
-      int[] captureMap;
-      int[] proximityMap;
-      if (getCurrentPlayer() == player_t.white) {
-        influenceMap = mInfluenceMapWhite;
-        captureMap = mCaptureMapWhite;
-        proximityMap = mProximityMapWhite;
-      } else {
-        influenceMap = mInfluenceMapBlack;
-        captureMap = mCaptureMapBlack;
-        proximityMap = mProximityMapBlack;
-      }
-
-      Tuple<Tuple<int, int>, double> champ = null;
-      Tuple<Tuple<int, int>, double> chump;
+      Tuple<Tuple<int, int>, Tuple<double, int>> champ = null;
+      Tuple<Tuple<int, int>, Tuple<double, int>> chump;
       Tuple<int, int> spot;
 
       for (int row_dex = 0; row_dex < ROWS; row_dex++) {
         for (int col_dex = 0; col_dex < COLS; col_dex++) {
-          int nextPermittedExploreSteps;
+          int nextPermittedExploreSteps = mPermittedExploreSteps - 1;
           if (!isLegal(row_dex, col_dex)) {
             continue;
           }
 
-          if (isOnMap(row_dex, col_dex, influenceMap) || isOnMap(row_dex, col_dex, captureMap)) {
+          /*
+          if (isOnMap(row_dex, col_dex, mInfluenceMap)) {
+            influenceCount++;
             if (mPermittedExploreSteps > 0) {
               nextPermittedExploreSteps = mPermittedExploreSteps - 1;
             } else {
               nextPermittedExploreSteps = mPermittedExploreSteps;
             }
-          } else if (isOnMap(row_dex, col_dex, proximityMap)) {
+          } else if (mHeuristicMapCurrent[row_dex][col_dex].Item2 == HeuristicValues.getProximityPriority()) {
             nextPermittedExploreSteps = mPermittedExploreSteps - PENALTY_PROXIMITY;
           } else {
             nextPermittedExploreSteps = mPermittedExploreSteps - PENALTY_NO_PROXIMITY;
+          }
+          */
+
+          if (champ != null && champ.Item2.Item1 == 1.0) {
+            return champ;
           }
 
           spot = Tuple.Create(row_dex, col_dex);
           if (nextPermittedExploreSteps >= 0) {
             nextGamestate = new GameState(this, row_dex, col_dex, nextPermittedExploreSteps);
-///////////
-            chump = Tuple.Create(spot, nextGamestate.minimax().Item2);
+            Tuple<Tuple<int, int>, Tuple<double, int>> recursedReturn = nextGamestate.minimax();
+            chump = Tuple.Create(spot, Tuple.Create(-1 * recursedReturn.Item2.Item1, recursedReturn.Item2.Item2));
           } else {
-            chump = Tuple.Create(spot, mHeuristicMap[row_dex][col_dex]);
-            if ((getCurrentPlayer() == player_t.white && isOnMap(row_dex, col_dex, mCaptureMapWhite)) ||
-                (getCurrentPlayer() == player_t.black && isOnMap(row_dex, col_dex, mCaptureMapBlack))) {
-              double captureValue = HeuristicValues.estimateQualityOfCapture(getCurrentPlayer(), getCaptures(player_t.white), getCaptures(player_t.black));
-              if (chump != null && captureValue > chump.Item2) {
-                chump = Tuple.Create(spot, captureValue);
-              }
-            }
+            chump = Tuple.Create(spot, Tuple.Create(totalHeuristic(), HeuristicValues.getProximityPriority() + 1));
           }
 
+          /*
+          if (champ != null && chump != null && champ.Item2.Item2 < 5 || chump.Item2.Item2 < 5) {
+            Console.WriteLine("champ: " + champ + ", chump: " + chump);
+          }
+          */
           champ = chooseBest(champ, chump);
+          if (champ.Item2.Item2 > chump.Item2.Item2) {
+            Console.WriteLine("!!!!!!!!!!!!!!!!????");
+          }
         }
       }
+      //Console.WriteLine("influenceCount: " + influenceCount + ", champ: " + champ);
       return champ;
     }
 
@@ -157,17 +161,14 @@ namespace LoganPenteAI {
     }
 
     // This function should (almost) never need to be called. Use updateMaps instead if possible.
-    private void initializeInfluenceMaps() {
-      mHeuristicMap = new List<double[]>();
-      mInfluenceMapWhite = new int[ROWS];
-      mInfluenceMapBlack = new int[ROWS];
-      mCaptureMapWhite = new int[ROWS];
-      mCaptureMapBlack = new int[ROWS];
-      mProximityMapWhite = new int[ROWS];
-      mProximityMapBlack = new int[ROWS];
+    private void initializeMaps() {
+      mHeuristicMapCurrent = new Tuple<double, int>[ROWS][];
+      mHeuristicMapOther = new Tuple<double, int>[ROWS][];
+      mInfluenceMap = new int[ROWS];
 
       for (int row_dex = 0; row_dex < ROWS; row_dex++) {
-        mHeuristicMap.Add(new double[COLS]);
+        mHeuristicMapCurrent[row_dex] = new Tuple<double, int>[COLS];
+        mHeuristicMapOther[row_dex] = new Tuple<double, int>[COLS];
         for (int col_dex = 0; col_dex < COLS; col_dex++) {
           updateMaps(row_dex, col_dex);
         }
@@ -175,87 +176,98 @@ namespace LoganPenteAI {
     }
 
     private void updateMaps(int row, int col) {
-      bool isProximity;
-      bool whiteProximity, blackProximity;
+      Tuple<double, int> champCurrent = null;
+      Tuple<double, int> chumpCurrent = null;
+      Tuple<double, int> champOther = null;
+      Tuple<double, int> chumpOther = null;
 
       foreach (Tuple<int, int> window in getWindows(row, col)) {
-        isProximity = false;
-        whiteProximity = false;
-        blackProximity = false;
-        // Proximity maps
-        foreach (Tuple<int, int, int, double> proximity in HeuristicValues.getProximity()) {
-          if (whiteProximity || (mProximityMapWhite[row] & COL_MASKS[col]) != 0) {
-            // Pass
-            whiteProximity = true;
-            if (blackProximity) {
-              break;
+        // Check all heuristic rules.
+        foreach (Tuple<Tuple<int, int, int>, Tuple<double, int>> heuristicPair in HeuristicValues.getHeuristics()) {
+          if (matchesPattern(getCurrentPlayer(), window, heuristicPair.Item1)) {
+            mInfluenceMap[row] |= COL_MASKS[col];
+
+            chumpCurrent = heuristicPair.Item2;
+            if (cmpHeuristics(chumpCurrent, champCurrent) >= 0) {
+              champCurrent = chumpCurrent;
             }
-          } else if (matchesPattern(windowWhite: window.Item1, windowBlack: window.Item2,
-                             patternWhite: proximity.Item1, patternBlack: proximity.Item2, patternIgnore: proximity.Item3)) {
-            mProximityMapWhite[row] |= COL_MASKS[col];
-            isProximity = true;
-            whiteProximity = true;
           }
 
-          if (blackProximity || (mProximityMapBlack[row] & COL_MASKS[col]) != 0) {
-            blackProximity = true;
-          } else if (matchesPattern(windowWhite: window.Item2, windowBlack: window.Item1,
-                             patternWhite: proximity.Item2, patternBlack: proximity.Item1, patternIgnore: proximity.Item3)) {
-            // Swapped black and white players
-            mProximityMapBlack[row] |= COL_MASKS[col];
-            isProximity = true;
-            blackProximity = true;
+          if (matchesPattern(getOtherPlayer(), window, heuristicPair.Item1)) {
+            mInfluenceMap[row] |= COL_MASKS[col];
+
+            chumpOther = heuristicPair.Item2;
+            if (cmpHeuristics(chumpOther, champOther) >= 0) {
+              champOther = chumpOther;
+            }
           }
         }
 
-        // Influence maps
-        foreach (Tuple<int, int, int, double> heuristic in HeuristicValues.getHeuristics()) {
-          if (whiteProximity && matchesPattern(windowWhite: window.Item1, windowBlack: window.Item2,
-                                               patternWhite: heuristic.Item1, patternBlack: heuristic.Item2, patternIgnore: heuristic.Item3)) {
-            mInfluenceMapWhite[row] |= COL_MASKS[col];
-            whiteProximity = true;
-          }
-          if (blackProximity && matchesPattern(windowWhite: window.Item2, windowBlack: window.Item1,
-                                               patternWhite: heuristic.Item2, patternBlack: heuristic.Item1, patternIgnore: heuristic.Item3)) {
-            // Swapped black and white players
-            mInfluenceMapBlack[row] |= COL_MASKS[col];
-            blackProximity = true;
-          }
+        // Check captures
+        if (matchesPattern(getCurrentPlayer(), window, HeuristicValues.getCaptureCheck())) {
+          mInfluenceMap[row] |= COL_MASKS[col];
 
-          if (whiteProximity && blackProximity) {
-            break;
+          chumpCurrent = HeuristicValues.estimateQualityOfCapture(getCurrentPlayer(), getCaptures(player_t.white), getCaptures(player_t.black));
+          if (cmpHeuristics(chumpCurrent, champCurrent) >= 0) {
+            champCurrent = chumpCurrent;
           }
         }
 
-        // Capture maps
-        Tuple<int, int, int> capturePattern = HeuristicValues.getCaptureCheck();
-        if (matchesPattern(windowWhite: window.Item1, windowBlack: window.Item2,
-                           patternWhite: capturePattern.Item1, patternBlack: capturePattern.Item2, patternIgnore: capturePattern.Item3)) {
-          mCaptureMapWhite[row] |= COL_MASKS[col];
-        }
-        // Swapped black and white
-        if (matchesPattern(windowWhite: window.Item2, windowBlack: window.Item1,
-                           patternWhite: capturePattern.Item2, patternBlack: capturePattern.Item1, patternIgnore: capturePattern.Item3)) {
-          mCaptureMapWhite[row] |= COL_MASKS[col];
-        }
+        if (matchesPattern(getOtherPlayer(), window, HeuristicValues.getCaptureCheck())) {
+          mInfluenceMap[row] |= COL_MASKS[col];
 
+          chumpOther = HeuristicValues.estimateQualityOfCapture(getOtherPlayer(), getCaptures(player_t.white), getCaptures(player_t.black));
+          if (cmpHeuristics(chumpOther, champOther) >= 0) {
+            champOther = chumpOther;
+          }
+        }
       }
-      mHeuristicMap[row][col] = getHeuristicValue(row, col);
+      if (champCurrent == null) {
+        mHeuristicMapCurrent[row][col] = Tuple.Create(0.0, HeuristicValues.getProximityPriority() + 1);
+      } else {
+        mHeuristicMapCurrent[row][col] = champCurrent;
+      }
+
+      if (champOther == null) {
+        mHeuristicMapOther[row][col] = Tuple.Create(0.0, HeuristicValues.getProximityPriority() + 1);
+      } else {
+        mHeuristicMapOther[row][col] = champOther;
+      }
     }
 
     // After finding the expected winner and uncertainy (the second tuple) associated with a move (the first tuple), determine which one is better.
-    private Tuple<Tuple<int, int>, double> chooseBest(Tuple<Tuple<int, int>, double> a, Tuple<Tuple<int, int>, double> b) {
+    private Tuple<Tuple<int, int>, Tuple<double, int>> chooseBest(Tuple<Tuple<int, int>, Tuple<double, int>> a,
+                                                                  Tuple<Tuple<int, int>, Tuple<double, int>> b) {
       if (a == null && b == null) {
         return null;
       } else if (a == null) {
         return b;
       } else if (b == null) {
         return a;
-      } else if (Math.Abs(a.Item2) > Math.Abs(b.Item2)) {
+      } else if (cmpHeuristics(a.Item2, b.Item2) >= 0) {
         return a;
       } else {
         return b;
       }
+    }
+
+    private int cmpHeuristics(Tuple<double, int> first, Tuple<double, int> second) {
+      if (first == null && second == null) {
+        return 0;
+      } else if (first == null) {
+        return -1;
+      } else if (second == null) {
+        return 1;
+      } else if (first.Item2 < second.Item2) {
+        return 1;
+      } else if (first.Item2 > first.Item2) {
+        return -1;
+      } else if (first.Item1 > second.Item1) {
+        return 1;
+      } else if (first.Item1 < second.Item1) {
+        return -1;
+      }
+      return 0;
     }
 
     public override bool move(int row, int col) {
@@ -265,6 +277,10 @@ namespace LoganPenteAI {
     }
 
     public void moveTriggeredMapsUpdate(int row, int col) {
+      Tuple<double, int>[][] swap = mHeuristicMapCurrent;
+      mHeuristicMapCurrent = mHeuristicMapOther;
+      mHeuristicMapOther = swap;
+
       List<Tuple<int, int>> directions = new List<Tuple<int, int>>();
       directions.Add(new Tuple<int, int>(0, 1));  // horizontal
       directions.Add(new Tuple<int, int>(1, 0));  // vertical
@@ -287,30 +303,22 @@ namespace LoganPenteAI {
     }
 
     // TODO, this doesn't check for captures.
-    public double getHeuristicValue(int row, int col) {
+    public Tuple<double, int> getHeuristicValue(int row, int col) {
       if (!isLegal(row, col)) {
-        return 0.0;
+        return Tuple.Create(0.0, HeuristicValues.getProximityPriority() + 1);
       } else {
         int patternCurrent, patternOther;
         // Finds the largest absolute value. If the value is negative, then the guess is that the opponent wil win.
         foreach (Tuple<int, int> window in getWindows(row, col)) {
-          foreach (Tuple<int, int, int, double> heuristic in HeuristicValues.getHeuristics()) {
-            if (getCurrentPlayer() == player_t.white) {
-              patternCurrent = heuristic.Item1;
-              patternOther = heuristic.Item2;
-            } else {
-              patternCurrent = heuristic.Item2;
-              patternOther = heuristic.Item1;
-            }
-
-            if (matchesPattern(window.Item1, window.Item2, patternCurrent, patternOther, heuristic.Item3)) {
-              return heuristic.Item4;
+          foreach (Tuple<Tuple<int, int, int>, Tuple<double, int>> heuristicPair in HeuristicValues.getHeuristics()) {
+            if (matchesPattern(getCurrentPlayer(), window, heuristicPair.Item1)) {
+              return heuristicPair.Item2;
             }
           }
         }
       }
 
-      return 0.0;
+      return Tuple.Create(0.0, HeuristicValues.getProximityPriority() + 1);
     }
   }
 }

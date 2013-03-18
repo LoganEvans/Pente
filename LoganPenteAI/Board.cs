@@ -76,7 +76,7 @@ namespace LoganPenteAI {
       directions.Add(new Tuple<int, int>(1, -1));  // back slash
 
       player_t current = getCurrentPlayer();
-      player_t other = getNonCurrentPlayer();
+      player_t other = getOtherPlayer();
 
       bool retval = false;
 
@@ -145,15 +145,19 @@ namespace LoganPenteAI {
       return windows;
     }
 
-    // patternLength should be an odd number
-    public bool matchesPattern(int windowWhite, int windowBlack,
-                               int patternWhite, int patternBlack, int patternIgnore) {
-      if (((windowWhite | patternIgnore) == (patternWhite | patternIgnore)) &&
-          ((windowBlack | patternIgnore) == (patternBlack | patternIgnore))) {
-        return true;
+    public bool matchesPattern(player_t currentPlayer, Tuple<int, int> window, Tuple<int, int, int> patternTrio) {
+      if (currentPlayer == player_t.white) {
+        if (((window.Item1 | patternTrio.Item3) == (patternTrio.Item1 | patternTrio.Item3)) &&
+            ((window.Item2 | patternTrio.Item3) == (patternTrio.Item2 | patternTrio.Item3))) {
+          return true;
+        }
       } else {
-        return false;
+        if (((window.Item1 | patternTrio.Item3) == (patternTrio.Item2 | patternTrio.Item3)) &&
+            ((window.Item2 | patternTrio.Item3) == (patternTrio.Item1 | patternTrio.Item3))) {
+          return true;
+        }
       }
+      return false;
     }
 
     // Specifies the row of the last move. This allows the method to shorten its
@@ -247,7 +251,7 @@ namespace LoganPenteAI {
       }
     }
 
-    public player_t getNonCurrentPlayer() {
+    public player_t getOtherPlayer() {
       if (mMoveNumber % 2 == 0) {
         return player_t.black;
       } else {
