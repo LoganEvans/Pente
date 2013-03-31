@@ -11,16 +11,8 @@ namespace LoganPenteAI {
   public class PlayerHuman : PlayerBase {
     private Board mBoard;
     private player_t mColor;
-    private AutoResetEvent waitOnClick;
-    private AutoResetEvent waitOnOpponent;
-
-    public PlayerHuman() {
-    }
-
-    public PlayerHuman(player_t color, Board board) {
-      mBoard = board;
-      mColor = color;
-    }
+    private AutoResetEvent mWaitOnClick;
+    private AutoResetEvent mWaitOnOpponent;
 
     public override void setBoard(BoardInterface board) {
       mBoard = new Board(board);
@@ -31,41 +23,41 @@ namespace LoganPenteAI {
     }
 
     public override void setOpponent(PlayerBase opponent) {
-      opponent.MoveTriggered += MoveTriggeredEventHandler_getOpponentMove;
+      opponent.MoveSelected += MoveSelectedEventHandler_getOpponentMove;
     }
 
-    public override void MoveTriggeredEventHandler_getOpponentMove(object sender, MoveTriggeredEventArgs args) {
+    public override void MoveSelectedEventHandler_getOpponentMove(object sender, MoveSelectedEventArgs args) {
       mBoard.move(args.row, args.col);
-      //Console.WriteLine(mColor + " Setting waitOnOpponent");
-      waitOnOpponent.Set();
+      //Console.WriteLine(mColor + " Setting mWaitOnOpponent");
+      mWaitOnOpponent.Set();
     }
 
-    public void setClickReceivedListener(Display display) {
-      display.ClickReceived += ClickReceivedEventHandler;
+    public void setMoveSelectedByClickListener(Display display) {
+      display.MoveSelectedByClick += MoveSelectedByClickEventHandler;
     }
 
-    public void ClickReceivedEventHandler(object sender, MoveTriggeredEventArgs args) {
+    public void MoveSelectedByClickEventHandler(object sender, MoveSelectedEventArgs args) {
       if (args.player == mColor) {
         mBoard.move(args.row, args.col);
-        OnMoveTriggered(args);
-        //Console.WriteLine(mColor + " Setting waitOnClick");
-        waitOnClick.Set();
+        OnMoveSelected(args);
+        //Console.WriteLine(mColor + " Setting mWaitOnClick");
+        mWaitOnClick.Set();
       }
     }
 
     public override void playerThread() {
       //Console.WriteLine(" > playerThread() " + mColor);
-      waitOnClick = new AutoResetEvent(false);
-      waitOnOpponent = new AutoResetEvent(false);
+      mWaitOnClick = new AutoResetEvent(false);
+      mWaitOnOpponent = new AutoResetEvent(false);
 
       while (mBoard.getWinner() == player_t.neither) {
         if (mBoard.getCurrentPlayer() == mColor) {
           //Console.WriteLine("(playerThread) " + mColor + " Waiting on click...");
-          waitOnClick.WaitOne();
+          mWaitOnClick.WaitOne();
           //Console.WriteLine("(playerThread) " + mColor + " Done waiting on click...");
         } else {
           //Console.WriteLine("(playerThread) " + mColor + " Waiting on opponent...");
-          waitOnOpponent.WaitOne();
+          mWaitOnOpponent.WaitOne();
           //Console.WriteLine("(playerThread) " + mColor + " Done waiting on opponent...");
         }
       }

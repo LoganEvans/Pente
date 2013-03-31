@@ -18,17 +18,15 @@ namespace LoganPenteAI {
     public const int COLS = 19;
     public const int PAD_H = 40;
     public const int PAD_W = 10;
-    private Board mBoard;
-    private PlayerBase mPlayerWhite;
-    private PlayerBase mPlayerBlack;
+    private BoardInterface mBoard;
 
-    public event EventHandler<MoveTriggeredEventArgs> ClickReceived;
+    public event EventHandler<MoveSelectedEventArgs> MoveSelectedByClick;
 
-    public Display(Board board, PlayerBase playerWhite, PlayerBase playerBlack) {
+    public Display(BoardInterface board, PlayerBase playerWhite, PlayerBase playerBlack) {
       InitializeComponent();
       setBoard(board);
-      playerWhite.MoveTriggered += MoveTriggeredEventHandler_whiteMoved;
-      playerBlack.MoveTriggered += MoveTriggeredEventHandler_blackMoved;
+      playerWhite.MoveSelected += MoveSelectedEventHandler;
+      playerBlack.MoveSelected += MoveSelectedEventHandler;
     }
 
     private void setText() {
@@ -37,15 +35,7 @@ namespace LoganPenteAI {
                   " Black captures: " + mBoard.getCaptures(player_t.black);
     }
 
-    public void MoveTriggeredEventHandler_whiteMoved(object sender, MoveTriggeredEventArgs args) {
-      setMove(args);
-    }
-
-    public void MoveTriggeredEventHandler_blackMoved(object sender, MoveTriggeredEventArgs args) {
-      setMove(args);
-    }
-
-    private void setMove(MoveTriggeredEventArgs args) {
+    public void MoveSelectedEventHandler(object sender, MoveSelectedEventArgs args) {
       mBoard.move(args.row, args.col);
       Invalidate();
       if (mBoard.getWinner() != player_t.neither) {
@@ -53,25 +43,21 @@ namespace LoganPenteAI {
       }
     }
 
-    private void setMoveForAll(Tuple<int, int> move) {
-      mBoard.move(move.Item1, move.Item2);
-    }
-
-    public void setBoard(Board board) {
+    public void setBoard(BoardInterface board) {
       mBoard = board;
     }
 
-    public Board getBoard() {
+    public BoardInterface getBoard() {
       return mBoard;
     }
 
     private void Display_Paint(object sender, PaintEventArgs e) {
       Graphics g = e.Graphics;
-      drawBoard(g);
+      drawBoardLines(g);
       drawStones(g);
     }
 
-    private void drawBoard(Graphics g) {
+    private void drawBoardLines(Graphics g) {
       setText();
       int pen_width = 2;
       int width = this.Size.Width;
@@ -125,7 +111,6 @@ namespace LoganPenteAI {
       int clicked_w = MousePosition.X - base_w - PAD_W;
       int region_w = delta_w / 4;
       int clicked_col;
-      //if (Math.Abs(clicked_w - region_w)
       if (Math.Abs((clicked_w % delta_w) - delta_w) < region_w) {
         // Clicked just to the left of the line.
         clicked_col = clicked_w / delta_w + 1;
@@ -155,15 +140,15 @@ namespace LoganPenteAI {
         return;
       }
 
-      MoveTriggeredEventArgs args = new MoveTriggeredEventArgs();
+      MoveSelectedEventArgs args = new MoveSelectedEventArgs();
       args.row = clicked_row;
       args.col = clicked_col;
       args.player = mBoard.getCurrentPlayer();
-      OnClickReceived(args);
+      OnMoveSelectedByClick(args);
     }
 
-    protected virtual void OnClickReceived(MoveTriggeredEventArgs args) {
-      EventHandler<MoveTriggeredEventArgs> handler = ClickReceived;
+    protected virtual void OnMoveSelectedByClick(MoveSelectedEventArgs args) {
+      EventHandler<MoveSelectedEventArgs> handler = MoveSelectedByClick;
       if (handler != null) {
         handler(this, args);
       }

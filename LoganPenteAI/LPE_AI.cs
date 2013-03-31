@@ -15,35 +15,31 @@ namespace LoganPenteAI {
       // TODO: It would be nice if the program could be threaded in a way that would allow the
       // Display class to handle display issues and the main thread to handle game control issues.
       // Read up on delegates and thread-safe multithreading.
-      Board board = new Board();
+      BoardInterface board = new Board();
 
       PlayerHuman pi1 = new PlayerHuman();
       //PlayerBase pi1 = new PlayerAI();
+      pi1.setBoard(board);
+      pi1.setColor(player_t.white);
 
       PlayerHuman pi2 = new PlayerHuman();
       //PlayerBase pi2 = new PlayerAI();
 
-      pi1.setBoard(board);
+      Display display = new Display(board, pi1, pi2);
+
+      // Comment out if a player is not a human.
+      pi1.setMoveSelectedByClickListener(display);
+      pi2.setMoveSelectedByClickListener(display);
+
       pi2.setBoard(board);
-      pi1.setColor(player_t.white);
       pi2.setColor(player_t.black);
+
       pi1.setOpponent(pi2);
       pi2.setOpponent(pi1);
 
       Thread pi1Thread = new Thread(pi1.playerThread);
-      Thread pi2Thread = new Thread(pi2.playerThread);
-
-      Display display = new Display(board, pi1, pi2);
-
-      if (pi1 is PlayerHuman) {
-        pi1.setClickReceivedListener(display);
-      }
-
-      if (pi2 is PlayerHuman) {
-        pi2.setClickReceivedListener(display);
-      }
-
       pi1Thread.Start();
+      Thread pi2Thread = new Thread(pi2.playerThread);
       pi2Thread.Start();
 
       Application.EnableVisualStyles();

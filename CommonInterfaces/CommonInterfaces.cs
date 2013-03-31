@@ -22,7 +22,7 @@ namespace CommonInterfaces {
     bool isLegal(int row, int col);
   }
 
-  public class MoveTriggeredEventArgs : EventArgs {
+  public class MoveSelectedEventArgs : EventArgs {
     public player_t player { get; set; }
     public int row { get; set; }
     public int col { get; set; }
@@ -35,17 +35,19 @@ namespace CommonInterfaces {
     public abstract void setBoard(BoardInterface board);
     public abstract void setColor(player_t color);
     public abstract void setOpponent(PlayerBase opponent);
+
+    // This should be the start of any processing done by this player.
     public abstract void playerThread();
 
-    public event EventHandler<MoveTriggeredEventArgs> MoveTriggered;
+    public event EventHandler<MoveSelectedEventArgs> MoveSelected;
 
-    protected virtual void OnMoveTriggered(MoveTriggeredEventArgs args) {
-      EventHandler<MoveTriggeredEventArgs> handler = MoveTriggered;
+    protected virtual void OnMoveSelected(MoveSelectedEventArgs args) {
+      EventHandler<MoveSelectedEventArgs> handler = MoveSelected;
       if (handler != null) {
         handler(this, args);
       }
     }
 
-    public abstract void MoveTriggeredEventHandler_getOpponentMove(object sender, MoveTriggeredEventArgs args);
+    public abstract void MoveSelectedEventHandler_getOpponentMove(object sender, MoveSelectedEventArgs args);
   }
 }

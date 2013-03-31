@@ -29,10 +29,10 @@ namespace LoganPenteAI {
     }
 
     public override void setOpponent(PlayerBase opponent) {
-      MoveTriggered += opponent.MoveTriggeredEventHandler_getOpponentMove;
+      MoveSelected += opponent.MoveSelectedEventHandler_getOpponentMove;
     }
 
-    public override void MoveTriggeredEventHandler_getOpponentMove(object sender, MoveTriggeredEventArgs args) {
+    public override void MoveSelectedEventHandler_getOpponentMove(object sender, MoveSelectedEventArgs args) {
       mGameState.move(args.row, args.col);
     }
 
