@@ -17,12 +17,20 @@ namespace LoganPenteAI {
       // Read up on delegates and thread-safe multithreading.
       Board board = new Board();
 
-      PlayerHuman pi1 = new PlayerHuman(player_t.white, board);
-      //PlayerBase pi1 = new PlayerAI(player_t.white, board);
-      Thread pi1Thread = new Thread(pi1.playerThread);
+      PlayerHuman pi1 = new PlayerHuman();
+      //PlayerBase pi1 = new PlayerAI();
 
-      PlayerHuman pi2 = new PlayerHuman(player_t.black, board);
-      //PlayerBase pi2 = new PlayerAI(player_t.black, board);
+      PlayerHuman pi2 = new PlayerHuman();
+      //PlayerBase pi2 = new PlayerAI();
+
+      pi1.setBoard(board);
+      pi2.setBoard(board);
+      pi1.setColor(player_t.white);
+      pi2.setColor(player_t.black);
+      pi1.setOpponent(pi2);
+      pi2.setOpponent(pi1);
+
+      Thread pi1Thread = new Thread(pi1.playerThread);
       Thread pi2Thread = new Thread(pi2.playerThread);
 
       Display display = new Display(board, pi1, pi2);

@@ -35,6 +35,17 @@ namespace LoganPenteAI {
     }
 
     public Board(BoardInterface copyFrom) {
+      mRowsWhite = new int[ROWS];
+      mRowsBlack = new int[ROWS];
+      for (int row_dex = 0; row_dex < ROWS; row_dex++) {
+        for (int col_dex = 0; col_dex < COLS; col_dex++) {
+          setSpot(row_dex, col_dex, copyFrom.getSpot(row_dex, col_dex));
+        }
+      }
+      mWinner = copyFrom.getWinner();
+      mMoveNumber = copyFrom.getMoveNumber();
+      mCapturesWhite = copyFrom.getCaptures(player_t.white);
+      mCapturesBlack = copyFrom.getCaptures(player_t.black);
     }
 
     public Board(Board copyFrom) {
@@ -286,6 +297,14 @@ namespace LoganPenteAI {
       }
 
       return true;
+    }
+
+    private void setSpot(int row, int col, player_t color) {
+      if (color == player_t.white) {
+        mRowsWhite[row] |= COL_MASKS[col];
+      } else if (color == player_t.black) {
+        mRowsBlack[row] |= COL_MASKS[col];
+      }
     }
   }
 }
