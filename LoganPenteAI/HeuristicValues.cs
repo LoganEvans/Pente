@@ -41,9 +41,9 @@ namespace LoganPenteAI {
       _heuristics.Add(Tuple.Create(Tuple.Create(0xf, 0x0, 0x1e0), Tuple.Create(mWin[0], 0)));  // 0bXXXX.1111
 
       // Block wins... generally a bad scenario
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0xf, 0x1e0), Tuple.Create(-mWin[1], 1)));  // 0bXXXX.2222
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x2e, 0x1c1), Tuple.Create(-mWin[1], 1)));  // 0bXXX2.222X
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x6c, 0x183), Tuple.Create(-mWin[1], 1)));  // 0bXX22.22XX
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0xf, 0x1e0), Tuple.Create(-(mWin[1] + delta), 1)));  // 0bXXXX.2222
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x2e, 0x1c1), Tuple.Create(-(mWin[1] + delta), 1)));  // 0bXXX2.222X
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x6c, 0x183), Tuple.Create(-(mWin[1] + delta), 1)));  // 0bXX22.22XX
 
       // Create a four (could win in one)... generally a good scenario
       // Note: An unblocked 3 is also listen on this level because it generally needs to be addressed
@@ -58,10 +58,10 @@ namespace LoganPenteAI {
       _heuristics.Add(Tuple.Create(Tuple.Create(0x160, 0x0, 0xf), Tuple.Create(mWin[1], 2)));  // 0b1011.XXXX
 
       // Block an unblocked 3 (Block any win in two) or capture... generally a bad (but not terrible) scenario
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0xb, 0x1e0), Tuple.Create(-mWin[2], 3)));  // 0bXXXX.2022
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0xd, 0x1e0), Tuple.Create(-mWin[2], 3)));  // 0bXXXX.2202
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x2c, 0x181), Tuple.Create(-mWin[2], 3)));  // 0bXX02.220X
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0xe, 0x1e0), Tuple.Create(-mWin[2], 3)));  // 0bXXXX.2220
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0xb, 0x1e0), Tuple.Create(-(mWin[2] - bigDelta), 3)));  // 0bXXXX.2022
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0xd, 0x1e0), Tuple.Create(-(mWin[2] - bigDelta), 3)));  // 0bXXXX.2202
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x2c, 0x181), Tuple.Create(-(mWin[2] - bigDelta), 3)));  // 0bXX02.220X
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0xe, 0x1e0), Tuple.Create(-(mWin[2] - bigDelta), 3)));  // 0bXXXX.2220
 
       // Set up a capture or set up an unblocked 3, or block a capture
       _heuristics.Add(Tuple.Create(Tuple.Create(0xc, 0x2, 0x1e1), Tuple.Create(mWin[2] + bigDelta / 2, 4)));  // 0bXXXX.112X

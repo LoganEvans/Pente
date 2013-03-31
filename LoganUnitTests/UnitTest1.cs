@@ -19,7 +19,10 @@ namespace LoganUnitTests {
       testBoard.move(10, 9);  // white
       testBoard.move(9, 13);  // black
 
-      Assert.AreEqual<Tuple<int, int>>(Tuple.Create(10, 9), new PlayerAI(player_t.white, testBoard).getMove());
+      Assert.IsTrue(testBoard.getWinner() == player_t.neither);
+      Tuple<int, int> move = new PlayerAI(player_t.white, testBoard).getMove();
+      testBoard.move(move.Item1, move.Item2);
+      Assert.IsFalse(testBoard.getWinner() == player_t.neither);
     }
   }
 }

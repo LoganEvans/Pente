@@ -33,7 +33,7 @@
       this.BackColor = System.Drawing.Color.Khaki;
       this.ClientSize = new System.Drawing.Size(684, 661);
       this.Name = "Display";
-      this.Text = "Display";
+      this.Text = "t";
       this.Click += new System.EventHandler(this.onClick);
       this.Paint += new System.Windows.Forms.PaintEventHandler(this.Display_Paint);
       this.ResumeLayout(false);

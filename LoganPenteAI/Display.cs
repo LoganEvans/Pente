@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -18,65 +19,42 @@ namespace LoganPenteAI {
     public const int PAD_H = 40;
     public const int PAD_W = 10;
     private Board mBoard;
-    private PlayerInterface mPlayerWhite;
-    private PlayerInterface mPlayerBlack;
+    private PlayerBase mPlayerWhite;
+    private PlayerBase mPlayerBlack;
 
-    /*
-    public Display() {
-      InitializeComponent();
-    }
+    public event EventHandler<MoveTriggeredEventArgs> ClickReceived;
 
-    public Display(Board board) {
+    public Display(Board board, PlayerBase playerWhite, PlayerBase playerBlack) {
       InitializeComponent();
       setBoard(board);
-    }
-    */
-
-    public Display(Board board, PlayerInterface playerWhite, PlayerInterface playerBlack) {
-      InitializeComponent();
-      setBoard(board);
-      mPlayerWhite = playerWhite;
-      mPlayerBlack = playerBlack;
-
-      gameLoop();
+      playerWhite.MoveTriggered += MoveTriggeredEventHandler_whiteMoved;
+      playerBlack.MoveTriggered += MoveTriggeredEventHandler_blackMoved;
     }
 
-    private void gameLoop() {
-      while (mBoard.getWinner() == player_t.neither) {
-        Console.WriteLine(" > gameLoop.loop... ");
-        Invalidate();
-        if (getBoard().getCurrentPlayer() == player_t.white &&
-            (mPlayerWhite is PlayerHuman)) {
-          // Wait for a mouse click.
-          Console.WriteLine("Player white (human)");
-          return;
-        } else if (getBoard().getCurrentPlayer() == player_t.black &&
-                   mPlayerBlack is PlayerHuman) {
-          // Again, wait for mouse click...
-          Console.WriteLine("Player black (human)");
-          return;
-        } else if (getBoard().getCurrentPlayer() == player_t.white) {
-          // White is an AI...
-          Tuple<int, int> move = mPlayerWhite.getMove();
-          Console.WriteLine("Player white (AI). move: " + move);
-          setMoveForAll(move);
-          //mPlayerBlack.setOpponentMove(move);
-        } else {
-          // Black is an AI...
-          Tuple<int, int> move = mPlayerBlack.getMove();
-          Console.WriteLine("Player black (AI). move: " + move);
-          setMoveForAll(move);
-          //mPlayerWhite.setOpponentMove(move);
-        }
-      }
+    private void setText() {
+      this.Text = "Pente -- Turn: " + mBoard.getMoveNumber() +
+                  " White captures: " + mBoard.getCaptures(player_t.white) +
+                  " Black captures: " + mBoard.getCaptures(player_t.black);
+    }
+
+    public void MoveTriggeredEventHandler_whiteMoved(object sender, MoveTriggeredEventArgs args) {
+      setMove(args);
+    }
+
+    public void MoveTriggeredEventHandler_blackMoved(object sender, MoveTriggeredEventArgs args) {
+      setMove(args);
+    }
+
+    private void setMove(MoveTriggeredEventArgs args) {
+      mBoard.move(args.row, args.col);
       Invalidate();
-      MessageBox.Show("Winner: " + getBoard().getWinner());
+      if (mBoard.getWinner() != player_t.neither) {
+        MessageBox.Show("Winner: " + mBoard.getWinner());
+      }
     }
 
     private void setMoveForAll(Tuple<int, int> move) {
       mBoard.move(move.Item1, move.Item2);
-      mPlayerWhite.setMove(move);
-      mPlayerBlack.setMove(move);
     }
 
     public void setBoard(Board board) {
@@ -94,6 +72,7 @@ namespace LoganPenteAI {
     }
 
     private void drawBoard(Graphics g) {
+      setText();
       int pen_width = 2;
       int width = this.Size.Width;
       int height = this.Size.Height;
@@ -140,24 +119,6 @@ namespace LoganPenteAI {
 
     // Handles the board click.
     private void onClick(object sender, EventArgs e) {
-      Tuple<int, int> spot = getClickedSpot();
-      if ((getBoard().getCurrentPlayer() == player_t.white && mPlayerWhite is PlayerHuman) ||
-          (getBoard().getCurrentPlayer() == player_t.black && mPlayerBlack is PlayerHuman)) {
-        if (spot == null) {
-          return;
-        } else {
-          //mPlayerWhite.setOpponentMove(spot);
-          //mPlayerBlack.setOpponentMove(spot);
-          Console.WriteLine("Human played at: " + spot);
-          setMoveForAll(spot);
-        }
-      }
-
-      gameLoop();
-    }
-
-    // Returns <row, col> or null
-    private Tuple<int, int> getClickedSpot() {
       int width = this.Size.Width;
       int base_w = this.PointToScreen(Point.Empty).X;
       int delta_w = (width - 2 * PAD_W) / (COLS - 1);
@@ -173,7 +134,7 @@ namespace LoganPenteAI {
         clicked_col = clicked_w / delta_w;
       } else {
         // Clicked too far away from the line.
-        return null;
+        return;
       }
 
       int height = this.Size.Height;
@@ -191,10 +152,21 @@ namespace LoganPenteAI {
         clicked_row = clicked_h / delta_h;
       } else {
         // Clicked too far away from the line.
-        return null;
+        return;
       }
 
-      return new Tuple<int, int>(clicked_row, clicked_col);
+      MoveTriggeredEventArgs args = new MoveTriggeredEventArgs();
+      args.row = clicked_row;
+      args.col = clicked_col;
+      args.player = mBoard.getCurrentPlayer();
+      OnClickReceived(args);
+    }
+
+    protected virtual void OnClickReceived(MoveTriggeredEventArgs args) {
+      EventHandler<MoveTriggeredEventArgs> handler = ClickReceived;
+      if (handler != null) {
+        handler(this, args);
+      }
     }
   }
 }

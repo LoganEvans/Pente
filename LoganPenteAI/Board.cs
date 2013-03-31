@@ -34,6 +34,9 @@ namespace LoganPenteAI {
       move(ROWS / 2, COLS / 2);
     }
 
+    public Board(BoardInterface copyFrom) {
+    }
+
     public Board(Board copyFrom) {
       mRowsWhite = new int[ROWS];
       mRowsBlack = new int[ROWS];
