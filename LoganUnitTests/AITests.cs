@@ -6,9 +6,10 @@ using LoganPenteAI;
 
 namespace LoganUnitTests {
   [TestClass]
-  public class UnitTest1 {
+  public class AITests {
     [TestMethod]
     public void test_getMove_shouldTakeWin() {
+      Assert.Fail();
       Board testBoard = new Board();
       // Default of (9, 9) for white
       testBoard.move(9, 10);  // black

@@ -195,7 +195,7 @@ namespace LoganPenteAI {
     }
 
     private bool isOnMap(int row, int col, int[] map) {
-      if ((map[row] & COL_MASKS[col]) != 0) {
+      if ((map[row] & SPOT_MASKS[col]) != 0) {
         return true;
       } else {
         return false;
@@ -227,7 +227,7 @@ namespace LoganPenteAI {
         // Check all heuristic rules.
         foreach (Tuple<Tuple<int, int, int>, Tuple<double, int>> heuristicPair in HeuristicValues.getHeuristics()) {
           if (matchesPattern(getCurrentPlayer(), window, heuristicPair.Item1)) {
-            mInfluenceMap[row] |= COL_MASKS[col];
+            mInfluenceMap[row] |= SPOT_MASKS[col];
 
             chumpCurrent = heuristicPair.Item2;
             if (cmpHeuristics(chumpCurrent, champCurrent) >= 0) {
@@ -236,7 +236,7 @@ namespace LoganPenteAI {
           }
 
           if (matchesPattern(getOtherPlayer(), window, heuristicPair.Item1)) {
-            mInfluenceMap[row] |= COL_MASKS[col];
+            mInfluenceMap[row] |= SPOT_MASKS[col];
 
             chumpOther = heuristicPair.Item2;
             if (cmpHeuristics(chumpOther, champOther) >= 0) {
@@ -247,7 +247,7 @@ namespace LoganPenteAI {
 
         // Check captures
         if (matchesPattern(getCurrentPlayer(), window, HeuristicValues.getCaptureCheck())) {
-          mInfluenceMap[row] |= COL_MASKS[col];
+          mInfluenceMap[row] |= SPOT_MASKS[col];
 
           chumpCurrent = HeuristicValues.estimateQualityOfCapture(getCurrentPlayer(), getCaptures(player_t.white), getCaptures(player_t.black));
           if (cmpHeuristics(chumpCurrent, champCurrent) >= 0) {
@@ -256,7 +256,7 @@ namespace LoganPenteAI {
         }
 
         if (matchesPattern(getOtherPlayer(), window, HeuristicValues.getCaptureCheck())) {
-          mInfluenceMap[row] |= COL_MASKS[col];
+          mInfluenceMap[row] |= SPOT_MASKS[col];
 
           chumpOther = HeuristicValues.estimateQualityOfCapture(getOtherPlayer(), getCaptures(player_t.white), getCaptures(player_t.black));
           if (cmpHeuristics(chumpOther, champOther) >= 0) {

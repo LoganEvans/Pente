@@ -121,7 +121,6 @@ namespace LoganPenteAI {
       List<Tuple<Tuple<int, int, int>, Tuple<double, int>>> reversed = new List<Tuple<Tuple<int, int, int>, Tuple<double, int>>>();
       int reversedPatternWhite, reversedPatternBlack, reversedPatternIgnore;
 
-      Board board = new Board();  // Used to reference COL_MASKS
       for (int i = 0; i < inputList.Count; i++) {
         foreach (Tuple<Tuple<int, int, int>, Tuple<double, int>> regular in inputList) {
           reversedPatternWhite = 0;
@@ -130,14 +129,14 @@ namespace LoganPenteAI {
 
           int index = 0;
           for (int bit_dex = 8; bit_dex >= 0; bit_dex--) {
-            if ((regular.Item1.Item1 & board.COL_MASKS[index]) != 0) {
-              reversedPatternWhite |= board.COL_MASKS[bit_dex];
+            if ((regular.Item1.Item1 & Board.SPOT_MASKS[index]) != 0) {
+              reversedPatternWhite |= Board.SPOT_MASKS[bit_dex];
             }
-            if ((regular.Item1.Item2 & board.COL_MASKS[index]) != 0) {
-              reversedPatternBlack |= board.COL_MASKS[bit_dex];
+            if ((regular.Item1.Item2 & Board.SPOT_MASKS[index]) != 0) {
+              reversedPatternBlack |= Board.SPOT_MASKS[bit_dex];
             }
-            if ((regular.Item1.Item3 & board.COL_MASKS[index]) != 0) {
-              reversedPatternIgnore |= board.COL_MASKS[bit_dex];
+            if ((regular.Item1.Item3 & Board.SPOT_MASKS[index]) != 0) {
+              reversedPatternIgnore |= Board.SPOT_MASKS[bit_dex];
             }
             index++;
           }

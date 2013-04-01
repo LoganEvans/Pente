@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 using CommonInterfaces;
 
@@ -11,14 +12,30 @@ namespace LoganPenteAI {
     public const int ROWS = 19;
     public const int COLS = 19;
     public const int ROW_MASK = 0x7FFFF;
-    public readonly int[] COL_MASKS = {0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80,
-                                       0x100, 0x200, 0x400, 0x800, 0x1000, 0x2000,
-                                       0x4000, 0x8000, 0x10000, 0x20000, 0x40000};
+    private const int DIAGONALS = ROWS + COLS - 1;
+    public static readonly int[] SPOT_MASKS = {0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80,
+                                               0x100, 0x200, 0x400, 0x800, 0x1000, 0x2000,
+                                               0x4000, 0x8000, 0x10000, 0x20000, 0x40000};
+    public const int WINDOW_MASK = 0x1FF;
+    private const int WINDOW_RADIUS = 4;
+    private static readonly Tuple<int, int, int> BACKWARD_CAPTURE_PATTERN = Tuple.Create(0x12, 0xc, 0x1e1);
+    private static readonly Tuple<int, int, int> FORWARD_CAPTURE_PATTERN = Tuple.Create(0x90, 0x60, 0x10f);
+    private const int ROW_WINDOW = 0;
+    private const int COL_WINDOW = 1;
+    private const int UP_DIAG_WINDOW = 2;
+    private const int DOWN_DIAG_WINDOW = 3;
 
     // Note: It is possible to fix the size of this by using a struct and an unsafe code block. It is possible
     // that doing so would greatly speed up code that deals with the board. Evaluate this.
     private int[] mRowsWhite;
     private int[] mRowsBlack;
+    private int[] mColsWhite;
+    private int[] mColsBlack;
+    private int[] mUpDiagWhite;
+    private int[] mUpDiagBlack;
+    private int[] mDownDiagWhite;
+    private int[] mDownDiagBlack;
+
     private player_t mWinner;
     private int mMoveNumber;
     private int mCapturesWhite;
@@ -27,6 +44,13 @@ namespace LoganPenteAI {
     public Board() {
       mRowsWhite = new int[ROWS];
       mRowsBlack = new int[ROWS];
+      mColsWhite = new int[ROWS];
+      mColsBlack = new int[ROWS];
+      mUpDiagWhite = new int[DIAGONALS];
+      mUpDiagBlack = new int[DIAGONALS];
+      mDownDiagWhite = new int[DIAGONALS];
+      mDownDiagBlack = new int[DIAGONALS];
+
       mWinner = player_t.neither;
       mMoveNumber = 0;
       mCapturesWhite = 0;
@@ -37,6 +61,12 @@ namespace LoganPenteAI {
     public Board(BoardInterface copyFrom) {
       mRowsWhite = new int[ROWS];
       mRowsBlack = new int[ROWS];
+      mColsWhite = new int[ROWS];
+      mColsBlack = new int[ROWS];
+      mUpDiagWhite = new int[DIAGONALS];
+      mUpDiagBlack = new int[DIAGONALS];
+      mDownDiagWhite = new int[DIAGONALS];
+      mDownDiagBlack = new int[DIAGONALS];
       for (int row_dex = 0; row_dex < ROWS; row_dex++) {
         for (int col_dex = 0; col_dex < COLS; col_dex++) {
           setSpot(row_dex, col_dex, copyFrom.getSpot(row_dex, col_dex));
@@ -51,14 +81,63 @@ namespace LoganPenteAI {
     public Board(Board copyFrom) {
       mRowsWhite = new int[ROWS];
       mRowsBlack = new int[ROWS];
+      mColsWhite = new int[ROWS];
+      mColsBlack = new int[ROWS];
+      mUpDiagWhite = new int[DIAGONALS];
+      mUpDiagBlack = new int[DIAGONALS];
+      mDownDiagWhite = new int[DIAGONALS];
+      mDownDiagBlack = new int[DIAGONALS];
+
       for (int i = 0; i < ROWS; i++) {
         mRowsWhite[i] = copyFrom.mRowsWhite[i];
         mRowsBlack[i] = copyFrom.mRowsBlack[i];
+        mColsWhite[i] = copyFrom.mColsWhite[i];
+        mColsBlack[i] = copyFrom.mColsBlack[i];
       }
+
+      for (int i = 0; i < DIAGONALS; i++) {
+        mUpDiagWhite[i] = copyFrom.mUpDiagWhite[i];
+        mUpDiagBlack[i] = copyFrom.mUpDiagBlack[i];
+        mDownDiagWhite[i] = copyFrom.mDownDiagWhite[i];
+        mDownDiagBlack[i] = copyFrom.mDownDiagBlack[i];
+      }
+
       mWinner = copyFrom.mWinner;
       mMoveNumber = copyFrom.mMoveNumber;
       mCapturesWhite = copyFrom.mCapturesWhite;
       mCapturesBlack = copyFrom.mCapturesBlack;
+    }
+
+    public Board(player_t nextPlayer, int capturesWhite, int capturesBlack, String boardStr) {
+      Debug.Assert(boardStr.Length == ROWS * COLS);
+      mCapturesWhite = capturesWhite;
+      mCapturesBlack = capturesBlack;
+      mWinner = player_t.neither;
+      mMoveNumber = (nextPlayer == player_t.white) ? 4 : 5;  // To avoid the rule on moves 0 and 2
+
+      mRowsWhite = new int[ROWS];
+      mRowsBlack = new int[ROWS];
+      mColsWhite = new int[ROWS];
+      mColsBlack = new int[ROWS];
+      mUpDiagWhite = new int[DIAGONALS];
+      mUpDiagBlack = new int[DIAGONALS];
+      mDownDiagWhite = new int[DIAGONALS];
+      mDownDiagBlack = new int[DIAGONALS];
+
+      player_t color;
+      for (int row_dex = 0; row_dex < ROWS; row_dex++) {
+        for (int col_dex = 0; col_dex < COLS; col_dex++) {
+          if (boardStr[row_dex * ROWS + col_dex] == 'W') {
+            color = player_t.white;
+          } else if (boardStr[row_dex * ROWS + col_dex] == 'B') {
+            color = player_t.black;
+          } else {
+            color = player_t.neither;
+          }
+
+          setSpot(row_dex, col_dex, color);
+        }
+      }
     }
 
     public virtual bool move(int row, int col) {
@@ -67,11 +146,7 @@ namespace LoganPenteAI {
       }
       player_t current_player = getCurrentPlayer();
 
-      if (current_player == player_t.white) {
-        mRowsWhite[row] |= COL_MASKS[col];
-      } else {
-        mRowsBlack[row] |= COL_MASKS[col];
-      }
+      setSpot(row, col, getCurrentPlayer());
 
       performCaptures(row, col);
       if (isGameOver(row, col)) {
@@ -82,81 +157,76 @@ namespace LoganPenteAI {
       return true;
     }
 
+    private void incrementPlayerCaptures(player_t color) {
+      if (color == player_t.white) {
+        mCapturesWhite++;
+      } else {
+        mCapturesBlack++;
+      }
+    }
+
     private bool performCaptures(int row, int col) {
-      List<Tuple<int, int>> directions = new List<Tuple<int, int>>();
-      directions.Add(new Tuple<int, int>(0, 1));  // horizontal
-      directions.Add(new Tuple<int, int>(1, 0));  // vertical
-      directions.Add(new Tuple<int, int>(1, 1));  // forward slash
-      directions.Add(new Tuple<int, int>(1, -1));  // back slash
+      Debug.Assert(ROW_WINDOW == 0);
+      Debug.Assert(COL_WINDOW == 1);
+      Debug.Assert(UP_DIAG_WINDOW == 2);
+      Debug.Assert(DOWN_DIAG_WINDOW == 3);
 
       player_t current = getCurrentPlayer();
-      player_t other = getOtherPlayer();
 
       bool retval = false;
+      List<Tuple<int, int>> windows = getWindows(row, col);
 
-      foreach (Tuple<int, int> direction in directions) {
-        for (int sign = 0; sign <= 1; sign++) {
-          int a = direction.Item1, b = direction.Item2;
-          if (sign == 1) {
-            a *= -1;
-            b *= -1;
-          }
+      var directions = new List<Tuple<int, int>>();
+      directions.Add(Tuple.Create(0, 1));  // by row
+      directions.Add(Tuple.Create(1, 0));  // by col
+      directions.Add(Tuple.Create(-1, 1));  // by up diag
+      directions.Add(Tuple.Create(1, 1));  // by down diag
 
-          if (getSpot(row + a, col + b) == other &&
-              getSpot(row + a + a, col + b + b) == other &&
-              getSpot(row + a + a + a, col + b + b + b) == current) {
-            retval = true;
-            if (current == player_t.white) {
-              mRowsBlack[row + a] &= (~COL_MASKS[col + b]);
-              mRowsBlack[row + a + a] &= (~COL_MASKS[col + b + b]);
-              mCapturesWhite++;
-            } else {
-              mRowsWhite[row + a] &= (~COL_MASKS[col + b]);
-              mRowsWhite[row + a + a] &= (~COL_MASKS[col + b + b]);
-              mCapturesBlack++;
-            }
-          }
+      for (int i = 0; i < directions.Count; i++) {
+        if (matchesPattern(current, windows[i], FORWARD_CAPTURE_PATTERN)) {
+          setSpot(row + directions[i].Item1, col + directions[i].Item2, player_t.neither);
+          setSpot(row + 2 * directions[i].Item1, col + 2 * directions[i].Item2, player_t.neither);
+          incrementPlayerCaptures(current);
+          retval = true;
+        }
+
+        if (matchesPattern(current, windows[i], BACKWARD_CAPTURE_PATTERN)) {
+          setSpot(row - directions[i].Item1, col - directions[i].Item2, player_t.neither);
+          setSpot(row - 2 * directions[i].Item1, col - 2 * directions[i].Item2, player_t.neither);
+          incrementPlayerCaptures(current);
+          retval = true;
         }
       }
 
       return retval;
     }
 
-    public List<Tuple<int, int> > getWindows(int row, int col) {
-      List<Tuple<int, int>> windows = new List<Tuple<int, int>>();
-      List<Tuple<int, int>> directions = new List<Tuple<int, int>>();
-      directions.Add(new Tuple<int, int>(0, 1));  // horizontal
-      directions.Add(new Tuple<int, int>(1, 0));  // vertical
-      directions.Add(new Tuple<int, int>(1, 1));  // forward slash
-      directions.Add(new Tuple<int, int>(1, -1));  // back slash
+    public List<Tuple<int, int>> getWindows(int row, int col) {
+      Debug.Assert(ROW_WINDOW == 0);
+      Debug.Assert(COL_WINDOW == 1);
+      Debug.Assert(UP_DIAG_WINDOW == 2);
+      Debug.Assert(DOWN_DIAG_WINDOW == 3);
 
-      int index = 0;
-      foreach (Tuple<int, int> direction in directions) {
-        int windowWhite = 0;
-        int windowBlack = 0;
-        int inspectedCol;
-        int inspectedRow;
-        index = 0;
+      var retval = new List<Tuple<int, int>>();
+      int whiteRow, blackRow, whiteCol, blackCol, whiteUpDiag, blackUpDiag, whiteDownDiag, blackDownDiag;
 
-        for (int i = -4; i <= 4; i++) {
-          inspectedCol = col + (direction.Item1 * i);
-          inspectedRow = row + (direction.Item2 * i);
+      whiteRow = ((mRowsWhite[row] << WINDOW_RADIUS) >> col) & WINDOW_MASK;
+      blackRow = ((mRowsBlack[row] << WINDOW_RADIUS) >> col) & WINDOW_MASK;
+      retval.Add(Tuple.Create(whiteRow, blackRow));  // ROW_WINDOW == 0
 
-          if (0 <= inspectedRow && inspectedRow < ROWS && 0 <= inspectedCol && inspectedCol < COLS) {
-            if ((mRowsWhite[inspectedRow] & COL_MASKS[inspectedCol]) != 0) {
-              windowWhite |= COL_MASKS[index];
-            }
+      whiteCol = ((mColsWhite[col] << WINDOW_RADIUS) >> row) & WINDOW_MASK;
+      blackCol = ((mColsBlack[col] << WINDOW_RADIUS) >> row) & WINDOW_MASK;
+      retval.Add(Tuple.Create(whiteCol, blackCol));  // COL_WINDOW == 1
 
-            if ((mRowsBlack[inspectedRow] & COL_MASKS[inspectedCol]) != 0) {
-              windowBlack |= COL_MASKS[index];
-            }
-          }
+      whiteUpDiag = ((mUpDiagWhite[upDiagIndex(row, col)] << WINDOW_RADIUS) >> col) & WINDOW_MASK;
+      blackUpDiag = ((mUpDiagBlack[upDiagIndex(row, col)] << WINDOW_RADIUS) >> col) & WINDOW_MASK;
+      retval.Add(Tuple.Create(whiteUpDiag, blackUpDiag));  // UP_DIAG_WINDOW == 2
 
-          index++;
-        }
-        windows.Add(new Tuple<int, int>(windowWhite, windowBlack));
-      }
-      return windows;
+      whiteDownDiag = ((mDownDiagWhite[downDiagIndex(row, col)] << WINDOW_RADIUS) >> col) & WINDOW_MASK;
+      blackDownDiag = ((mDownDiagBlack[downDiagIndex(row, col)] << WINDOW_RADIUS) >> col) & WINDOW_MASK;
+      retval.Add(Tuple.Create(whiteDownDiag, blackDownDiag));  // DOWN_DIAG_WINDOW == 3
+
+      return retval;
     }
 
     public bool matchesPattern(player_t currentPlayer, Tuple<int, int> window, Tuple<int, int, int> patternTrio) {
@@ -189,40 +259,9 @@ namespace LoganPenteAI {
         return true;
       }
 
-      // Strategy: Construct 4 numbers that each represent 9 spots on the board. Then, perform bit shifts on
-      // the numbers to see if 5 adjacent ones are set.
-      int[] boardRows;
-      if (getCurrentPlayer() == player_t.white) {
-        boardRows = mRowsWhite;
-      } else {
-        boardRows = mRowsBlack;
-      }
-
-      List<Tuple<int, int>> directions = new List<Tuple<int, int>>();
-      directions.Add(new Tuple<int, int>(0, 1));  // horizontal
-      directions.Add(new Tuple<int, int>(1, 0));  // vertical
-      directions.Add(new Tuple<int, int>(1, 1));  // forward slash
-      directions.Add(new Tuple<int, int>(1, -1));  // back slash
-
-      foreach (Tuple<int, int> direction in directions) {
-        int window = 0;
-        int inspectedCol;
-        int inspectedRow;
-        int index = 0;
-        for (int i = -4; i <= 4; i++) {
-          inspectedCol = col + (direction.Item1 * i);
-          inspectedRow = row + (direction.Item2 * i);
-
-          if (0 <= inspectedRow && inspectedRow < ROWS && 0 <= inspectedCol && inspectedCol < COLS) {
-            if ((boardRows[inspectedRow] & COL_MASKS[inspectedCol]) != 0) {
-              window |= COL_MASKS[index];
-            }
-          }
-
-          index++;
-        }
-
-        if ((window & (window << 1) & (window << 2) & (window << 3) & (window << 4)) != 0) {
+      foreach (Tuple<int, int> window in getWindows(row, col)) {
+        int currentWindow = (getCurrentPlayer() == player_t.white) ? window.Item1 : window.Item2;
+        if ((currentWindow & (currentWindow << 1) & (currentWindow << 2) & (currentWindow << 3) & (currentWindow << 4)) != 0) {
           return true;
         }
       }
@@ -232,9 +271,9 @@ namespace LoganPenteAI {
 
     public player_t getSpot(int row, int col) {
       if (0 <= row && row < ROWS && 0 <= col && col < COLS) {
-        if ((mRowsWhite[row] & COL_MASKS[col]) != 0) {
+        if ((mRowsWhite[row] & SPOT_MASKS[col]) != 0) {
           return player_t.white;
-        } else if ((mRowsBlack[row] & COL_MASKS[col]) != 0) {
+        } else if ((mRowsBlack[row] & SPOT_MASKS[col]) != 0) {
           return player_t.black;
         } else {
           return player_t.neither;
@@ -251,7 +290,6 @@ namespace LoganPenteAI {
         return mCapturesBlack;
       }
     }
-
 
     public int getMoveNumber() {
       return mMoveNumber;
@@ -291,8 +329,8 @@ namespace LoganPenteAI {
         return false;
       }
 
-      if ((mRowsWhite[row] & COL_MASKS[col]) != 0 ||
-          (mRowsBlack[row] & COL_MASKS[col]) != 0) {
+      if ((mRowsWhite[row] & SPOT_MASKS[col]) != 0 ||
+          (mRowsBlack[row] & SPOT_MASKS[col]) != 0) {
         return false;
       }
 
@@ -301,10 +339,36 @@ namespace LoganPenteAI {
 
     private void setSpot(int row, int col, player_t color) {
       if (color == player_t.white) {
-        mRowsWhite[row] |= COL_MASKS[col];
+        mRowsWhite[row] |= SPOT_MASKS[col];
+        mColsWhite[col] |= SPOT_MASKS[row];
+        mUpDiagWhite[upDiagIndex(row, col)] |= SPOT_MASKS[col];
+        mDownDiagWhite[downDiagIndex(row, col)] |= SPOT_MASKS[col];
       } else if (color == player_t.black) {
-        mRowsBlack[row] |= COL_MASKS[col];
+        mRowsBlack[row] |= SPOT_MASKS[col];
+        mColsBlack[col] |= SPOT_MASKS[row];
+        mUpDiagBlack[upDiagIndex(row, col)] |= SPOT_MASKS[col];
+        mDownDiagBlack[downDiagIndex(row, col)] |= SPOT_MASKS[col];
+      } else {
+        mRowsWhite[row] &= (~SPOT_MASKS[col]);
+        mRowsBlack[row] &= (~SPOT_MASKS[col]);
+
+        mColsWhite[col] &= (~SPOT_MASKS[row]);
+        mColsBlack[col] &= (~SPOT_MASKS[row]);
+
+        mUpDiagWhite[upDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
+        mUpDiagBlack[upDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
+
+        mDownDiagWhite[downDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
+        mDownDiagBlack[downDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
       }
+    }
+
+    private static int upDiagIndex(int row, int col) {
+      return row + col;
+    }
+
+    private static int downDiagIndex(int row, int col) {
+      return row - col + COLS - 1;
     }
   }
 }
