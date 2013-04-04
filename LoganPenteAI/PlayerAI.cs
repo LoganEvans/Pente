@@ -9,46 +9,46 @@ using CommonInterfaces;
 namespace LoganPenteAI {
   public class PlayerAI : PlayerBase {
     private GameState mGameState;
-    private player_t mColor;
+    private Player mColor;
     private const int LOOKAHEAD = 2;
 
     public PlayerAI() {
     }
 
-    public PlayerAI(player_t color, Board board) {
-      setBoard(board);
-      setColor(color);
+    public PlayerAI(Player color, Board board) {
+      SetBoard(board);
+      SetColor(color);
     }
 
-    public override void setBoard(BoardInterface board) {
+    public override void SetBoard(BoardInterface board) {
       mGameState = new GameState(board, LOOKAHEAD);
     }
 
-    public override void setColor(player_t color) {
+    public override void SetColor(Player color) {
       mColor = color;
     }
 
-    public override void setOpponent(PlayerBase opponent) {
-      MoveSelected += opponent.MoveSelectedEventHandler_getOpponentMove;
+    public override void SetOpponent(PlayerBase opponent) {
+      MoveSelected += opponent.MoveSelectedEventHandler_GetOpponentMove;
     }
 
-    public override void MoveSelectedEventHandler_getOpponentMove(object sender, MoveSelectedEventArgs args) {
-      mGameState.move(args.row, args.col);
+    public override void MoveSelectedEventHandler_GetOpponentMove(object sender, MoveSelectedEventArgs args) {
+      mGameState.Move(args.row, args.col);
     }
 
     // The order of the Tuple is <row, col>
-    public Tuple<int, int> getMove() {
-      Tuple<int, int> move = mGameState.getBestMove();
-      Console.WriteLine("move number: " + mGameState.getMoveNumber() + " color: " + mColor + ", best move: " + move);
+    public Tuple<int, int> GetMove() {
+      Tuple<int, int> move = mGameState.GetBestMove();
+      Console.WriteLine("move number: " + mGameState.GetMoveNumber() + " color: " + mColor + ", best move: " + move);
       return move;
     }
 
-    public void setMove(Tuple<int, int> move) {
+    public void SetMove(Tuple<int, int> move) {
       //Console.WriteLine(" > setOpponentMove(" + move + ") for AI " + mColor);
-      mGameState.move(move.Item1, move.Item2);
+      mGameState.Move(move.Item1, move.Item2);
     }
 
-    public override void playerThread() {
+    public override void PlayerThread() {
     }
   }
 }

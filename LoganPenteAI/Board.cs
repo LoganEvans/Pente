@@ -36,7 +36,7 @@ namespace LoganPenteAI {
     private int[] mDownDiagWhite;
     private int[] mDownDiagBlack;
 
-    private player_t mWinner;
+    private Player mWinner;
     private int mMoveNumber;
     private int mCapturesWhite;
     private int mCapturesBlack;
@@ -51,11 +51,11 @@ namespace LoganPenteAI {
       mDownDiagWhite = new int[DIAGONALS];
       mDownDiagBlack = new int[DIAGONALS];
 
-      mWinner = player_t.neither;
+      mWinner = Player.Neither;
       mMoveNumber = 0;
       mCapturesWhite = 0;
       mCapturesBlack = 0;
-      move(ROWS / 2, COLS / 2);
+      Move(ROWS / 2, COLS / 2);
     }
 
     public Board(BoardInterface copyFrom) {
@@ -69,13 +69,13 @@ namespace LoganPenteAI {
       mDownDiagBlack = new int[DIAGONALS];
       for (int row_dex = 0; row_dex < ROWS; row_dex++) {
         for (int col_dex = 0; col_dex < COLS; col_dex++) {
-          setSpot(row_dex, col_dex, copyFrom.getSpot(row_dex, col_dex));
+          SetSpot(row_dex, col_dex, copyFrom.GetSpot(row_dex, col_dex));
         }
       }
-      mWinner = copyFrom.getWinner();
-      mMoveNumber = copyFrom.getMoveNumber();
-      mCapturesWhite = copyFrom.getCaptures(player_t.white);
-      mCapturesBlack = copyFrom.getCaptures(player_t.black);
+      mWinner = copyFrom.GetWinner();
+      mMoveNumber = copyFrom.GetMoveNumber();
+      mCapturesWhite = copyFrom.GetCaptures(Player.White);
+      mCapturesBlack = copyFrom.GetCaptures(Player.Black);
     }
 
     public Board(Board copyFrom) {
@@ -108,12 +108,12 @@ namespace LoganPenteAI {
       mCapturesBlack = copyFrom.mCapturesBlack;
     }
 
-    public Board(player_t nextPlayer, int capturesWhite, int capturesBlack, String boardStr) {
+    public Board(Player nextPlayer, int capturesWhite, int capturesBlack, String boardStr) {
       Debug.Assert(boardStr.Length == ROWS * COLS);
       mCapturesWhite = capturesWhite;
       mCapturesBlack = capturesBlack;
-      mWinner = player_t.neither;
-      mMoveNumber = (nextPlayer == player_t.white) ? 4 : 5;  // To avoid the rule on moves 0 and 2
+      mWinner = Player.Neither;
+      mMoveNumber = (nextPlayer == Player.White) ? 4 : 5;  // To avoid the rule on moves 0 and 2
 
       mRowsWhite = new int[ROWS];
       mRowsBlack = new int[ROWS];
@@ -124,32 +124,32 @@ namespace LoganPenteAI {
       mDownDiagWhite = new int[DIAGONALS];
       mDownDiagBlack = new int[DIAGONALS];
 
-      player_t color;
+      Player color;
       for (int row_dex = 0; row_dex < ROWS; row_dex++) {
         for (int col_dex = 0; col_dex < COLS; col_dex++) {
           if (boardStr[row_dex * ROWS + col_dex] == 'W') {
-            color = player_t.white;
+            color = Player.White;
           } else if (boardStr[row_dex * ROWS + col_dex] == 'B') {
-            color = player_t.black;
+            color = Player.Black;
           } else {
-            color = player_t.neither;
+            color = Player.Neither;
           }
 
-          setSpot(row_dex, col_dex, color);
+          SetSpot(row_dex, col_dex, color);
         }
       }
     }
 
-    public virtual bool move(int row, int col) {
-      if (!isLegal(row, col)) {
+    public virtual bool Move(int row, int col) {
+      if (!IsLegal(row, col)) {
         return false;
       }
-      player_t current_player = getCurrentPlayer();
+      Player current_player = GetCurrentPlayer();
 
-      setSpot(row, col, getCurrentPlayer());
+      SetSpot(row, col, GetCurrentPlayer());
 
-      performCaptures(row, col);
-      if (isGameOver(row, col)) {
+      PerformCaptures(row, col);
+      if (IsGameOver(row, col)) {
         mWinner = current_player;
       }
       mMoveNumber++;
@@ -157,24 +157,24 @@ namespace LoganPenteAI {
       return true;
     }
 
-    private void incrementPlayerCaptures(player_t color) {
-      if (color == player_t.white) {
+    private void IncrementPlayerCaptures(Player color) {
+      if (color == Player.White) {
         mCapturesWhite++;
       } else {
         mCapturesBlack++;
       }
     }
 
-    private bool performCaptures(int row, int col) {
+    private bool PerformCaptures(int row, int col) {
       Debug.Assert(ROW_WINDOW == 0);
       Debug.Assert(COL_WINDOW == 1);
       Debug.Assert(UP_DIAG_WINDOW == 2);
       Debug.Assert(DOWN_DIAG_WINDOW == 3);
 
-      player_t current = getCurrentPlayer();
+      Player current = GetCurrentPlayer();
 
       bool retval = false;
-      List<Tuple<int, int>> windows = getWindows(row, col);
+      List<Tuple<int, int>> windows = GetWindows(row, col);
 
       var directions = new List<Tuple<int, int>>();
       directions.Add(Tuple.Create(0, 1));  // by row
@@ -183,17 +183,17 @@ namespace LoganPenteAI {
       directions.Add(Tuple.Create(1, 1));  // by down diag
 
       for (int i = 0; i < directions.Count; i++) {
-        if (matchesPattern(current, windows[i], FORWARD_CAPTURE_PATTERN)) {
-          setSpot(row + directions[i].Item1, col + directions[i].Item2, player_t.neither);
-          setSpot(row + 2 * directions[i].Item1, col + 2 * directions[i].Item2, player_t.neither);
-          incrementPlayerCaptures(current);
+        if (MatchesPattern(current, windows[i], FORWARD_CAPTURE_PATTERN)) {
+          SetSpot(row + directions[i].Item1, col + directions[i].Item2, Player.Neither);
+          SetSpot(row + 2 * directions[i].Item1, col + 2 * directions[i].Item2, Player.Neither);
+          IncrementPlayerCaptures(current);
           retval = true;
         }
 
-        if (matchesPattern(current, windows[i], BACKWARD_CAPTURE_PATTERN)) {
-          setSpot(row - directions[i].Item1, col - directions[i].Item2, player_t.neither);
-          setSpot(row - 2 * directions[i].Item1, col - 2 * directions[i].Item2, player_t.neither);
-          incrementPlayerCaptures(current);
+        if (MatchesPattern(current, windows[i], BACKWARD_CAPTURE_PATTERN)) {
+          SetSpot(row - directions[i].Item1, col - directions[i].Item2, Player.Neither);
+          SetSpot(row - 2 * directions[i].Item1, col - 2 * directions[i].Item2, Player.Neither);
+          IncrementPlayerCaptures(current);
           retval = true;
         }
       }
@@ -201,7 +201,7 @@ namespace LoganPenteAI {
       return retval;
     }
 
-    public List<Tuple<int, int>> getWindows(int row, int col) {
+    public List<Tuple<int, int>> GetWindows(int row, int col) {
       Debug.Assert(ROW_WINDOW == 0);
       Debug.Assert(COL_WINDOW == 1);
       Debug.Assert(UP_DIAG_WINDOW == 2);
@@ -218,19 +218,19 @@ namespace LoganPenteAI {
       blackCol = ((mColsBlack[col] << WINDOW_RADIUS) >> row) & WINDOW_MASK;
       retval.Add(Tuple.Create(whiteCol, blackCol));  // COL_WINDOW == 1
 
-      whiteUpDiag = ((mUpDiagWhite[upDiagIndex(row, col)] << WINDOW_RADIUS) >> col) & WINDOW_MASK;
-      blackUpDiag = ((mUpDiagBlack[upDiagIndex(row, col)] << WINDOW_RADIUS) >> col) & WINDOW_MASK;
+      whiteUpDiag = ((mUpDiagWhite[UpDiagIndex(row, col)] << WINDOW_RADIUS) >> col) & WINDOW_MASK;
+      blackUpDiag = ((mUpDiagBlack[UpDiagIndex(row, col)] << WINDOW_RADIUS) >> col) & WINDOW_MASK;
       retval.Add(Tuple.Create(whiteUpDiag, blackUpDiag));  // UP_DIAG_WINDOW == 2
 
-      whiteDownDiag = ((mDownDiagWhite[downDiagIndex(row, col)] << WINDOW_RADIUS) >> col) & WINDOW_MASK;
-      blackDownDiag = ((mDownDiagBlack[downDiagIndex(row, col)] << WINDOW_RADIUS) >> col) & WINDOW_MASK;
+      whiteDownDiag = ((mDownDiagWhite[DownDiagIndex(row, col)] << WINDOW_RADIUS) >> col) & WINDOW_MASK;
+      blackDownDiag = ((mDownDiagBlack[DownDiagIndex(row, col)] << WINDOW_RADIUS) >> col) & WINDOW_MASK;
       retval.Add(Tuple.Create(whiteDownDiag, blackDownDiag));  // DOWN_DIAG_WINDOW == 3
 
       return retval;
     }
 
-    public bool matchesPattern(player_t currentPlayer, Tuple<int, int> window, Tuple<int, int, int> patternTrio) {
-      if (currentPlayer == player_t.white) {
+    public bool MatchesPattern(Player currentPlayer, Tuple<int, int> window, Tuple<int, int, int> patternTrio) {
+      if (currentPlayer == Player.White) {
         if (((window.Item1 | patternTrio.Item3) == (patternTrio.Item1 | patternTrio.Item3)) &&
             ((window.Item2 | patternTrio.Item3) == (patternTrio.Item2 | patternTrio.Item3))) {
           return true;
@@ -246,8 +246,8 @@ namespace LoganPenteAI {
 
     // Specifies the row of the last move. This allows the method to shorten its
     // check for a game over.
-    private bool isGameOver(int row, int col) {
-      if (getWinner() != player_t.neither) {
+    private bool IsGameOver(int row, int col) {
+      if (GetWinner() != Player.Neither) {
         return true;
       }
 
@@ -259,8 +259,8 @@ namespace LoganPenteAI {
         return true;
       }
 
-      foreach (Tuple<int, int> window in getWindows(row, col)) {
-        int currentWindow = (getCurrentPlayer() == player_t.white) ? window.Item1 : window.Item2;
+      foreach (Tuple<int, int> window in GetWindows(row, col)) {
+        int currentWindow = (GetCurrentPlayer() == Player.White) ? window.Item1 : window.Item2;
         if ((currentWindow & (currentWindow << 1) & (currentWindow << 2) & (currentWindow << 3) & (currentWindow << 4)) != 0) {
           return true;
         }
@@ -269,54 +269,54 @@ namespace LoganPenteAI {
       return false;
     }
 
-    public player_t getSpot(int row, int col) {
+    public Player GetSpot(int row, int col) {
       if (0 <= row && row < ROWS && 0 <= col && col < COLS) {
         if ((mRowsWhite[row] & SPOT_MASKS[col]) != 0) {
-          return player_t.white;
+          return Player.White;
         } else if ((mRowsBlack[row] & SPOT_MASKS[col]) != 0) {
-          return player_t.black;
+          return Player.Black;
         } else {
-          return player_t.neither;
+          return Player.Neither;
         }
       } else {
-        return player_t.neither;
+        return Player.Neither;
       }
     }
 
-    public int getCaptures(player_t player) {
-      if (player == player_t.white) {
+    public int GetCaptures(Player player) {
+      if (player == Player.White) {
         return mCapturesWhite;
       } else {
         return mCapturesBlack;
       }
     }
 
-    public int getMoveNumber() {
+    public int GetMoveNumber() {
       return mMoveNumber;
     }
 
-    public player_t getCurrentPlayer() {
+    public Player GetCurrentPlayer() {
       if (mMoveNumber % 2 == 0) {
-        return player_t.white;
+        return Player.White;
       } else {
-        return player_t.black;
+        return Player.Black;
       }
     }
 
-    public player_t getOtherPlayer() {
+    public Player getOtherPlayer() {
       if (mMoveNumber % 2 == 0) {
-        return player_t.black;
+        return Player.Black;
       } else {
-        return player_t.white;
+        return Player.White;
       }
     }
 
-    // if the return value is player_t.neither, then the game is not finished.
-    public player_t getWinner() {
+    // if the return value is Player.Neither, then the game is not finished.
+    public Player GetWinner() {
       return mWinner;
     }
 
-    public bool isLegal(int row, int col) {
+    public bool IsLegal(int row, int col) {
       if (mMoveNumber == 2) {
         int center = ROWS / 2;
         if (center - 2 <= row && row <= center + 2 &&
@@ -325,7 +325,7 @@ namespace LoganPenteAI {
         }
       }
 
-      if (getWinner() != player_t.neither) {
+      if (GetWinner() != Player.Neither) {
         return false;
       }
 
@@ -337,17 +337,17 @@ namespace LoganPenteAI {
       return true;
     }
 
-    private void setSpot(int row, int col, player_t color) {
-      if (color == player_t.white) {
+    private void SetSpot(int row, int col, Player color) {
+      if (color == Player.White) {
         mRowsWhite[row] |= SPOT_MASKS[col];
         mColsWhite[col] |= SPOT_MASKS[row];
-        mUpDiagWhite[upDiagIndex(row, col)] |= SPOT_MASKS[col];
-        mDownDiagWhite[downDiagIndex(row, col)] |= SPOT_MASKS[col];
-      } else if (color == player_t.black) {
+        mUpDiagWhite[UpDiagIndex(row, col)] |= SPOT_MASKS[col];
+        mDownDiagWhite[DownDiagIndex(row, col)] |= SPOT_MASKS[col];
+      } else if (color == Player.Black) {
         mRowsBlack[row] |= SPOT_MASKS[col];
         mColsBlack[col] |= SPOT_MASKS[row];
-        mUpDiagBlack[upDiagIndex(row, col)] |= SPOT_MASKS[col];
-        mDownDiagBlack[downDiagIndex(row, col)] |= SPOT_MASKS[col];
+        mUpDiagBlack[UpDiagIndex(row, col)] |= SPOT_MASKS[col];
+        mDownDiagBlack[DownDiagIndex(row, col)] |= SPOT_MASKS[col];
       } else {
         mRowsWhite[row] &= (~SPOT_MASKS[col]);
         mRowsBlack[row] &= (~SPOT_MASKS[col]);
@@ -355,19 +355,19 @@ namespace LoganPenteAI {
         mColsWhite[col] &= (~SPOT_MASKS[row]);
         mColsBlack[col] &= (~SPOT_MASKS[row]);
 
-        mUpDiagWhite[upDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
-        mUpDiagBlack[upDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
+        mUpDiagWhite[UpDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
+        mUpDiagBlack[UpDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
 
-        mDownDiagWhite[downDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
-        mDownDiagBlack[downDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
+        mDownDiagWhite[DownDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
+        mDownDiagBlack[DownDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
       }
     }
 
-    private static int upDiagIndex(int row, int col) {
+    private static int UpDiagIndex(int row, int col) {
       return row + col;
     }
 
-    private static int downDiagIndex(int row, int col) {
+    private static int DownDiagIndex(int row, int col) {
       return row - col + COLS - 1;
     }
   }

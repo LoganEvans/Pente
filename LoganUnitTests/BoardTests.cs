@@ -8,8 +8,8 @@ namespace LoganUnitTests {
   [TestClass]
   public class BoardTests {
     [TestMethod]
-    public void test_debugConsstructor() {
-      var board = new Board(player_t.white, 2, 4,
+    public void TestDebugConsstructor() {
+      var board = new Board(Player.White, 2, 4,
         //123456789012345678
 "W.................B" +  // 0
 "..................." +  // 1
@@ -31,21 +31,21 @@ namespace LoganUnitTests {
 "..................." +  // 17
 "...................");  // 18
 
-      Assert.AreEqual(player_t.white, board.getSpot(9, 9));
-      Assert.AreEqual(player_t.white, board.getSpot(12, 10));
-      Assert.AreEqual(player_t.white, board.getSpot(0, 0));
-      Assert.AreEqual(player_t.black, board.getSpot(9, 10));
-      Assert.AreEqual(player_t.black, board.getSpot(9, 11));
-      Assert.AreEqual(player_t.black, board.getSpot(14, 12));
-      Assert.AreEqual(player_t.black, board.getSpot(0, 18));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(12, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(0, 0));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 11));
+      Assert.AreEqual(Player.Black, board.GetSpot(14, 12));
+      Assert.AreEqual(Player.Black, board.GetSpot(0, 18));
 
-      Assert.AreEqual(2, board.getCaptures(player_t.white));
-      Assert.AreEqual(4, board.getCaptures(player_t.black));
+      Assert.AreEqual(2, board.GetCaptures(Player.White));
+      Assert.AreEqual(4, board.GetCaptures(Player.Black));
     }
 
     [TestMethod]
-    public void test_captures() {
-      var board = new Board(player_t.white, 0, 0,
+    public void TestCaptures() {
+      var board = new Board(Player.White, 0, 0,
         //123456789012345678
 "..................." +  // 0
 "..................." +  // 1
@@ -67,62 +67,62 @@ namespace LoganUnitTests {
 "..................." +  // 17
 "...................");  // 18
 
-      Assert.AreEqual(0, board.getCaptures(player_t.white));
-      Assert.AreEqual(player_t.black, board.getSpot(7, 7));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 8));
+      Assert.AreEqual(0, board.GetCaptures(Player.White));
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 8));
 
-      Assert.AreEqual(player_t.black, board.getSpot(7, 9));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 9));
 
-      Assert.AreEqual(player_t.black, board.getSpot(7, 11));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 11));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 10));
 
-      Assert.AreEqual(player_t.black, board.getSpot(9, 7));
-      Assert.AreEqual(player_t.black, board.getSpot(9, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 8));
 
-      Assert.AreEqual(player_t.black, board.getSpot(9, 10));
-      Assert.AreEqual(player_t.black, board.getSpot(9, 11));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 11));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 8));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 7));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 9));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 9));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 10));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 11));
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 11));
 
-      board.move(9, 9);
-      Assert.AreEqual(8, board.getCaptures(player_t.white));
-      Assert.AreEqual(player_t.neither, board.getSpot(7, 7));
-      Assert.AreEqual(player_t.neither, board.getSpot(8, 8));
+      board.Move(9, 9);
+      Assert.AreEqual(8, board.GetCaptures(Player.White));
+      Assert.AreEqual(Player.Neither, board.GetSpot(7, 7));
+      Assert.AreEqual(Player.Neither, board.GetSpot(8, 8));
 
-      Assert.AreEqual(player_t.neither, board.getSpot(7, 9));
-      Assert.AreEqual(player_t.neither, board.getSpot(8, 9));
+      Assert.AreEqual(Player.Neither, board.GetSpot(7, 9));
+      Assert.AreEqual(Player.Neither, board.GetSpot(8, 9));
 
-      Assert.AreEqual(player_t.neither, board.getSpot(7, 11));
-      Assert.AreEqual(player_t.neither, board.getSpot(8, 10));
+      Assert.AreEqual(Player.Neither, board.GetSpot(7, 11));
+      Assert.AreEqual(Player.Neither, board.GetSpot(8, 10));
 
-      Assert.AreEqual(player_t.neither, board.getSpot(9, 7));
-      Assert.AreEqual(player_t.neither, board.getSpot(9, 8));
+      Assert.AreEqual(Player.Neither, board.GetSpot(9, 7));
+      Assert.AreEqual(Player.Neither, board.GetSpot(9, 8));
 
-      Assert.AreEqual(player_t.neither, board.getSpot(9, 10));
-      Assert.AreEqual(player_t.neither, board.getSpot(9, 11));
+      Assert.AreEqual(Player.Neither, board.GetSpot(9, 10));
+      Assert.AreEqual(Player.Neither, board.GetSpot(9, 11));
 
-      Assert.AreEqual(player_t.neither, board.getSpot(10, 8));
-      Assert.AreEqual(player_t.neither, board.getSpot(11, 7));
+      Assert.AreEqual(Player.Neither, board.GetSpot(10, 8));
+      Assert.AreEqual(Player.Neither, board.GetSpot(11, 7));
 
-      Assert.AreEqual(player_t.neither, board.getSpot(10, 9));
-      Assert.AreEqual(player_t.neither, board.getSpot(11, 9));
+      Assert.AreEqual(Player.Neither, board.GetSpot(10, 9));
+      Assert.AreEqual(Player.Neither, board.GetSpot(11, 9));
 
-      Assert.AreEqual(player_t.neither, board.getSpot(10, 10));
-      Assert.AreEqual(player_t.neither, board.getSpot(11, 11));
+      Assert.AreEqual(Player.Neither, board.GetSpot(10, 10));
+      Assert.AreEqual(Player.Neither, board.GetSpot(11, 11));
     }
 
     [TestMethod]
-    public void test_capturesIndividualWhiteMove() {
+    public void TestCapturesIndividualWhiteMove() {
       Board board;
-      board = new Board(player_t.white, 0, 0,
+      board = new Board(Player.White, 0, 0,
         //123456789012345678
 "..................." +  // 0
 "..................." +  // 1
@@ -143,35 +143,35 @@ namespace LoganUnitTests {
 "..................." +  // 16
 "..................." +  // 17
 "...................");  // 18
-      Assert.AreEqual(player_t.black, board.getSpot(7, 7));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 8));
-      board.move(9, 9);
-      Assert.AreEqual(player_t.neither, board.getSpot(7, 7));
-      Assert.AreEqual(player_t.neither, board.getSpot(8, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 8));
+      board.Move(9, 9);
+      Assert.AreEqual(Player.Neither, board.GetSpot(7, 7));
+      Assert.AreEqual(Player.Neither, board.GetSpot(8, 8));
 
-      Assert.AreEqual(player_t.black, board.getSpot(7, 9));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 9));
 
-      Assert.AreEqual(player_t.black, board.getSpot(7, 11));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 11));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 10));
 
-      Assert.AreEqual(player_t.black, board.getSpot(9, 7));
-      Assert.AreEqual(player_t.black, board.getSpot(9, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 8));
 
-      Assert.AreEqual(player_t.black, board.getSpot(9, 10));
-      Assert.AreEqual(player_t.black, board.getSpot(9, 11));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 11));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 8));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 7));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 9));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 9));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 10));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 11));
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 11));
 
 
-      board = new Board(player_t.white, 0, 0,
+      board = new Board(Player.White, 0, 0,
         //123456789012345678
 "..................." +  // 0
 "..................." +  // 1
@@ -192,34 +192,34 @@ namespace LoganUnitTests {
 "..................." +  // 16
 "..................." +  // 17
 "...................");  // 18
-      Assert.AreEqual(player_t.black, board.getSpot(7, 9));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 9));
-      board.move(9, 9);
-      Assert.AreEqual(player_t.black, board.getSpot(7, 7));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 9));
+      board.Move(9, 9);
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 8));
 
-      Assert.AreEqual(player_t.neither, board.getSpot(7, 9));
-      Assert.AreEqual(player_t.neither, board.getSpot(8, 9));
+      Assert.AreEqual(Player.Neither, board.GetSpot(7, 9));
+      Assert.AreEqual(Player.Neither, board.GetSpot(8, 9));
 
-      Assert.AreEqual(player_t.black, board.getSpot(7, 11));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 11));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 10));
 
-      Assert.AreEqual(player_t.black, board.getSpot(9, 7));
-      Assert.AreEqual(player_t.black, board.getSpot(9, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 8));
 
-      Assert.AreEqual(player_t.black, board.getSpot(9, 10));
-      Assert.AreEqual(player_t.black, board.getSpot(9, 11));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 11));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 8));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 7));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 9));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 9));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 10));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 11));
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 11));
 
-      board = new Board(player_t.white, 0, 0,
+      board = new Board(Player.White, 0, 0,
         //123456789012345678
 "..................." +  // 0
 "..................." +  // 1
@@ -240,33 +240,33 @@ namespace LoganUnitTests {
 "..................." +  // 16
 "..................." +  // 17
 "...................");  // 18
-      Assert.AreEqual(player_t.black, board.getSpot(7, 11));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 10));
-      board.move(9, 9);
-      Assert.AreEqual(player_t.black, board.getSpot(7, 7));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 11));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 10));
+      board.Move(9, 9);
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 8));
 
-      Assert.AreEqual(player_t.black, board.getSpot(7, 9));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 9));
 
-      Assert.AreEqual(player_t.neither, board.getSpot(7, 11));
-      Assert.AreEqual(player_t.neither, board.getSpot(8, 10));
+      Assert.AreEqual(Player.Neither, board.GetSpot(7, 11));
+      Assert.AreEqual(Player.Neither, board.GetSpot(8, 10));
 
-      Assert.AreEqual(player_t.black, board.getSpot(9, 7));
-      Assert.AreEqual(player_t.black, board.getSpot(9, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 8));
 
-      Assert.AreEqual(player_t.black, board.getSpot(9, 10));
-      Assert.AreEqual(player_t.black, board.getSpot(9, 11));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 11));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 8));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 7));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 9));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 9));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 10));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 11));
-      board = new Board(player_t.white, 0, 0,
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 11));
+      board = new Board(Player.White, 0, 0,
         //123456789012345678
 "..................." +  // 0
 "..................." +  // 1
@@ -287,33 +287,33 @@ namespace LoganUnitTests {
 "..................." +  // 16
 "..................." +  // 17
 "...................");  // 18
-      Assert.AreEqual(player_t.black, board.getSpot(9, 7));
-      Assert.AreEqual(player_t.black, board.getSpot(9, 8));
-      board.move(9, 9);
-      Assert.AreEqual(player_t.black, board.getSpot(7, 7));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 8));
+      board.Move(9, 9);
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 8));
 
-      Assert.AreEqual(player_t.black, board.getSpot(7, 9));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 9));
 
-      Assert.AreEqual(player_t.black, board.getSpot(7, 11));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 11));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 10));
 
-      Assert.AreEqual(player_t.neither, board.getSpot(9, 7));
-      Assert.AreEqual(player_t.neither, board.getSpot(9, 8));
+      Assert.AreEqual(Player.Neither, board.GetSpot(9, 7));
+      Assert.AreEqual(Player.Neither, board.GetSpot(9, 8));
 
-      Assert.AreEqual(player_t.black, board.getSpot(9, 10));
-      Assert.AreEqual(player_t.black, board.getSpot(9, 11));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 11));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 8));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 7));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 9));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 9));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 10));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 11));
-      board = new Board(player_t.white, 0, 0,
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 11));
+      board = new Board(Player.White, 0, 0,
 
         //123456789012345678
 "..................." +  // 0
@@ -335,33 +335,33 @@ namespace LoganUnitTests {
 "..................." +  // 16
 "..................." +  // 17
 "...................");  // 18
-      Assert.AreEqual(player_t.black, board.getSpot(9, 10));
-      Assert.AreEqual(player_t.black, board.getSpot(9, 11));
-      board.move(9, 9);
-      Assert.AreEqual(player_t.black, board.getSpot(7, 7));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 11));
+      board.Move(9, 9);
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 8));
 
-      Assert.AreEqual(player_t.black, board.getSpot(7, 9));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 9));
 
-      Assert.AreEqual(player_t.black, board.getSpot(7, 11));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 11));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 10));
 
-      Assert.AreEqual(player_t.black, board.getSpot(9, 7));
-      Assert.AreEqual(player_t.black, board.getSpot(9, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 8));
 
-      Assert.AreEqual(player_t.neither, board.getSpot(9, 10));
-      Assert.AreEqual(player_t.neither, board.getSpot(9, 11));
+      Assert.AreEqual(Player.Neither, board.GetSpot(9, 10));
+      Assert.AreEqual(Player.Neither, board.GetSpot(9, 11));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 8));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 7));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 9));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 9));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 10));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 11));
-      board = new Board(player_t.white, 0, 0,
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 11));
+      board = new Board(Player.White, 0, 0,
         //123456789012345678
 "..................." +  // 0
 "..................." +  // 1
@@ -382,33 +382,33 @@ namespace LoganUnitTests {
 "..................." +  // 16
 "..................." +  // 17
 "...................");  // 18
-      Assert.AreEqual(player_t.black, board.getSpot(10, 8));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 7));
-      board.move(9, 9);
-      Assert.AreEqual(player_t.black, board.getSpot(7, 7));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 7));
+      board.Move(9, 9);
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 8));
 
-      Assert.AreEqual(player_t.black, board.getSpot(7, 9));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 9));
 
-      Assert.AreEqual(player_t.black, board.getSpot(7, 11));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 11));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 10));
 
-      Assert.AreEqual(player_t.black, board.getSpot(9, 7));
-      Assert.AreEqual(player_t.black, board.getSpot(9, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 8));
 
-      Assert.AreEqual(player_t.black, board.getSpot(9, 10));
-      Assert.AreEqual(player_t.black, board.getSpot(9, 11));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 11));
 
-      Assert.AreEqual(player_t.neither, board.getSpot(10, 8));
-      Assert.AreEqual(player_t.neither, board.getSpot(11, 7));
+      Assert.AreEqual(Player.Neither, board.GetSpot(10, 8));
+      Assert.AreEqual(Player.Neither, board.GetSpot(11, 7));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 9));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 9));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 10));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 11));
-      board = new Board(player_t.white, 0, 0,
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 11));
+      board = new Board(Player.White, 0, 0,
         //123456789012345678
 "..................." +  // 0
 "..................." +  // 1
@@ -429,33 +429,33 @@ namespace LoganUnitTests {
 "..................." +  // 16
 "..................." +  // 17
 "...................");  // 18
-      Assert.AreEqual(player_t.black, board.getSpot(10, 9));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 9));
-      board.move(9, 9);
-      Assert.AreEqual(player_t.black, board.getSpot(7, 7));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 9));
+      board.Move(9, 9);
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 8));
 
-      Assert.AreEqual(player_t.black, board.getSpot(7, 9));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 9));
 
-      Assert.AreEqual(player_t.black, board.getSpot(7, 11));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 11));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 10));
 
-      Assert.AreEqual(player_t.black, board.getSpot(9, 7));
-      Assert.AreEqual(player_t.black, board.getSpot(9, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 8));
 
-      Assert.AreEqual(player_t.black, board.getSpot(9, 10));
-      Assert.AreEqual(player_t.black, board.getSpot(9, 11));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 11));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 8));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 7));
 
-      Assert.AreEqual(player_t.neither, board.getSpot(10, 9));
-      Assert.AreEqual(player_t.neither, board.getSpot(11, 9));
+      Assert.AreEqual(Player.Neither, board.GetSpot(10, 9));
+      Assert.AreEqual(Player.Neither, board.GetSpot(11, 9));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 10));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 11));
-      board = new Board(player_t.white, 0, 0,
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 11));
+      board = new Board(Player.White, 0, 0,
         //123456789012345678
 "..................." +  // 0
 "..................." +  // 1
@@ -476,38 +476,38 @@ namespace LoganUnitTests {
 "..................." +  // 16
 "..................." +  // 17
 "...................");  // 18
-      Assert.AreEqual(player_t.black, board.getSpot(10, 10));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 11));
-      board.move(9, 9);
-      Assert.AreEqual(player_t.black, board.getSpot(7, 7));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 11));
+      board.Move(9, 9);
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 8));
 
-      Assert.AreEqual(player_t.black, board.getSpot(7, 9));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 9));
 
-      Assert.AreEqual(player_t.black, board.getSpot(7, 11));
-      Assert.AreEqual(player_t.black, board.getSpot(8, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(7, 11));
+      Assert.AreEqual(Player.Black, board.GetSpot(8, 10));
 
-      Assert.AreEqual(player_t.black, board.getSpot(9, 7));
-      Assert.AreEqual(player_t.black, board.getSpot(9, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 8));
 
-      Assert.AreEqual(player_t.black, board.getSpot(9, 10));
-      Assert.AreEqual(player_t.black, board.getSpot(9, 11));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 10));
+      Assert.AreEqual(Player.Black, board.GetSpot(9, 11));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 8));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 7));
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 8));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 7));
 
-      Assert.AreEqual(player_t.black, board.getSpot(10, 9));
-      Assert.AreEqual(player_t.black, board.getSpot(11, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(10, 9));
+      Assert.AreEqual(Player.Black, board.GetSpot(11, 9));
 
-      Assert.AreEqual(player_t.neither, board.getSpot(10, 10));
-      Assert.AreEqual(player_t.neither, board.getSpot(11, 11));
+      Assert.AreEqual(Player.Neither, board.GetSpot(10, 10));
+      Assert.AreEqual(Player.Neither, board.GetSpot(11, 11));
     }
 
     [TestMethod]
-    public void test_capturesIndividualBlackMove() {
+    public void TestCapturesIndividualBlackMove() {
       Board board;
-      board = new Board(player_t.black, 0, 0,
+      board = new Board(Player.Black, 0, 0,
         //123456789012345678
 "..................." +  // 0
 "..................." +  // 1
@@ -528,35 +528,35 @@ namespace LoganUnitTests {
 "..................." +  // 16
 "..................." +  // 17
 "...................");  // 18
-      Assert.AreEqual(player_t.white, board.getSpot(7, 7));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 8));
-      board.move(9, 9);
-      Assert.AreEqual(player_t.neither, board.getSpot(7, 7));
-      Assert.AreEqual(player_t.neither, board.getSpot(8, 8));
+      Assert.AreEqual(Player.White, board.GetSpot(7, 7));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 8));
+      board.Move(9, 9);
+      Assert.AreEqual(Player.Neither, board.GetSpot(7, 7));
+      Assert.AreEqual(Player.Neither, board.GetSpot(8, 8));
 
-      Assert.AreEqual(player_t.white, board.getSpot(7, 9));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(7, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 9));
 
-      Assert.AreEqual(player_t.white, board.getSpot(7, 11));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(7, 11));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 10));
 
-      Assert.AreEqual(player_t.white, board.getSpot(9, 7));
-      Assert.AreEqual(player_t.white, board.getSpot(9, 8));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 7));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 8));
 
-      Assert.AreEqual(player_t.white, board.getSpot(9, 10));
-      Assert.AreEqual(player_t.white, board.getSpot(9, 11));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 11));
 
-      Assert.AreEqual(player_t.white, board.getSpot(10, 8));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 7));
+      Assert.AreEqual(Player.White, board.GetSpot(10, 8));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 7));
 
-      Assert.AreEqual(player_t.white, board.getSpot(10, 9));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(10, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 9));
 
-      Assert.AreEqual(player_t.white, board.getSpot(10, 10));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 11));
+      Assert.AreEqual(Player.White, board.GetSpot(10, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 11));
 
 
-      board = new Board(player_t.black, 0, 0,
+      board = new Board(Player.Black, 0, 0,
         //123456789012345678
 "..................." +  // 0
 "..................." +  // 1
@@ -577,34 +577,34 @@ namespace LoganUnitTests {
 "..................." +  // 16
 "..................." +  // 17
 "...................");  // 18
-      Assert.AreEqual(player_t.white, board.getSpot(7, 9));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 9));
-      board.move(9, 9);
-      Assert.AreEqual(player_t.white, board.getSpot(7, 7));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 8));
+      Assert.AreEqual(Player.White, board.GetSpot(7, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 9));
+      board.Move(9, 9);
+      Assert.AreEqual(Player.White, board.GetSpot(7, 7));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 8));
 
-      Assert.AreEqual(player_t.neither, board.getSpot(7, 9));
-      Assert.AreEqual(player_t.neither, board.getSpot(8, 9));
+      Assert.AreEqual(Player.Neither, board.GetSpot(7, 9));
+      Assert.AreEqual(Player.Neither, board.GetSpot(8, 9));
 
-      Assert.AreEqual(player_t.white, board.getSpot(7, 11));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(7, 11));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 10));
 
-      Assert.AreEqual(player_t.white, board.getSpot(9, 7));
-      Assert.AreEqual(player_t.white, board.getSpot(9, 8));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 7));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 8));
 
-      Assert.AreEqual(player_t.white, board.getSpot(9, 10));
-      Assert.AreEqual(player_t.white, board.getSpot(9, 11));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 11));
 
-      Assert.AreEqual(player_t.white, board.getSpot(10, 8));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 7));
+      Assert.AreEqual(Player.White, board.GetSpot(10, 8));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 7));
 
-      Assert.AreEqual(player_t.white, board.getSpot(10, 9));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(10, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 9));
 
-      Assert.AreEqual(player_t.white, board.getSpot(10, 10));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 11));
+      Assert.AreEqual(Player.White, board.GetSpot(10, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 11));
 
-      board = new Board(player_t.black, 0, 0,
+      board = new Board(Player.Black, 0, 0,
         //123456789012345678
 "..................." +  // 0
 "..................." +  // 1
@@ -625,33 +625,33 @@ namespace LoganUnitTests {
 "..................." +  // 16
 "..................." +  // 17
 "...................");  // 18
-      Assert.AreEqual(player_t.white, board.getSpot(7, 11));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 10));
-      board.move(9, 9);
-      Assert.AreEqual(player_t.white, board.getSpot(7, 7));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 8));
+      Assert.AreEqual(Player.White, board.GetSpot(7, 11));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 10));
+      board.Move(9, 9);
+      Assert.AreEqual(Player.White, board.GetSpot(7, 7));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 8));
 
-      Assert.AreEqual(player_t.white, board.getSpot(7, 9));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(7, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 9));
 
-      Assert.AreEqual(player_t.neither, board.getSpot(7, 11));
-      Assert.AreEqual(player_t.neither, board.getSpot(8, 10));
+      Assert.AreEqual(Player.Neither, board.GetSpot(7, 11));
+      Assert.AreEqual(Player.Neither, board.GetSpot(8, 10));
 
-      Assert.AreEqual(player_t.white, board.getSpot(9, 7));
-      Assert.AreEqual(player_t.white, board.getSpot(9, 8));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 7));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 8));
 
-      Assert.AreEqual(player_t.white, board.getSpot(9, 10));
-      Assert.AreEqual(player_t.white, board.getSpot(9, 11));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 11));
 
-      Assert.AreEqual(player_t.white, board.getSpot(10, 8));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 7));
+      Assert.AreEqual(Player.White, board.GetSpot(10, 8));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 7));
 
-      Assert.AreEqual(player_t.white, board.getSpot(10, 9));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(10, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 9));
 
-      Assert.AreEqual(player_t.white, board.getSpot(10, 10));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 11));
-      board = new Board(player_t.black, 0, 0,
+      Assert.AreEqual(Player.White, board.GetSpot(10, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 11));
+      board = new Board(Player.Black, 0, 0,
         //123456789012345678
 "..................." +  // 0
 "..................." +  // 1
@@ -672,33 +672,33 @@ namespace LoganUnitTests {
 "..................." +  // 16
 "..................." +  // 17
 "...................");  // 18
-      Assert.AreEqual(player_t.white, board.getSpot(9, 7));
-      Assert.AreEqual(player_t.white, board.getSpot(9, 8));
-      board.move(9, 9);
-      Assert.AreEqual(player_t.white, board.getSpot(7, 7));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 8));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 7));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 8));
+      board.Move(9, 9);
+      Assert.AreEqual(Player.White, board.GetSpot(7, 7));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 8));
 
-      Assert.AreEqual(player_t.white, board.getSpot(7, 9));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(7, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 9));
 
-      Assert.AreEqual(player_t.white, board.getSpot(7, 11));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(7, 11));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 10));
 
-      Assert.AreEqual(player_t.neither, board.getSpot(9, 7));
-      Assert.AreEqual(player_t.neither, board.getSpot(9, 8));
+      Assert.AreEqual(Player.Neither, board.GetSpot(9, 7));
+      Assert.AreEqual(Player.Neither, board.GetSpot(9, 8));
 
-      Assert.AreEqual(player_t.white, board.getSpot(9, 10));
-      Assert.AreEqual(player_t.white, board.getSpot(9, 11));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 11));
 
-      Assert.AreEqual(player_t.white, board.getSpot(10, 8));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 7));
+      Assert.AreEqual(Player.White, board.GetSpot(10, 8));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 7));
 
-      Assert.AreEqual(player_t.white, board.getSpot(10, 9));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(10, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 9));
 
-      Assert.AreEqual(player_t.white, board.getSpot(10, 10));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 11));
-      board = new Board(player_t.black, 0, 0,
+      Assert.AreEqual(Player.White, board.GetSpot(10, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 11));
+      board = new Board(Player.Black, 0, 0,
 
         //123456789012345678
 "..................." +  // 0
@@ -720,33 +720,33 @@ namespace LoganUnitTests {
 "..................." +  // 16
 "..................." +  // 17
 "...................");  // 18
-      Assert.AreEqual(player_t.white, board.getSpot(9, 10));
-      Assert.AreEqual(player_t.white, board.getSpot(9, 11));
-      board.move(9, 9);
-      Assert.AreEqual(player_t.white, board.getSpot(7, 7));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 8));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 11));
+      board.Move(9, 9);
+      Assert.AreEqual(Player.White, board.GetSpot(7, 7));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 8));
 
-      Assert.AreEqual(player_t.white, board.getSpot(7, 9));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(7, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 9));
 
-      Assert.AreEqual(player_t.white, board.getSpot(7, 11));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(7, 11));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 10));
 
-      Assert.AreEqual(player_t.white, board.getSpot(9, 7));
-      Assert.AreEqual(player_t.white, board.getSpot(9, 8));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 7));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 8));
 
-      Assert.AreEqual(player_t.neither, board.getSpot(9, 10));
-      Assert.AreEqual(player_t.neither, board.getSpot(9, 11));
+      Assert.AreEqual(Player.Neither, board.GetSpot(9, 10));
+      Assert.AreEqual(Player.Neither, board.GetSpot(9, 11));
 
-      Assert.AreEqual(player_t.white, board.getSpot(10, 8));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 7));
+      Assert.AreEqual(Player.White, board.GetSpot(10, 8));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 7));
 
-      Assert.AreEqual(player_t.white, board.getSpot(10, 9));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(10, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 9));
 
-      Assert.AreEqual(player_t.white, board.getSpot(10, 10));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 11));
-      board = new Board(player_t.black, 0, 0,
+      Assert.AreEqual(Player.White, board.GetSpot(10, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 11));
+      board = new Board(Player.Black, 0, 0,
         //123456789012345678
 "..................." +  // 0
 "..................." +  // 1
@@ -767,33 +767,33 @@ namespace LoganUnitTests {
 "..................." +  // 16
 "..................." +  // 17
 "...................");  // 18
-      Assert.AreEqual(player_t.white, board.getSpot(10, 8));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 7));
-      board.move(9, 9);
-      Assert.AreEqual(player_t.white, board.getSpot(7, 7));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 8));
+      Assert.AreEqual(Player.White, board.GetSpot(10, 8));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 7));
+      board.Move(9, 9);
+      Assert.AreEqual(Player.White, board.GetSpot(7, 7));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 8));
 
-      Assert.AreEqual(player_t.white, board.getSpot(7, 9));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(7, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 9));
 
-      Assert.AreEqual(player_t.white, board.getSpot(7, 11));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(7, 11));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 10));
 
-      Assert.AreEqual(player_t.white, board.getSpot(9, 7));
-      Assert.AreEqual(player_t.white, board.getSpot(9, 8));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 7));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 8));
 
-      Assert.AreEqual(player_t.white, board.getSpot(9, 10));
-      Assert.AreEqual(player_t.white, board.getSpot(9, 11));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 11));
 
-      Assert.AreEqual(player_t.neither, board.getSpot(10, 8));
-      Assert.AreEqual(player_t.neither, board.getSpot(11, 7));
+      Assert.AreEqual(Player.Neither, board.GetSpot(10, 8));
+      Assert.AreEqual(Player.Neither, board.GetSpot(11, 7));
 
-      Assert.AreEqual(player_t.white, board.getSpot(10, 9));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(10, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 9));
 
-      Assert.AreEqual(player_t.white, board.getSpot(10, 10));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 11));
-      board = new Board(player_t.black, 0, 0,
+      Assert.AreEqual(Player.White, board.GetSpot(10, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 11));
+      board = new Board(Player.Black, 0, 0,
         //123456789012345678
 "..................." +  // 0
 "..................." +  // 1
@@ -814,33 +814,33 @@ namespace LoganUnitTests {
 "..................." +  // 16
 "..................." +  // 17
 "...................");  // 18
-      Assert.AreEqual(player_t.white, board.getSpot(10, 9));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 9));
-      board.move(9, 9);
-      Assert.AreEqual(player_t.white, board.getSpot(7, 7));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 8));
+      Assert.AreEqual(Player.White, board.GetSpot(10, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 9));
+      board.Move(9, 9);
+      Assert.AreEqual(Player.White, board.GetSpot(7, 7));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 8));
 
-      Assert.AreEqual(player_t.white, board.getSpot(7, 9));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(7, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 9));
 
-      Assert.AreEqual(player_t.white, board.getSpot(7, 11));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(7, 11));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 10));
 
-      Assert.AreEqual(player_t.white, board.getSpot(9, 7));
-      Assert.AreEqual(player_t.white, board.getSpot(9, 8));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 7));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 8));
 
-      Assert.AreEqual(player_t.white, board.getSpot(9, 10));
-      Assert.AreEqual(player_t.white, board.getSpot(9, 11));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 11));
 
-      Assert.AreEqual(player_t.white, board.getSpot(10, 8));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 7));
+      Assert.AreEqual(Player.White, board.GetSpot(10, 8));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 7));
 
-      Assert.AreEqual(player_t.neither, board.getSpot(10, 9));
-      Assert.AreEqual(player_t.neither, board.getSpot(11, 9));
+      Assert.AreEqual(Player.Neither, board.GetSpot(10, 9));
+      Assert.AreEqual(Player.Neither, board.GetSpot(11, 9));
 
-      Assert.AreEqual(player_t.white, board.getSpot(10, 10));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 11));
-      board = new Board(player_t.black, 0, 0,
+      Assert.AreEqual(Player.White, board.GetSpot(10, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 11));
+      board = new Board(Player.Black, 0, 0,
         //123456789012345678
 "..................." +  // 0
 "..................." +  // 1
@@ -861,32 +861,32 @@ namespace LoganUnitTests {
 "..................." +  // 16
 "..................." +  // 17
 "...................");  // 18
-      Assert.AreEqual(player_t.white, board.getSpot(10, 10));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 11));
-      board.move(9, 9);
-      Assert.AreEqual(player_t.white, board.getSpot(7, 7));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 8));
+      Assert.AreEqual(Player.White, board.GetSpot(10, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 11));
+      board.Move(9, 9);
+      Assert.AreEqual(Player.White, board.GetSpot(7, 7));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 8));
 
-      Assert.AreEqual(player_t.white, board.getSpot(7, 9));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(7, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 9));
 
-      Assert.AreEqual(player_t.white, board.getSpot(7, 11));
-      Assert.AreEqual(player_t.white, board.getSpot(8, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(7, 11));
+      Assert.AreEqual(Player.White, board.GetSpot(8, 10));
 
-      Assert.AreEqual(player_t.white, board.getSpot(9, 7));
-      Assert.AreEqual(player_t.white, board.getSpot(9, 8));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 7));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 8));
 
-      Assert.AreEqual(player_t.white, board.getSpot(9, 10));
-      Assert.AreEqual(player_t.white, board.getSpot(9, 11));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 10));
+      Assert.AreEqual(Player.White, board.GetSpot(9, 11));
 
-      Assert.AreEqual(player_t.white, board.getSpot(10, 8));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 7));
+      Assert.AreEqual(Player.White, board.GetSpot(10, 8));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 7));
 
-      Assert.AreEqual(player_t.white, board.getSpot(10, 9));
-      Assert.AreEqual(player_t.white, board.getSpot(11, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(10, 9));
+      Assert.AreEqual(Player.White, board.GetSpot(11, 9));
 
-      Assert.AreEqual(player_t.neither, board.getSpot(10, 10));
-      Assert.AreEqual(player_t.neither, board.getSpot(11, 11));
+      Assert.AreEqual(Player.Neither, board.GetSpot(10, 10));
+      Assert.AreEqual(Player.Neither, board.GetSpot(11, 11));
     }
   }
 }

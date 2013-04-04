@@ -80,29 +80,29 @@ namespace LoganPenteAI {
       _heuristics.Add(Tuple.Create(Tuple.Create(0x8, 0x0, 0x1e7), Tuple.Create(delta / 9, mProximityPriority)));  // 0bXXXX.1XXX
       _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x8, 0x1e7), Tuple.Create(delta / 9, mProximityPriority)));  // 0bXXXX.2XXX
 
-      appendReversedAndSort(_heuristics);
+      AppendReversedAndSort(_heuristics);
 
       _captureCheck = new Tuple<int, int, int>(0x2, 0xc, 0x1e1);  // 0bXXXX.221X
     }
 
     // Order is:
     // patternLength, patternCurrentPlayer, patternOpponentPlayer, patternIgnore, score
-    public static List<Tuple<Tuple<int, int, int>, Tuple<double, int>>> getHeuristics() {
+    public static List<Tuple<Tuple<int, int, int>, Tuple<double, int>>> GetHeuristics() {
       return _heuristics;
     }
 
-    public static Tuple<int, int, int> getCaptureCheck() {
+    public static Tuple<int, int, int> GetCaptureCheck() {
       return _captureCheck;
     }
 
-    public static int getProximityPriority() {
+    public static int GetProximityPriority() {
       return mProximityPriority;
     }
 
-    public static Tuple<double, int> estimateQualityOfCapture(player_t currentPlayer, int capturesWhite, int capturesBlack) {
-      player_t otherPlayer = (currentPlayer == player_t.white) ? player_t.black : player_t.white;
+    public static Tuple<double, int> EstimateQualityOfCapture(Player currentPlayer, int capturesWhite, int capturesBlack) {
+      Player otherPlayer = (currentPlayer == Player.White) ? Player.Black : Player.White;
       int capturesCurrent, capturesOther;
-      if (currentPlayer == player_t.white) {
+      if (currentPlayer == Player.White) {
         capturesCurrent = capturesWhite;
         capturesOther = capturesBlack;
       } else {
@@ -111,13 +111,13 @@ namespace LoganPenteAI {
       }
       int priority = 5 - Math.Max(capturesCurrent + 1, capturesOther);
       double heuristic = 1.0 - 0.2 * priority;
-      if (currentPlayer == player_t.black) {
+      if (currentPlayer == Player.Black) {
         heuristic *= -1;
       }
       return Tuple.Create(heuristic, priority);
     }
 
-    private static void appendReversedAndSort(List<Tuple<Tuple<int, int, int>, Tuple<double, int>>> inputList) {
+    private static void AppendReversedAndSort(List<Tuple<Tuple<int, int, int>, Tuple<double, int>>> inputList) {
       List<Tuple<Tuple<int, int, int>, Tuple<double, int>>> reversed = new List<Tuple<Tuple<int, int, int>, Tuple<double, int>>>();
       int reversedPatternWhite, reversedPatternBlack, reversedPatternIgnore;
 

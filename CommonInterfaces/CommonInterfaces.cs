@@ -6,24 +6,24 @@ using System.Threading.Tasks;
 
 namespace CommonInterfaces {
   // This can represent the player or the identity of the player that placed a stone in a spot.
-  public enum player_t {black, white, neither};
+  public enum Player {Black, White, Neither};
 
   public interface BoardInterface {
     // The assumption will be that the current player is making the move. If the move was
     // successfully made, return true. Else, return false.
-    bool move(int row, int col);
-    player_t getSpot(int row, int col);
-    int getCaptures(player_t player);
-    int getMoveNumber();
-    player_t getCurrentPlayer();
+    bool Move(int row, int col);
+    Player GetSpot(int row, int col);
+    int GetCaptures(Player player);
+    int GetMoveNumber();
+    Player GetCurrentPlayer();
 
     // if the return value is neither, then the game is not finished.
-    player_t getWinner();
-    bool isLegal(int row, int col);
+    Player GetWinner();
+    bool IsLegal(int row, int col);
   }
 
   public class MoveSelectedEventArgs : EventArgs {
-    public player_t player { get; set; }
+    public Player player { get; set; }
     public int row { get; set; }
     public int col { get; set; }
   }
@@ -32,12 +32,12 @@ namespace CommonInterfaces {
   // will be made. It isn't made until setMove is called. This will allow the game controller
   // to synchronize the boards in a uniform fashion.
   public abstract class PlayerBase {
-    public abstract void setBoard(BoardInterface board);
-    public abstract void setColor(player_t color);
-    public abstract void setOpponent(PlayerBase opponent);
+    public abstract void SetBoard(BoardInterface board);
+    public abstract void SetColor(Player color);
+    public abstract void SetOpponent(PlayerBase opponent);
 
     // This should be the start of any processing done by this player.
-    public abstract void playerThread();
+    public abstract void PlayerThread();
 
     public event EventHandler<MoveSelectedEventArgs> MoveSelected;
 
@@ -48,6 +48,6 @@ namespace CommonInterfaces {
       }
     }
 
-    public abstract void MoveSelectedEventHandler_getOpponentMove(object sender, MoveSelectedEventArgs args);
+    public abstract void MoveSelectedEventHandler_GetOpponentMove(object sender, MoveSelectedEventArgs args);
   }
 }

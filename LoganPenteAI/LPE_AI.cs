@@ -19,8 +19,8 @@ namespace LoganPenteAI {
 
       PlayerHuman pi1 = new PlayerHuman();
       //PlayerBase pi1 = new PlayerAI();
-      pi1.setBoard(board);
-      pi1.setColor(player_t.white);
+      pi1.SetBoard(board);
+      pi1.SetColor(Player.White);
 
       PlayerHuman pi2 = new PlayerHuman();
       //PlayerBase pi2 = new PlayerAI();
@@ -28,18 +28,18 @@ namespace LoganPenteAI {
       Display display = new Display(board, pi1, pi2);
 
       // Comment out if a player is not a human.
-      pi1.setMoveSelectedByClickListener(display);
-      pi2.setMoveSelectedByClickListener(display);
+      pi1.SetMoveSelectedByClickListener(display);
+      pi2.SetMoveSelectedByClickListener(display);
 
-      pi2.setBoard(board);
-      pi2.setColor(player_t.black);
+      pi2.SetBoard(board);
+      pi2.SetColor(Player.Black);
 
-      pi1.setOpponent(pi2);
-      pi2.setOpponent(pi1);
+      pi1.SetOpponent(pi2);
+      pi2.SetOpponent(pi1);
 
-      Thread pi1Thread = new Thread(pi1.playerThread);
+      Thread pi1Thread = new Thread(pi1.PlayerThread);
       pi1Thread.Start();
-      Thread pi2Thread = new Thread(pi2.playerThread);
+      Thread pi2Thread = new Thread(pi2.PlayerThread);
       pi2Thread.Start();
 
       Application.EnableVisualStyles();

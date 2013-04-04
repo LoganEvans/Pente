@@ -24,41 +24,42 @@ namespace LoganPenteAI {
 
     public Display(BoardInterface board, PlayerBase playerWhite, PlayerBase playerBlack) {
       InitializeComponent();
-      setBoard(board);
+
+      SetBoard(board);
       playerWhite.MoveSelected += MoveSelectedEventHandler;
       playerBlack.MoveSelected += MoveSelectedEventHandler;
     }
 
-    private void setText() {
-      this.Text = "Pente -- Turn: " + mBoard.getMoveNumber() +
-                  " White captures: " + mBoard.getCaptures(player_t.white) +
-                  " Black captures: " + mBoard.getCaptures(player_t.black);
+    private void SetText() {
+      this.Text = "Pente -- Turn: " + mBoard.GetMoveNumber() +
+                  " White captures: " + mBoard.GetCaptures(Player.White) +
+                  " Black captures: " + mBoard.GetCaptures(Player.Black);
     }
 
     public void MoveSelectedEventHandler(object sender, MoveSelectedEventArgs args) {
-      mBoard.move(args.row, args.col);
+      mBoard.Move(args.row, args.col);
       Invalidate();
-      if (mBoard.getWinner() != player_t.neither) {
-        MessageBox.Show("Winner: " + mBoard.getWinner());
+      if (mBoard.GetWinner() != Player.Neither) {
+        MessageBox.Show("Winner: " + mBoard.GetWinner());
       }
     }
 
-    public void setBoard(BoardInterface board) {
+    public void SetBoard(BoardInterface board) {
       mBoard = board;
     }
 
-    public BoardInterface getBoard() {
+    public BoardInterface GetBoard() {
       return mBoard;
     }
 
     private void Display_Paint(object sender, PaintEventArgs e) {
       Graphics g = e.Graphics;
-      drawBoardLines(g);
-      drawStones(g);
+      DrawBoardLines(g);
+      DrawStones(g);
     }
 
-    private void drawBoardLines(Graphics g) {
-      setText();
+    private void DrawBoardLines(Graphics g) {
+      SetText();
       int pen_width = 2;
       int width = this.Size.Width;
       int height = this.Size.Height;
@@ -80,7 +81,7 @@ namespace LoganPenteAI {
       }
     }
 
-    private void drawStones(Graphics g) {
+    private void DrawStones(Graphics g) {
       int width = this.Size.Width;
       int height = this.Size.Height;
       int delta_w = (width - 2 * PAD_W) / (COLS - 1);
@@ -93,10 +94,10 @@ namespace LoganPenteAI {
         for (int row_dex = 0; row_dex < ROWS; row_dex++) {
           int center_col = PAD_W + col_dex * delta_w - pen_width / 2;
           int center_row = PAD_H + row_dex * delta_h - pen_width / 2;
-          if (getBoard().getSpot(row_dex, col_dex) == player_t.white) {
+          if (GetBoard().GetSpot(row_dex, col_dex) == Player.White) {
             g.DrawEllipse(p_outline, new Rectangle(center_col - 1, center_row - 1, pen_width + 2, pen_width + 2));
             g.DrawEllipse(p_white, new Rectangle(center_col, center_row, pen_width, pen_width));
-          } else if (getBoard().getSpot(row_dex, col_dex) == player_t.black) {
+          } else if (GetBoard().GetSpot(row_dex, col_dex) == Player.Black) {
             g.DrawEllipse(p_outline, new Rectangle(center_col - 1, center_row - 1, pen_width + 2, pen_width + 2));
           }
         }
@@ -104,7 +105,7 @@ namespace LoganPenteAI {
     }
 
     // Handles the board click.
-    private void onClick(object sender, EventArgs e) {
+    private void OnClick(object sender, EventArgs e) {
       int width = this.Size.Width;
       int base_w = this.PointToScreen(Point.Empty).X;
       int delta_w = (width - 2 * PAD_W) / (COLS - 1);
@@ -143,7 +144,7 @@ namespace LoganPenteAI {
       MoveSelectedEventArgs args = new MoveSelectedEventArgs();
       args.row = clicked_row;
       args.col = clicked_col;
-      args.player = mBoard.getCurrentPlayer();
+      args.player = mBoard.GetCurrentPlayer();
       OnMoveSelectedByClick(args);
     }
 
