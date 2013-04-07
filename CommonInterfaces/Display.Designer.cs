@@ -1,4 +1,4 @@
-﻿namespace LoganPenteAI {
+﻿namespace CommonInterfaces {
   partial class Display {
     /// <summary>
     /// Required designer variable.
@@ -27,9 +27,12 @@
       // 
       // Display
       // 
+      this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+      this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
       this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(128)))));
       this.ClientSize = new System.Drawing.Size(684, 661);
       this.Name = "Display";
+      this.Text = "Pente";
       this.Click += new System.EventHandler(this.OnClick);
       this.Paint += new System.Windows.Forms.PaintEventHandler(this.Display_Paint);
       this.ResumeLayout(false);
