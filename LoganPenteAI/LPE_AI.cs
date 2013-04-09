@@ -22,14 +22,14 @@ namespace LoganPenteAI {
       pi1.SetBoard(board);
       pi1.SetColor(Player.White);
 
-      PlayerHuman pi2 = new PlayerHuman();
-      //PlayerBase pi2 = new PlayerAI();
+      //PlayerHuman pi2 = new PlayerHuman();
+      PlayerBase pi2 = new PlayerAI();
 
       Display display = new Display(board, pi1, pi2);
 
       // Comment out if a player is not a human.
       pi1.SetMoveSelectedByClickListener(display);
-      pi2.SetMoveSelectedByClickListener(display);
+      //pi2.SetMoveSelectedByClickListener(display);
 
       pi2.SetBoard(board);
       pi2.SetColor(Player.Black);

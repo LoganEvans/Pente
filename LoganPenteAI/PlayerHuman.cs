@@ -14,6 +14,8 @@ namespace LoganPenteAI {
     private AutoResetEvent mWaitOnClick;
     private AutoResetEvent mWaitOnOpponent;
 
+    public PlayerHuman() { }
+
     public override void SetBoard(BoardInterface board) {
       mBoard = new Board(board);
     }

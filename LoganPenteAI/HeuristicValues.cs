@@ -7,12 +7,66 @@ using System.Threading.Tasks;
 using CommonInterfaces;
 
 namespace LoganPenteAI {
+  public struct Pattern {
+    public static const int PATTERN_MASK = 0x1FF;
+    public static const int PATTERN_RADIUS = 4;
+    public static const int PATTERN_DIAMETER = 9;
+    public static readonly Tuple<int, int, int> BACKWARD_CAPTURE_PATTERN = Tuple.Create(0x12, 0xc, 0x1e1);
+    public static readonly Tuple<int, int, int> FORWARD_CAPTURE_PATTERN = Tuple.Create(0x90, 0x60, 0x10f);
+    public static const int ROW_PATTERN = 0;
+    public static const int COL_PATTERN = 1;
+    public static const int UP_DIAG_PATTERN = 2;
+    public static const int DOWN_DIAG_PATTERN = 3;
+
+    private int mPattern;
+
+    public void SetPattern(int patternWhite, int patternBlack) {
+      mPattern = patternWhite + (patternBlack << Pattern.PATTERN_DIAMETER);
+    }
+
+    public virtual int GetHashCode() {
+      return mPattern;
+    }
+
+    public int getPatternWhite() {
+      return mPattern & PATTERN_MASK;
+    }
+
+    public int getPatternBlack() {
+      return (mPattern >> PATTERN_DIAMETER) & PATTERN_MASK;
+    }
+
+    public static List<Pattern> GetAllMatchingPatterns(Tuple<int, int, int> patternTrio) {
+      List<Pattern> retval = new List<Pattern>();
+      Pattern toAdd;
+
+      for (int i = 0; i < PATTERN_DIAMETER; i++) {
+        if (((1 << i) & patternTrio.Item3) != 0) {
+          toAdd = new Pattern();
+          toAdd.SetPattern(patternTrio.Item1, patternTrio.Item2);
+          retval.Add(toAdd);
+          
+          toAdd = new Pattern();
+          toAdd.SetPattern(patternTrio.Item1 | (1 << i), patternTrio.Item2);
+          retval.Add(toAdd);
+
+          toAdd = new Pattern();
+          toAdd.SetPattern(patternTrio.Item1, patternTrio.Item2 | (1 << i));
+          retval.Add(toAdd);
+        }
+      }
+
+      return retval;
+    }
+  }
+
   static class HeuristicValues {
     private static List<Tuple<Tuple<int, int, int>, Tuple<double, int>>> _heuristics;
+    private static Dictionary<Pattern, Tuple<double, int>> _hDict;
     private static Tuple<int, int, int> _captureCheck;
     private static double[] mWin;
     private static int mProximityPriority;
- 
+
     // The Heuristics are primarily to identify spots to look at so that the branching
     // factor will be kept low.
     static HeuristicValues() {
@@ -80,7 +134,7 @@ namespace LoganPenteAI {
       _heuristics.Add(Tuple.Create(Tuple.Create(0x8, 0x0, 0x1e7), Tuple.Create(delta / 9, mProximityPriority)));  // 0bXXXX.1XXX
       _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x8, 0x1e7), Tuple.Create(delta / 9, mProximityPriority)));  // 0bXXXX.2XXX
 
-      AppendReversedAndSort(_heuristics);
+      AddReversed(_heuristics);
 
       _captureCheck = new Tuple<int, int, int>(0x2, 0xc, 0x1e1);  // 0bXXXX.221X
     }
@@ -117,7 +171,7 @@ namespace LoganPenteAI {
       return Tuple.Create(heuristic, priority);
     }
 
-    private static void AppendReversedAndSort(List<Tuple<Tuple<int, int, int>, Tuple<double, int>>> inputList) {
+    private static void AddReversed(List<Tuple<Tuple<int, int, int>, Tuple<double, int>>> inputList) {
       List<Tuple<Tuple<int, int, int>, Tuple<double, int>>> reversed = new List<Tuple<Tuple<int, int, int>, Tuple<double, int>>>();
       int reversedPatternWhite, reversedPatternBlack, reversedPatternIgnore;
 
@@ -145,10 +199,9 @@ namespace LoganPenteAI {
         }
       }
 
-      inputList.AddRange(reversed);
-
-      // Sort by priority
-      inputList.Sort((a, b) => Math.Abs(a.Item2.Item2).CompareTo(Math.Abs(b.Item2.Item2)));
+      foreach (Tuple<Tuple<int, int, int>, Tuple<double, int>> val in reversed) {
+        inputList.Add(val);
+      }
     }
   }
 }

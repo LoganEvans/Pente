@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using CommonInterfaces;
@@ -10,14 +11,12 @@ namespace LoganPenteAI {
   public class PlayerAI : PlayerBase {
     private GameState mGameState;
     private Player mColor;
-    private const int LOOKAHEAD = 2;
+    private const int LOOKAHEAD = 1;
+    private AutoResetEvent mWaitOnOpponent;
 
-    public PlayerAI() {
-    }
+    public PlayerAI() {}
 
-    public PlayerAI(Player color, Board board) {
-      SetBoard(board);
-      SetColor(color);
+    public PlayerAI(Player color, BoardInterface board) {
     }
 
     public override void SetBoard(BoardInterface board) {
@@ -34,6 +33,7 @@ namespace LoganPenteAI {
 
     public override void MoveSelectedEventHandler_GetOpponentMove(object sender, MoveSelectedEventArgs args) {
       mGameState.Move(args.row, args.col);
+      mWaitOnOpponent.Set();
     }
 
     // The order of the Tuple is <row, col>
@@ -49,6 +49,28 @@ namespace LoganPenteAI {
     }
 
     public override void PlayerThread() {
+      //Console.WriteLine(" > PlayerThread() " + mColor);
+      mWaitOnOpponent = new AutoResetEvent(false);
+      MoveSelectedEventArgs args;
+      Tuple<int, int> move;
+
+      while (mGameState.GetWinner() == Player.Neither) {
+        if (mGameState.GetCurrentPlayer() == mColor) {
+          move = GetMove();
+          args = new MoveSelectedEventArgs();
+          args.row = move.Item1;
+          args.col = move.Item2;
+          args.player = mGameState.GetCurrentPlayer();
+          OnMoveSelected(args);
+          mGameState.Move(move.Item1, move.Item2);
+          //Console.WriteLine("(playerThread) " + mColor + " Waiting on click...");
+          //Console.WriteLine("(playerThread) " + mColor + " Done waiting on click...");
+        } else {
+          //Console.WriteLine("(playerThread) " + mColor + " Waiting on opponent...");
+          mWaitOnOpponent.WaitOne();
+          //Console.WriteLine("(playerThread) " + mColor + " Done waiting on opponent...");
+        }
+      }
     }
   }
 }

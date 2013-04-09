@@ -223,7 +223,7 @@ namespace LoganPenteAI {
       Tuple<double, int> champOther = null;
       Tuple<double, int> chumpOther = null;
 
-      foreach (Tuple<int, int> window in GetWindows(row, col)) {
+      foreach (Tuple<int, int> window in GetPatterns(row, col)) {
         // Check all heuristic rules.
         foreach (Tuple<Tuple<int, int, int>, Tuple<double, int>> heuristicPair in HeuristicValues.GetHeuristics()) {
           if (MatchesPattern(GetCurrentPlayer(), window, heuristicPair.Item1)) {
@@ -357,7 +357,7 @@ namespace LoganPenteAI {
       } else {
         int patternCurrent, patternOther;
         // Finds the largest absolute value. If the value is negative, then the guess is that the opponent wil win.
-        foreach (Tuple<int, int> window in GetWindows(row, col)) {
+        foreach (Tuple<int, int> window in GetPatterns(row, col)) {
           foreach (Tuple<Tuple<int, int, int>, Tuple<double, int>> heuristicPair in HeuristicValues.GetHeuristics()) {
             if (MatchesPattern(GetCurrentPlayer(), window, heuristicPair.Item1)) {
               return heuristicPair.Item2;
