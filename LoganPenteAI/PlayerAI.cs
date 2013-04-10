@@ -11,7 +11,7 @@ namespace LoganPenteAI {
   public class PlayerAI : PlayerBase {
     private GameState mGameState;
     private Player mColor;
-    private const int LOOKAHEAD = 1;
+    private const int LOOKAHEAD = 2;
     private AutoResetEvent mWaitOnOpponent;
 
     public PlayerAI() {}
@@ -28,7 +28,7 @@ namespace LoganPenteAI {
     }
 
     public override void SetOpponent(PlayerBase opponent) {
-      MoveSelected += opponent.MoveSelectedEventHandler_GetOpponentMove;
+      opponent.MoveSelected += MoveSelectedEventHandler_GetOpponentMove;
     }
 
     public override void MoveSelectedEventHandler_GetOpponentMove(object sender, MoveSelectedEventArgs args) {
@@ -56,6 +56,7 @@ namespace LoganPenteAI {
 
       while (mGameState.GetWinner() == Player.Neither) {
         if (mGameState.GetCurrentPlayer() == mColor) {
+          Console.WriteLine("(playerThread) " + mColor + " Thinking...");
           move = GetMove();
           args = new MoveSelectedEventArgs();
           args.row = move.Item1;
@@ -63,12 +64,11 @@ namespace LoganPenteAI {
           args.player = mGameState.GetCurrentPlayer();
           OnMoveSelected(args);
           mGameState.Move(move.Item1, move.Item2);
-          //Console.WriteLine("(playerThread) " + mColor + " Waiting on click...");
-          //Console.WriteLine("(playerThread) " + mColor + " Done waiting on click...");
+          Console.WriteLine("(playerThread) " + mColor + " Done thinking...");
         } else {
-          //Console.WriteLine("(playerThread) " + mColor + " Waiting on opponent...");
+          Console.WriteLine("(playerThread) " + mColor + " Waiting on opponent...");
           mWaitOnOpponent.WaitOne();
-          //Console.WriteLine("(playerThread) " + mColor + " Done waiting on opponent...");
+          Console.WriteLine("(playerThread) " + mColor + " Done waiting on opponent...");
         }
       }
     }

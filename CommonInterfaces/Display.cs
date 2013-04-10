@@ -50,12 +50,12 @@ namespace CommonInterfaces {
 
     private void Display_Paint(object sender, PaintEventArgs e) {
       Graphics g = e.Graphics;
+      SetText();
       DrawBoardLines(g);
       DrawStones(g);
     }
 
     private void DrawBoardLines(Graphics g) {
-      SetText();
       int pen_width = 2;
       int width = this.Size.Width;
       int height = this.Size.Height;

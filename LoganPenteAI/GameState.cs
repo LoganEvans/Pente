@@ -86,7 +86,11 @@ namespace LoganPenteAI {
     private double TotalHeuristic() {
       double retval = 0.0;
       if (GetWinner() != Player.Neither) {
-        return -1.0;  // Opponent just moved, so opponent just won.
+        if (GetCurrentPlayer() == Player.White) {
+          return 1.0;
+        } else {
+          return -1.0;  // Opponent just moved, so opponent just won.
+        }
       }
 
       for (int row_dex = 0; row_dex < ROWS; row_dex++) {
@@ -181,15 +185,12 @@ namespace LoganPenteAI {
             continue;
           }
 
-          spot = Tuple.Create(row_dex, col_dex);
-          candidates.Add(Tuple.Create(spot, Tuple.Create(mHeuristicMapCurrent[row_dex][col_dex].Item1, mHeuristicMapCurrent[row_dex][col_dex].Item2)));
+          if (IsOnMap(row_dex, col_dex, mInfluenceMap)) {
+            spot = Tuple.Create(row_dex, col_dex);
+            candidates.Add(Tuple.Create(spot, Tuple.Create(mHeuristicMapCurrent[row_dex][col_dex].Item1, mHeuristicMapCurrent[row_dex][col_dex].Item2)));
+          }
         }
       }
-
-      // Sort by heuristic high to low
-      candidates.Sort((a, b) => -(a.Item2.Item1.CompareTo(b.Item2.Item1)));
-      // Sort by priority low to high
-      candidates.Sort((a, b) => a.Item2.Item2.CompareTo(b.Item2.Item2));
 
       return candidates;
     }
@@ -222,26 +223,21 @@ namespace LoganPenteAI {
       Tuple<double, int> chumpCurrent = null;
       Tuple<double, int> champOther = null;
       Tuple<double, int> chumpOther = null;
+      Dictionary<Pattern, Tuple<double, int>> hDict = HeuristicValues.GetHeuristicDict();
+      Pattern pattern;
 
-      foreach (Tuple<int, int> window in GetPatterns(row, col)) {
-        // Check all heuristic rules.
-        foreach (Tuple<Tuple<int, int, int>, Tuple<double, int>> heuristicPair in HeuristicValues.GetHeuristics()) {
-          if (MatchesPattern(GetCurrentPlayer(), window, heuristicPair.Item1)) {
-            mInfluenceMap[row] |= SPOT_MASKS[col];
-
-            chumpCurrent = heuristicPair.Item2;
-            if (CmpHeuristics(chumpCurrent, champCurrent) >= 0) {
-              champCurrent = chumpCurrent;
-            }
+      foreach (Tuple<int, int> window in GetWindows(row, col)) {
+        if (hDict.TryGetValue(WindowToPattern(GetCurrentPlayer(), window), out chumpCurrent)) {
+          mInfluenceMap[row] |= SPOT_MASKS[col];
+          if (CmpHeuristics(chumpCurrent, champCurrent) >= 0) {
+            champCurrent = chumpCurrent;
           }
+        }
 
-          if (MatchesPattern(getOtherPlayer(), window, heuristicPair.Item1)) {
-            mInfluenceMap[row] |= SPOT_MASKS[col];
-
-            chumpOther = heuristicPair.Item2;
-            if (CmpHeuristics(chumpOther, champOther) >= 0) {
-              champOther = chumpOther;
-            }
+        if (hDict.TryGetValue(WindowToPattern(GetOtherPlayer(), window), out chumpOther)) {
+          mInfluenceMap[row] |= SPOT_MASKS[col];
+          if (CmpHeuristics(chumpOther, champOther) >= 0) {
+            champOther = chumpOther;
           }
         }
 
@@ -255,10 +251,10 @@ namespace LoganPenteAI {
           }
         }
 
-        if (MatchesPattern(getOtherPlayer(), window, HeuristicValues.GetCaptureCheck())) {
+        if (MatchesPattern(GetOtherPlayer(), window, HeuristicValues.GetCaptureCheck())) {
           mInfluenceMap[row] |= SPOT_MASKS[col];
 
-          chumpOther = HeuristicValues.EstimateQualityOfCapture(getOtherPlayer(), GetCaptures(Player.White), GetCaptures(Player.Black));
+          chumpOther = HeuristicValues.EstimateQualityOfCapture(GetOtherPlayer(), GetCaptures(Player.White), GetCaptures(Player.Black));
           if (CmpHeuristics(chumpOther, champOther) >= 0) {
             champOther = chumpOther;
           }
@@ -354,19 +350,31 @@ namespace LoganPenteAI {
     public Tuple<double, int> GetHeuristicValue(int row, int col) {
       if (!IsLegal(row, col)) {
         return Tuple.Create(0.0, HeuristicValues.GetProximityPriority() + 1);
-      } else {
-        int patternCurrent, patternOther;
-        // Finds the largest absolute value. If the value is negative, then the guess is that the opponent wil win.
-        foreach (Tuple<int, int> window in GetPatterns(row, col)) {
-          foreach (Tuple<Tuple<int, int, int>, Tuple<double, int>> heuristicPair in HeuristicValues.GetHeuristics()) {
-            if (MatchesPattern(GetCurrentPlayer(), window, heuristicPair.Item1)) {
-              return heuristicPair.Item2;
-            }
-          }
+      }
+
+      Dictionary<Pattern, Tuple<double, int>> hDict = HeuristicValues.GetHeuristicDict();
+      Tuple<double, int> val = null;
+      Pattern pattern;
+
+      foreach (Tuple<int, int> window in GetWindows(row, col)) {
+        pattern = new Pattern();
+        pattern.SetPattern(window.Item1, window.Item2);
+        if (hDict.TryGetValue(pattern, out val)) {
+          return val;
         }
       }
 
       return Tuple.Create(0.0, HeuristicValues.GetProximityPriority() + 1);
+    }
+
+    public Pattern WindowToPattern(Player color, Tuple<int, int> window) {
+      Pattern retval = new Pattern();
+      if (color == Player.White) {
+        retval.SetPattern(window.Item1, window.Item2);
+      } else {
+        retval.SetPattern(window.Item2, window.Item1);
+      }
+      return retval;
     }
   }
 }

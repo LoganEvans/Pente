@@ -166,7 +166,7 @@ namespace LoganPenteAI {
       Player current = GetCurrentPlayer();
 
       bool retval = false;
-      List<Tuple<int, int>> windows = GetPatterns(row, col);
+      List<Tuple<int, int>> windows = GetWindows(row, col);
 
       var directions = new List<Tuple<int, int>>();
       directions.Add(Tuple.Create(0, 1));  // by row
@@ -175,14 +175,14 @@ namespace LoganPenteAI {
       directions.Add(Tuple.Create(1, 1));  // by down diag
 
       for (int i = 0; i < directions.Count; i++) {
-        if (MatchesPattern(current, windows[i], Pattern.FORWARD_CAPTURE_PATTERN)) {
+        if (MatchesPattern(current, windows[i], HeuristicValues.FORWARD_CAPTURE_PATTERN)) {
           SetSpot(row + directions[i].Item1, col + directions[i].Item2, Player.Neither);
           SetSpot(row + 2 * directions[i].Item1, col + 2 * directions[i].Item2, Player.Neither);
           IncrementPlayerCaptures(current);
           retval = true;
         }
 
-        if (MatchesPattern(current, windows[i], Pattern.BACKWARD_CAPTURE_PATTERN)) {
+        if (MatchesPattern(current, windows[i], HeuristicValues.BACKWARD_CAPTURE_PATTERN)) {
           SetSpot(row - directions[i].Item1, col - directions[i].Item2, Player.Neither);
           SetSpot(row - 2 * directions[i].Item1, col - 2 * directions[i].Item2, Player.Neither);
           IncrementPlayerCaptures(current);
@@ -193,7 +193,7 @@ namespace LoganPenteAI {
       return retval;
     }
 
-    public List<Tuple<int, int>> GetPatterns(int row, int col) {
+    public List<Tuple<int, int>> GetWindows(int row, int col) {
       Debug.Assert(Pattern.ROW_PATTERN == 0);
       Debug.Assert(Pattern.COL_PATTERN == 1);
       Debug.Assert(Pattern.UP_DIAG_PATTERN == 2);
@@ -251,7 +251,7 @@ namespace LoganPenteAI {
         return true;
       }
 
-      foreach (Tuple<int, int> window in GetPatterns(row, col)) {
+      foreach (Tuple<int, int> window in GetWindows(row, col)) {
         int currentWindow = (GetCurrentPlayer() == Player.White) ? window.Item1 : window.Item2;
         if ((currentWindow & (currentWindow << 1) & (currentWindow << 2) & (currentWindow << 3) & (currentWindow << 4)) != 0) {
           return true;
@@ -295,7 +295,7 @@ namespace LoganPenteAI {
       }
     }
 
-    public Player getOtherPlayer() {
+    public Player GetOtherPlayer() {
       if (mMoveNumber % 2 == 0) {
         return Player.Black;
       } else {

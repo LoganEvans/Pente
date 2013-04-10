@@ -8,15 +8,13 @@ using CommonInterfaces;
 
 namespace LoganPenteAI {
   public struct Pattern {
-    public static const int PATTERN_MASK = 0x1FF;
-    public static const int PATTERN_RADIUS = 4;
-    public static const int PATTERN_DIAMETER = 9;
-    public static readonly Tuple<int, int, int> BACKWARD_CAPTURE_PATTERN = Tuple.Create(0x12, 0xc, 0x1e1);
-    public static readonly Tuple<int, int, int> FORWARD_CAPTURE_PATTERN = Tuple.Create(0x90, 0x60, 0x10f);
-    public static const int ROW_PATTERN = 0;
-    public static const int COL_PATTERN = 1;
-    public static const int UP_DIAG_PATTERN = 2;
-    public static const int DOWN_DIAG_PATTERN = 3;
+    public const int PATTERN_MASK = 0x1FF;
+    public const int PATTERN_RADIUS = 4;
+    public const int PATTERN_DIAMETER = 9;
+    public const int ROW_PATTERN = 0;
+    public const int COL_PATTERN = 1;
+    public const int UP_DIAG_PATTERN = 2;
+    public const int DOWN_DIAG_PATTERN = 3;
 
     private int mPattern;
 
@@ -24,34 +22,28 @@ namespace LoganPenteAI {
       mPattern = patternWhite + (patternBlack << Pattern.PATTERN_DIAMETER);
     }
 
-    public virtual int GetHashCode() {
+    public override int GetHashCode() {
       return mPattern;
     }
 
-    public int getPatternWhite() {
+    public int GetPatternCurrent() {
       return mPattern & PATTERN_MASK;
     }
 
-    public int getPatternBlack() {
+    public int GetPatternOther() {
       return (mPattern >> PATTERN_DIAMETER) & PATTERN_MASK;
     }
 
     public static List<Pattern> GetAllMatchingPatterns(Tuple<int, int, int> patternTrio) {
       List<Pattern> retval = new List<Pattern>();
       Pattern toAdd;
+      int filter = patternTrio.Item3 | (patternTrio.Item3 << PATTERN_DIAMETER);
 
-      for (int i = 0; i < PATTERN_DIAMETER; i++) {
-        if (((1 << i) & patternTrio.Item3) != 0) {
+      for (int i = 0; i < Math.Pow(2, 2 * PATTERN_DIAMETER); i++) {
+        if ((i & filter) == filter) {
           toAdd = new Pattern();
           toAdd.SetPattern(patternTrio.Item1, patternTrio.Item2);
-          retval.Add(toAdd);
-          
-          toAdd = new Pattern();
-          toAdd.SetPattern(patternTrio.Item1 | (1 << i), patternTrio.Item2);
-          retval.Add(toAdd);
-
-          toAdd = new Pattern();
-          toAdd.SetPattern(patternTrio.Item1, patternTrio.Item2 | (1 << i));
+          toAdd.mPattern |= i;  // Augments the two patterns.
           retval.Add(toAdd);
         }
       }
@@ -61,17 +53,24 @@ namespace LoganPenteAI {
   }
 
   static class HeuristicValues {
-    private static List<Tuple<Tuple<int, int, int>, Tuple<double, int>>> _heuristics;
-    private static Dictionary<Pattern, Tuple<double, int>> _hDict;
+    private static List<Tuple<Tuple<int, int, int>, Tuple<double, int>>> _heuristics = null;
+    private static Dictionary<Pattern, Tuple<double, int>> _hDict = null;
     private static Tuple<int, int, int> _captureCheck;
     private static double[] mWin;
     private static int mProximityPriority;
+    public static readonly Tuple<int, int, int> BACKWARD_CAPTURE_PATTERN = Tuple.Create(0x12, 0xc, 0x1e1);
+    public static readonly Tuple<int, int, int> FORWARD_CAPTURE_PATTERN = Tuple.Create(0x90, 0x60, 0x10f);
 
     // The Heuristics are primarily to identify spots to look at so that the branching
     // factor will be kept low.
     static HeuristicValues() {
+      InitializeHeuristics();
+      // InitializeDictionary();
+    }
+
+    private static void InitializeHeuristics() {
       _heuristics = new List<Tuple<Tuple<int, int, int>, Tuple<double, int>>>();
-      double[] mWin = {1.0, 0.8, 0.6, 0.4, 0.2};
+      double[] mWin = { 1.0, 0.8, 0.6, 0.4, 0.2 };
       double bigDelta = mWin[0] / 100.0;
       double delta = bigDelta / 100.0;
 
@@ -139,10 +138,36 @@ namespace LoganPenteAI {
       _captureCheck = new Tuple<int, int, int>(0x2, 0xc, 0x1e1);  // 0bXXXX.221X
     }
 
+    private static void InitializeDictionary() {
+      _hDict = new Dictionary<Pattern, Tuple<double, int>>();
+      int x = 0;
+      Tuple<double, int> conflict;
+      foreach (Tuple<Tuple<int, int, int>, Tuple<double, int>> heur in _heuristics) {
+        foreach (Pattern pattern in Pattern.GetAllMatchingPatterns(heur.Item1)) {
+          if (_hDict.ContainsKey(pattern)) {
+            conflict = _hDict[pattern];
+            if (conflict.Item2 > heur.Item2.Item2) {
+              _hDict[pattern] = heur.Item2;
+            }
+          } else {
+            _hDict.Add(pattern, heur.Item2);
+          }
+          x++;
+        }
+      }
+    }
+
     // Order is:
     // patternLength, patternCurrentPlayer, patternOpponentPlayer, patternIgnore, score
-    public static List<Tuple<Tuple<int, int, int>, Tuple<double, int>>> GetHeuristics() {
+    private static List<Tuple<Tuple<int, int, int>, Tuple<double, int>>> GetHeuristics() {
       return _heuristics;
+    }
+
+    public static Dictionary<Pattern, Tuple<double, int>> GetHeuristicDict() {
+      if (_hDict == null) {
+        InitializeDictionary();
+      }
+      return _hDict;
     }
 
     public static Tuple<int, int, int> GetCaptureCheck() {
