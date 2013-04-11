@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using CommonInterfaces;
@@ -20,6 +22,10 @@ namespace LoganPenteAI {
 
     public void SetPattern(int patternWhite, int patternBlack) {
       mPattern = patternWhite + (patternBlack << Pattern.PATTERN_DIAMETER);
+    }
+
+    public void SetPattern(string fromString) {
+      mPattern = Int32.Parse(fromString);
     }
 
     public override int GetHashCode() {
@@ -49,6 +55,10 @@ namespace LoganPenteAI {
       }
 
       return retval;
+    }
+
+    public override string ToString() {
+      return mPattern.ToString();
     }
   }
 
@@ -139,20 +149,39 @@ namespace LoganPenteAI {
     }
 
     private static void InitializeDictionary() {
+      String filename = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), @"HeuristicValueStore.txt");
       _hDict = new Dictionary<Pattern, Tuple<double, int>>();
-      int x = 0;
-      Tuple<double, int> conflict;
-      foreach (Tuple<Tuple<int, int, int>, Tuple<double, int>> heur in _heuristics) {
-        foreach (Pattern pattern in Pattern.GetAllMatchingPatterns(heur.Item1)) {
-          if (_hDict.ContainsKey(pattern)) {
-            conflict = _hDict[pattern];
-            if (conflict.Item2 > heur.Item2.Item2) {
-              _hDict[pattern] = heur.Item2;
+
+      if (!File.Exists(filename) || File.ReadAllLines(filename).Length < 10) {
+        Tuple<double, int> conflict;
+        foreach (Tuple<Tuple<int, int, int>, Tuple<double, int>> heur in _heuristics) {
+          foreach (Pattern pattern in Pattern.GetAllMatchingPatterns(heur.Item1)) {
+            if (_hDict.ContainsKey(pattern)) {
+              conflict = _hDict[pattern];
+              if (conflict.Item2 > heur.Item2.Item2) {
+                _hDict[pattern] = heur.Item2;
+              }
+            } else {
+              _hDict.Add(pattern, heur.Item2);
             }
-          } else {
-            _hDict.Add(pattern, heur.Item2);
           }
-          x++;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        foreach (Pattern pattern in _hDict.Keys) {
+          sb.Append(pattern.ToString() + "," + _hDict[pattern].Item1 + "," + _hDict[pattern].Item2);
+          sb.Append(Environment.NewLine);
+        }
+
+        File.WriteAllText(filename, sb.ToString());
+      } else {
+        Regex rx = new Regex(@"(?<pattern>[^,]*),(?<heuristic>[^,]*),(?<priority>.*)$", RegexOptions.Compiled);
+
+        foreach (String line in File.ReadAllLines(filename)) {
+          GroupCollection groups = rx.Match(line).Groups;
+          Pattern key = new Pattern();
+          key.SetPattern(groups["pattern"].Value);
+          _hDict[key] = Tuple.Create(Double.Parse(groups["heuristic"].Value), Int32.Parse(groups["priority"].Value));
         }
       }
     }

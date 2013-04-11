@@ -45,6 +45,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GameState.cs" />
+    <Compile Include="HeuristicResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>HeuristicResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="HeuristicValues.cs" />
     <Compile Include="PlayerHuman.cs" />
     <Compile Include="PlayerAI.cs" />
@@ -60,6 +65,13 @@
       <Project>{0f88ab94-a0c9-4ee8-b763-f49dfbdf3b24}</Project>
       <Name>CommonInterfaces</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="HeuristicResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>HeuristicResources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

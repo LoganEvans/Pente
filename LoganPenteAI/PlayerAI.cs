@@ -20,7 +20,7 @@ namespace LoganPenteAI {
     }
 
     public override void SetBoard(BoardInterface board) {
-      mGameState = new GameState(board, LOOKAHEAD);
+      mGameState = new GameState(board);
     }
 
     public override void SetColor(Player color) {
@@ -38,7 +38,7 @@ namespace LoganPenteAI {
 
     // The order of the Tuple is <row, col>
     public Tuple<int, int> GetMove() {
-      Tuple<int, int> move = mGameState.GetBestMove();
+      Tuple<int, int> move = mGameState.GetBestMove(LOOKAHEAD);
       Console.WriteLine("move number: " + mGameState.GetMoveNumber() + " color: " + mColor + ", best move: " + move);
       return move;
     }
