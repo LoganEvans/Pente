@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using CommonInterfaces;
 
 namespace LoganPenteAI {
-  class GameState : Board {
+  public class GameState : Board {
     private int[] mInfluenceMap;
     private static int mPossitionsEvaluated;
     private static int mBaseDepth;
@@ -23,6 +23,11 @@ namespace LoganPenteAI {
     public GameState(GameState copyFrom) : base(copyFrom) {
       CopyMaps(copyFrom);
       mRunningHeuristic = copyFrom.mRunningHeuristic;
+    }
+
+    public GameState(Player nextPlayer, int capturesWhite, int capturesBlack, String boardStr) : base(nextPlayer, capturesWhite, capturesBlack, boardStr) {
+      InitializeMaps();
+      mRunningHeuristic = 0.0;
     }
 
     private void CopyMaps(GameState copyFrom) {

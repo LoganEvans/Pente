@@ -62,7 +62,7 @@ namespace LoganPenteAI {
     }
   }
 
-  static class HeuristicValues {
+  public static class HeuristicValues {
     private static List<Tuple<Tuple<int, int, int>, Tuple<double, int>>> _heuristics = null;
     private static Dictionary<Pattern, Tuple<double, int>> _hDict = null;
     private static Tuple<int, int, int> _captureCheck;
