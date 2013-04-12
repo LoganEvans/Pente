@@ -194,11 +194,6 @@ namespace LoganPenteAI {
     }
 
     public List<Tuple<int, int>> GetWindows(int row, int col) {
-      Debug.Assert(Pattern.ROW_PATTERN == 0);
-      Debug.Assert(Pattern.COL_PATTERN == 1);
-      Debug.Assert(Pattern.UP_DIAG_PATTERN == 2);
-      Debug.Assert(Pattern.DOWN_DIAG_PATTERN == 3);
-
       var retval = new List<Tuple<int, int>>();
       int whiteRow, blackRow, whiteCol, blackCol, whiteUpDiag, blackUpDiag, whiteDownDiag, blackDownDiag;
 

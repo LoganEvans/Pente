@@ -54,6 +54,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="BoardTests.cs" />
     <Compile Include="GameStateTests.cs" />
+    <Compile Include="HeuristicValuesTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CommonInterfaces\CommonInterfaces.csproj">

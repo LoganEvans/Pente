@@ -46,7 +46,7 @@ namespace LoganPenteAI {
       int filter = patternTrio.Item3 | (patternTrio.Item3 << PATTERN_DIAMETER);
 
       for (int i = 0; i < Math.Pow(2, 2 * PATTERN_DIAMETER); i++) {
-        if ((i & filter) == filter) {
+        if ((i | filter) == filter) {
           toAdd = new Pattern();
           toAdd.SetPattern(patternTrio.Item1, patternTrio.Item2);
           toAdd.mPattern |= i;  // Augments the two patterns.
@@ -179,9 +179,11 @@ namespace LoganPenteAI {
 
         foreach (String line in File.ReadAllLines(filename)) {
           GroupCollection groups = rx.Match(line).Groups;
-          Pattern key = new Pattern();
-          key.SetPattern(groups["pattern"].Value);
-          _hDict[key] = Tuple.Create(Double.Parse(groups["heuristic"].Value), Int32.Parse(groups["priority"].Value));
+          if (groups.Count == 4) {
+            Pattern key = new Pattern();
+            key.SetPattern(groups["pattern"].Value);
+            _hDict[key] = Tuple.Create(Double.Parse(groups["heuristic"].Value), Int32.Parse(groups["priority"].Value));
+          }
         }
       }
     }

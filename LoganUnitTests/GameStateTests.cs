@@ -15,7 +15,7 @@ namespace LoganUnitTests {
       Assert.AreEqual(Pattern.UP_DIAG_PATTERN, 2);
       Assert.AreEqual(Pattern.DOWN_DIAG_PATTERN, 3);
 
-      GameState board = new GameState(Player.White, 2, 4,
+      GameState uut = new GameState(Player.White, 2, 4,
 //123456789012345678
 "..................." +  // 0
 "..................." +  // 1
@@ -39,7 +39,9 @@ namespace LoganUnitTests {
 
       int row = 9;
       int col = 9;
-      List<Tuple<int, int>> windows = board.GetWindows(row, col);
+      List<Tuple<int, int>> windows = uut.GetWindows(row, col);
+      List<Tuple<int, int>> windowsB = uut.GetWindows(row + 1, col + 1);
+      Assert.AreNotEqual(windows[0].Item1, windowsB[0].Item1);
 
       int expectedWhiteRow = Convert.ToInt32("000000000", 2);
       int expectedBlackRow = Convert.ToInt32("111101111", 2);
@@ -60,6 +62,98 @@ namespace LoganUnitTests {
       int expectedBlackDownDiag = Convert.ToInt32("001100000", 2);
       Assert.AreEqual(expectedWhiteDownDiag, windows[3].Item1);
       Assert.AreEqual(expectedBlackDownDiag, windows[3].Item2);
+    }
+
+    [TestMethod]
+    public void TestGetHeuristicValueWhiteTurn() {
+      GameState uut = new GameState(Player.White, 2, 4,
+//123456789012345678
+".......B..........." +  // 0
+"........B.........." +  // 1
+"..................." +  // 2
+"..........B..W....." +  // 3
+"...........BW......" +  // 4
+"...........W......." +  // 5
+"..........W........" +  // 6
+"..................." +  // 7
+"........W.........." +  // 8
+"..........WWWWB...." +  // 9 (center)
+"..........BBBBW...." +  // 10
+".......WB.WWWWB...." +  // 11
+"....WBBBB.........." +  // 12
+"..................." +  // 13
+"..................." +  // 14
+"..................." +  // 15
+"..................." +  // 16
+"..................." +  // 17
+"...................");  // 18
+
+      // Can win: priority == 0
+      // Must block win: priority == 1
+      //
+
+      List<Tuple<int, int>> windows;
+      Tuple<double, int> heuristic;
+      windows = uut.GetWindows(2, 9);
+      int expectedBlackDownDiag = Convert.ToInt32("001101100", 2);
+      Assert.AreEqual(expectedBlackDownDiag, windows[3].Item2);
+      heuristic = uut.GetHeuristicValue(2, 9);
+      Assert.AreEqual(1, heuristic.Item2);
+
+      windows = uut.GetWindows(7, 9);
+      int expectedWhiteUpDiag = Convert.ToInt32("111101000", 2);
+      Assert.AreEqual(expectedWhiteUpDiag, windows[2].Item1);
+      Assert.AreEqual(0, uut.GetHeuristicValue(7, 9).Item2);
+      Assert.AreEqual(0, uut.GetHeuristicValue(9, 9).Item2);
+      Assert.AreEqual(1, uut.GetHeuristicValue(10, 9).Item2);
+      Assert.AreEqual(0, uut.GetHeuristicValue(11, 9).Item2);
+      Assert.AreEqual(1, uut.GetHeuristicValue(12, 9).Item2);
+    }
+
+    [TestMethod]
+    public void TestGetHeuristicValueBlackTurn() {
+      GameState uut = new GameState(Player.Black, 2, 4,
+//123456789012345678
+".......B..........." +  // 0
+"........B.........." +  // 1
+"..................." +  // 2
+"..........B..W....." +  // 3
+"...........BW......" +  // 4
+"...........W......." +  // 5
+"..........W........" +  // 6
+"..................." +  // 7
+"........W.........." +  // 8
+"..........WWWWB...." +  // 9 (center)
+"..........BBBBW...." +  // 10
+".......WB.WWWWB...." +  // 11
+"....WBBBB.........." +  // 12
+"..................." +  // 13
+"..................." +  // 14
+"..................." +  // 15
+"..................." +  // 16
+"..................." +  // 17
+"...................");  // 18
+
+      // Can win: priority == 0
+      // Must block win: priority == 1
+      //
+
+      List<Tuple<int, int>> windows;
+      Tuple<double, int> heuristic;
+      windows = uut.GetWindows(2, 9);
+      int expectedBlackDownDiag = Convert.ToInt32("001101100", 2);
+      Assert.AreEqual(windows[3].Item2, expectedBlackDownDiag);
+      heuristic = uut.GetHeuristicValue(2, 9);
+      Assert.AreEqual(0, heuristic.Item2);
+
+      windows = uut.GetWindows(7, 9);
+      int expectedWhiteUpDiag = Convert.ToInt32("111101000", 2);
+      Assert.AreEqual(windows[2].Item1, expectedWhiteUpDiag);
+      Assert.AreEqual(1, uut.GetHeuristicValue(7, 9).Item2);
+      Assert.AreEqual(1, uut.GetHeuristicValue(9, 9).Item2);
+      Assert.AreEqual(0, uut.GetHeuristicValue(10, 9).Item2);
+      Assert.AreEqual(1, uut.GetHeuristicValue(11, 9).Item2);
+      Assert.AreEqual(0, uut.GetHeuristicValue(12, 9).Item2);
     }
   }
 }
