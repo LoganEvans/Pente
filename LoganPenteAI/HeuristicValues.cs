@@ -259,5 +259,9 @@ namespace LoganPenteAI {
         inputList.Add(val);
       }
     }
+
+    public static double GetWinHeuristic() {
+      return 1000.0;
+    }
   }
 }

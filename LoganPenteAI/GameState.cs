@@ -9,9 +9,9 @@ using CommonInterfaces;
 namespace LoganPenteAI {
   public class GameState : Board {
     private int[] mInfluenceMap;
-    private static int mPossitionsEvaluated;
     private static int mBaseDepth;
     private double mRunningHeuristic;
+    private static int mPositionsEvaluated = 0;
 
     private readonly int[] branchingCategories = {3, 10, 50, ROWS * COLS};
 
@@ -42,36 +42,44 @@ namespace LoganPenteAI {
     public Tuple<int, int> GetBestMove(int depthLimit) {
       Console.WriteLine(" > GetBestMove()");
       mBaseDepth = GetMoveNumber();
-      mPossitionsEvaluated = 0;
       Tuple<int, int> move;
       double heuristic = Minimax(depthLimit, null, null, out move);
       //Tuple<Tuple<int, int>, Tuple<double, int>> move = Negamax();
-      Console.WriteLine(" < GetBestMove()... Possitions evaluated: " + mPossitionsEvaluated + ", heuristic: " + heuristic);
+      Console.WriteLine(" < GetBestMove()... heuristic: " + heuristic + " mPositionsEvaluated: " + mPositionsEvaluated);
       return move;
     }
 
-    double Minimax(int depth, double? heuristicAlpha, double? heuristicBeta, out Tuple<int, int> bestMove) {
+    double Minimax(int depthLimit, double? heuristicAlpha, double? heuristicBeta, out Tuple<int, int> bestMove) {
+      mPositionsEvaluated++;
       double? champHeur = null;
       double chumpHeur;
       GameState child = null;
       Tuple<int, int> move;
       bestMove = null;
 
-      if (depth == 0 || GetWinner() != Player.Neither) {
-        return mRunningHeuristic;
+      if (GetWinner() != Player.Neither) {
+        if (IsMaxLevel()) {
+          return HeuristicValues.GetWinHeuristic();
+        } else {
+          return -1 * HeuristicValues.GetWinHeuristic();
+        }
       }
 
       if (IsMaxLevel()) {
         foreach (Tuple<int, int> candidateMove in GetCandidateMoves()) {
           child = new GameState(this);
           child.Move(candidateMove.Item1, candidateMove.Item2);
-          chumpHeur = child.Minimax(depth - 1, champHeur, heuristicBeta, out move);
+          if (depthLimit > 0) {
+            chumpHeur = child.Minimax(depthLimit - 1, champHeur, heuristicBeta, out move);
+          } else {
+            chumpHeur = GetHeuristicValue(candidateMove.Item1, candidateMove.Item2).Item1;
+          }
 
           // Max level, so pick max.
           if (champHeur == null || champHeur < chumpHeur) {
             champHeur = chumpHeur;
+            bestMove = candidateMove;
             if (heuristicBeta != null && champHeur > heuristicBeta) {
-              bestMove = candidateMove;
               // Beta prune.
               break;
             }
@@ -81,13 +89,17 @@ namespace LoganPenteAI {
         foreach (Tuple<int, int> candidateMove in GetCandidateMoves()) {
           child = new GameState(this);
           child.Move(candidateMove.Item1, candidateMove.Item2);
-          chumpHeur = child.Minimax(depth - 1, heuristicAlpha, champHeur, out move);
+          if (depthLimit > 0) {
+            chumpHeur = child.Minimax(depthLimit - 1, heuristicAlpha, champHeur, out move);
+          } else {
+            chumpHeur = GetHeuristicValue(candidateMove.Item1, candidateMove.Item2).Item1;
+          }
 
           // Min level, so pick min.
           if (champHeur == null || champHeur > chumpHeur) {
             champHeur = chumpHeur;
+            bestMove = candidateMove;
             if (heuristicAlpha != null && champHeur < heuristicAlpha) {
-              bestMove = candidateMove;
               // Beta prune.
               break;
             }
@@ -95,7 +107,7 @@ namespace LoganPenteAI {
         }
       }
 
-      return (double)champHeur;
+      return (double)champHeur + mRunningHeuristic;
     }
 
     private List<Tuple<int, int>> GetCandidateMoves() {
@@ -110,6 +122,21 @@ namespace LoganPenteAI {
           if (IsOnMap(row_dex, col_dex, mInfluenceMap)) {
             spot = Tuple.Create(row_dex, col_dex);
             candidates.Add(spot);
+          }
+        }
+      }
+
+      if (candidates.Count == 0) {
+        for (int row_dex = 0; row_dex < ROWS; row_dex++) {
+          for (int col_dex = 0; col_dex < COLS; col_dex++) {
+            if (!IsLegal(row_dex, col_dex)) {
+              continue;
+            }
+
+            if (GetHeuristicValue(row_dex, col_dex).Item2 <= HeuristicValues.GetProximityPriority()) {
+              spot = Tuple.Create(row_dex, col_dex);
+              candidates.Add(spot);
+            }
           }
         }
       }
