@@ -9,21 +9,36 @@ namespace LoganUnitTests {
   public class AITests {
     [TestMethod]
     public void TestGetMoveShouldTakeWin() {
-      Assert.Fail();
-      Board testBoard = new Board();
-      // Default of (9, 9) for white
-      testBoard.Move(9, 10);  // black
-      testBoard.Move(13, 9);  // white
-      testBoard.Move(9, 11);  // black
-      testBoard.Move(11, 9);  // white
-      testBoard.Move(9, 12);  // black
-      testBoard.Move(10, 9);  // white
-      testBoard.Move(9, 13);  // black
+      GameState uut = new GameState(Player.White, 2, 4,
+//123456789012345678
+"..................." +  // 0
+"..................." +  // 1
+"..................." +  // 2
+"..................." +  // 3
+"..................." +  // 4
+"..................." +  // 5
+"..................." +  // 6
+"..................." +  // 7
+"..................." +  // 8
+".........WBBBB....." +  // 9 (center)
+".........W........." +  // 10
+".........W........." +  // 11
+"..................." +  // 12
+".........W........." +  // 13
+"..................." +  // 14
+"..................." +  // 15
+"..................." +  // 16
+"..................." +  // 17
+"...................");  // 18
 
-      Assert.IsTrue(testBoard.GetWinner() == Player.Neither);
-      Tuple<int, int> move = new PlayerAI(Player.White, testBoard).GetMove();
-      testBoard.Move(move.Item1, move.Item2);
-      Assert.IsFalse(testBoard.GetWinner() == Player.Neither);
+      Tuple<int, int> expectedMove = Tuple.Create(12, 9);
+      Tuple<int, int> move;
+      move = uut.GetBestMove(0);
+      Assert.AreEqual(expectedMove, move);
+      move = uut.GetBestMove(1);
+      Assert.AreEqual(expectedMove, move);
+      move = uut.GetBestMove(2);
+      Assert.AreEqual(expectedMove, move);
     }
   }
 }

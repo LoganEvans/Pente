@@ -11,12 +11,16 @@ namespace LoganPenteAI {
   public class PlayerAI : PlayerBase {
     private GameState mGameState;
     private Player mColor;
-    private const int LOOKAHEAD = 3;
+    private int mLookahead = 3;
     private AutoResetEvent mWaitOnOpponent;
 
     public PlayerAI() {}
 
     public PlayerAI(Player color, BoardInterface board) {
+    }
+
+    public void SetLookeahd(int lookahead) {
+      mLookahead = lookahead;
     }
 
     public override void SetBoard(BoardInterface board) {
@@ -38,7 +42,7 @@ namespace LoganPenteAI {
 
     // The order of the Tuple is <row, col>
     public Tuple<int, int> GetMove() {
-      Tuple<int, int> move = mGameState.GetBestMove(LOOKAHEAD);
+      Tuple<int, int> move = mGameState.GetBestMove(mLookahead);
       Console.WriteLine("move number: " + mGameState.GetMoveNumber() + " color: " + mColor + ", best move: " + move);
       return move;
     }
