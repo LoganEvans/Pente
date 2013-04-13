@@ -9,6 +9,37 @@ using System.Threading.Tasks;
 using CommonInterfaces;
 
 namespace LoganPenteAI {
+  public struct Heuristic {
+    private double mValue;
+    private int mPriority;
+    public readonly int PROXIMITY_PRIORITY = 5;
+
+    public Heuristic(double value, int priority) {
+      mValue = value;
+      mPriority = priority;
+    }
+
+    // Note: no error detection.
+    public Heuristic(string fromString) {
+      Regex rx = new Regex(@"(?<value>[^,]*),(?<priority>.*)$", RegexOptions.Compiled);
+      GroupCollection groups = rx.Match(fromString).Groups;
+      mValue = Double.Parse(groups["value"].Value);
+      mPriority = Int32.Parse(groups["priority"].Value);
+    }
+
+    public double GetValue() {
+      return mValue;
+    }
+
+    public int GetPriority() {
+      return mPriority;
+    }
+
+    public override string ToString() {
+      return mValue.ToString() + "," + mPriority.ToString();
+    }
+  }
+
   public struct Pattern {
     public const int PATTERN_MASK = 0x1FF;
     public const int PATTERN_RADIUS = 4;
@@ -63,8 +94,8 @@ namespace LoganPenteAI {
   }
 
   public static class HeuristicValues {
-    private static List<Tuple<Tuple<int, int, int>, Tuple<double, int>>> _heuristics = null;
-    private static Dictionary<Pattern, Tuple<double, int>> _hDict = null;
+    private static List<Tuple<Tuple<int, int, int>, Heuristic>> _heuristics = null;
+    private static Dictionary<Pattern, Heuristic> _hDict = null;
     private static Tuple<int, int, int> _captureCheck;
     private static double[] mWin;
     private static int mProximityPriority;
@@ -79,7 +110,7 @@ namespace LoganPenteAI {
     }
 
     private static void InitializeHeuristics() {
-      _heuristics = new List<Tuple<Tuple<int, int, int>, Tuple<double, int>>>();
+      _heuristics = new List<Tuple<Tuple<int, int, int>, Heuristic>>();
       double[] mWin = { 1.0, 0.8, 0.6, 0.4, 0.2 };
       double bigDelta = mWin[0] / 100.0;
       double delta = bigDelta / 100.0;
@@ -99,49 +130,49 @@ namespace LoganPenteAI {
       // When searching for a win, all move up to and including level 2 should be considered.
 
       // Wins
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x6c, 0x0, 0x183), Tuple.Create(mWin[0], 0)));  // 0bXX11.11XX
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x2e, 0x0, 0x1c1), Tuple.Create(mWin[0], 0)));  // 0bXXX1.111X
-      _heuristics.Add(Tuple.Create(Tuple.Create(0xf, 0x0, 0x1e0), Tuple.Create(mWin[0], 0)));  // 0bXXXX.1111
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x6c, 0x0, 0x183), new Heuristic(mWin[0], 0)));  // 0bXX11.11XX
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x2e, 0x0, 0x1c1), new Heuristic(mWin[0], 0)));  // 0bXXX1.111X
+      _heuristics.Add(Tuple.Create(Tuple.Create(0xf, 0x0, 0x1e0), new Heuristic(mWin[0], 0)));  // 0bXXXX.1111
 
       // Block wins... generally a bad scenario
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0xf, 0x1e0), Tuple.Create(-(mWin[1] + delta), 1)));  // 0bXXXX.2222
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x2e, 0x1c1), Tuple.Create(-(mWin[1] + delta), 1)));  // 0bXXX2.222X
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x6c, 0x183), Tuple.Create(-(mWin[1] + delta), 1)));  // 0bXX22.22XX
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0xf, 0x1e0), new Heuristic(-(mWin[1] + delta), 1)));  // 0bXXXX.2222
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x2e, 0x1c1), new Heuristic(-(mWin[1] + delta), 1)));  // 0bXXX2.222X
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x6c, 0x183), new Heuristic(-(mWin[1] + delta), 1)));  // 0bXX22.22XX
 
       // Create a four (could win in one)... generally a good scenario
       // Note: An unblocked 3 is also listen on this level because it generally needs to be addressed
       // immediately.
-      _heuristics.Add(Tuple.Create(Tuple.Create(0xe, 0x0, 0x1c1), Tuple.Create(mWin[1] + delta, 2)));  // 0bXXX0.111X
-      _heuristics.Add(Tuple.Create(Tuple.Create(0xe, 0x0, 0x1e0), Tuple.Create(mWin[1] + delta, 2)));  // 0bXXXX.1110
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x2c, 0x0, 0x183), Tuple.Create(mWin[1], 2)));  // 0bXX01.11XX
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x2c, 0x0, 0x1c1), Tuple.Create(mWin[1], 2)));  // 0bXXX1.110X
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x7, 0x0, 0x1e0), Tuple.Create(mWin[1], 2)));  // 0bXXXX.0111
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x4c, 0x0, 0x183), Tuple.Create(mWin[1], 2)));  // 0bXX10.11XX
-      _heuristics.Add(Tuple.Create(Tuple.Create(0xa8, 0x0, 0x107), Tuple.Create(mWin[1], 2)));  // 0bX101.1XXX
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x160, 0x0, 0xf), Tuple.Create(mWin[1], 2)));  // 0b1011.XXXX
+      _heuristics.Add(Tuple.Create(Tuple.Create(0xe, 0x0, 0x1c1), new Heuristic(mWin[1] + delta, 2)));  // 0bXXX0.111X
+      _heuristics.Add(Tuple.Create(Tuple.Create(0xe, 0x0, 0x1e0), new Heuristic(mWin[1] + delta, 2)));  // 0bXXXX.1110
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x2c, 0x0, 0x183), new Heuristic(mWin[1], 2)));  // 0bXX01.11XX
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x2c, 0x0, 0x1c1), new Heuristic(mWin[1], 2)));  // 0bXXX1.110X
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x7, 0x0, 0x1e0), new Heuristic(mWin[1], 2)));  // 0bXXXX.0111
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x4c, 0x0, 0x183), new Heuristic(mWin[1], 2)));  // 0bXX10.11XX
+      _heuristics.Add(Tuple.Create(Tuple.Create(0xa8, 0x0, 0x107), new Heuristic(mWin[1], 2)));  // 0bX101.1XXX
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x160, 0x0, 0xf), new Heuristic(mWin[1], 2)));  // 0b1011.XXXX
 
       // Block an unblocked 3 (Block any win in two) or capture... generally a bad (but not terrible) scenario
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0xb, 0x1e0), Tuple.Create(-(mWin[2] - bigDelta), 3)));  // 0bXXXX.2022
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0xd, 0x1e0), Tuple.Create(-(mWin[2] - bigDelta), 3)));  // 0bXXXX.2202
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x2c, 0x181), Tuple.Create(-(mWin[2] - bigDelta), 3)));  // 0bXX02.220X
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0xe, 0x1e0), Tuple.Create(-(mWin[2] - bigDelta), 3)));  // 0bXXXX.2220
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0xb, 0x1e0), new Heuristic(-(mWin[2] - bigDelta), 3)));  // 0bXXXX.2022
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0xd, 0x1e0), new Heuristic(-(mWin[2] - bigDelta), 3)));  // 0bXXXX.2202
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x2c, 0x181), new Heuristic(-(mWin[2] - bigDelta), 3)));  // 0bXX02.220X
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0xe, 0x1e0), new Heuristic(-(mWin[2] - bigDelta), 3)));  // 0bXXXX.2220
 
       // Set up a capture or set up an unblocked 3, or block a capture
-      _heuristics.Add(Tuple.Create(Tuple.Create(0xc, 0x2, 0x1e1), Tuple.Create(mWin[2] + bigDelta / 2, 4)));  // 0bXXXX.112X
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0xc, 0x1e1), Tuple.Create(mWin[2] + delta, 4)));  // 0bXXXX.220X
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x28, 0x0, 0x183), Tuple.Create(mWin[2] + bigDelta / 2 + delta, 4)));  // 0bXX01.10XX
-      _heuristics.Add(Tuple.Create(Tuple.Create(0xc, 0x0, 0x1c1), Tuple.Create(mWin[2] + bigDelta / 2 + delta, 4)));  // 0bXXX0.110X
+      _heuristics.Add(Tuple.Create(Tuple.Create(0xc, 0x2, 0x1e1), new Heuristic(mWin[2] + bigDelta / 2, 4)));  // 0bXXXX.112X
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0xc, 0x1e1), new Heuristic(mWin[2] + delta, 4)));  // 0bXXXX.220X
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x28, 0x0, 0x183), new Heuristic(mWin[2] + bigDelta / 2 + delta, 4)));  // 0bXX01.10XX
+      _heuristics.Add(Tuple.Create(Tuple.Create(0xc, 0x0, 0x1c1), new Heuristic(mWin[2] + bigDelta / 2 + delta, 4)));  // 0bXXX0.110X
 
       mProximityPriority = 5;
       // Proximity checks
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x1, 0x0, 0x1ee), Tuple.Create(delta / 6, mProximityPriority)));  // 0bXXXX.XXX1
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x1, 0x1ee), Tuple.Create(delta / 10, mProximityPriority)));  // 0bXXXX.XXX2
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x2, 0x0, 0x1ed), Tuple.Create(delta / 7, mProximityPriority)));  // 0bXXXX.XX1X
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x2, 0x1ed), Tuple.Create(delta / 10, mProximityPriority)));  // 0bXXXX.XX2X
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x4, 0x0, 0x1eb), Tuple.Create(delta / 5, mProximityPriority)));  // 0bXXXX.X1XX
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x4, 0x1eb), Tuple.Create(delta / 10, mProximityPriority)));  // 0bXXXX.X2XX
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x8, 0x0, 0x1e7), Tuple.Create(delta / 9, mProximityPriority)));  // 0bXXXX.1XXX
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x8, 0x1e7), Tuple.Create(delta / 9, mProximityPriority)));  // 0bXXXX.2XXX
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x1, 0x0, 0x1ee), new Heuristic(delta / 6, mProximityPriority)));  // 0bXXXX.XXX1
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x1, 0x1ee), new Heuristic(delta / 10, mProximityPriority)));  // 0bXXXX.XXX2
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x2, 0x0, 0x1ed), new Heuristic(delta / 7, mProximityPriority)));  // 0bXXXX.XX1X
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x2, 0x1ed), new Heuristic(delta / 10, mProximityPriority)));  // 0bXXXX.XX2X
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x4, 0x0, 0x1eb), new Heuristic(delta / 5, mProximityPriority)));  // 0bXXXX.X1XX
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x4, 0x1eb), new Heuristic(delta / 10, mProximityPriority)));  // 0bXXXX.X2XX
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x8, 0x0, 0x1e7), new Heuristic(delta / 9, mProximityPriority)));  // 0bXXXX.1XXX
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x8, 0x1e7), new Heuristic(delta / 9, mProximityPriority)));  // 0bXXXX.2XXX
 
       AddReversed(_heuristics);
 
@@ -150,39 +181,41 @@ namespace LoganPenteAI {
 
     private static void InitializeDictionary() {
       String filename = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), @"HeuristicValueStore.txt");
-      _hDict = new Dictionary<Pattern, Tuple<double, int>>();
+      _hDict = new Dictionary<Pattern, Heuristic>();
 
       if (!File.Exists(filename) || File.ReadAllLines(filename).Length < 10) {
-        Tuple<double, int> conflict;
-        foreach (Tuple<Tuple<int, int, int>, Tuple<double, int>> heur in _heuristics) {
-          foreach (Pattern pattern in Pattern.GetAllMatchingPatterns(heur.Item1)) {
+        Heuristic conflict;
+        foreach (Tuple<Tuple<int, int, int>, Heuristic> heurCollection in _heuristics) {
+          foreach (Pattern pattern in Pattern.GetAllMatchingPatterns(heurCollection.Item1)) {
             if (_hDict.ContainsKey(pattern)) {
               conflict = _hDict[pattern];
-              if (conflict.Item2 > heur.Item2.Item2) {
-                _hDict[pattern] = heur.Item2;
+              if (conflict.GetPriority() > heurCollection.Item2.GetPriority()) {
+                _hDict[pattern] = heurCollection.Item2;
               }
             } else {
-              _hDict.Add(pattern, heur.Item2);
+              _hDict.Add(pattern, heurCollection.Item2);
             }
           }
         }
 
         StringBuilder sb = new StringBuilder();
         foreach (Pattern pattern in _hDict.Keys) {
-          sb.Append(pattern.ToString() + "," + _hDict[pattern].Item1 + "," + _hDict[pattern].Item2);
+          sb.Append(pattern.ToString() + "," + _hDict[pattern].ToString());
           sb.Append(Environment.NewLine);
         }
 
         File.WriteAllText(filename, sb.ToString());
       } else {
-        Regex rx = new Regex(@"(?<pattern>[^,]*),(?<heuristic>[^,]*),(?<priority>.*)$", RegexOptions.Compiled);
+        //Regex rx = new Regex(@"(?<pattern>[^,]*),(?<heuristic>[^,]*),(?<priority>.*)$", RegexOptions.Compiled);
+        Regex rx = new Regex(@"(?<pattern>[^,]*),(?<heuristic>.*)$", RegexOptions.Compiled);
 
         foreach (String line in File.ReadAllLines(filename)) {
           GroupCollection groups = rx.Match(line).Groups;
           if (groups.Count == 4) {
             Pattern key = new Pattern();
             key.SetPattern(groups["pattern"].Value);
-            _hDict[key] = Tuple.Create(Double.Parse(groups["heuristic"].Value), Int32.Parse(groups["priority"].Value));
+            Heuristic value = new Heuristic(groups["heuristic"].Value);
+            _hDict[key] = value;
           }
         }
       }
@@ -190,11 +223,11 @@ namespace LoganPenteAI {
 
     // Order is:
     // patternLength, patternCurrentPlayer, patternOpponentPlayer, patternIgnore, score
-    private static List<Tuple<Tuple<int, int, int>, Tuple<double, int>>> GetHeuristics() {
+    private static List<Tuple<Tuple<int, int, int>, Heuristic>> GetHeuristics() {
       return _heuristics;
     }
 
-    public static Dictionary<Pattern, Tuple<double, int>> GetHeuristicDict() {
+    public static Dictionary<Pattern, Heuristic> GetHeuristicDict() {
       if (_hDict == null) {
         InitializeDictionary();
       }
@@ -209,7 +242,7 @@ namespace LoganPenteAI {
       return mProximityPriority;
     }
 
-    public static Tuple<double, int> EstimateQualityOfCapture(Player currentPlayer, int capturesWhite, int capturesBlack) {
+    public static Heuristic EstimateQualityOfCapture(Player currentPlayer, int capturesWhite, int capturesBlack) {
       Player otherPlayer = (currentPlayer == Player.White) ? Player.Black : Player.White;
       int capturesCurrent, capturesOther;
       if (currentPlayer == Player.White) {
@@ -227,12 +260,12 @@ namespace LoganPenteAI {
       return Tuple.Create(heuristic, priority);
     }
 
-    private static void AddReversed(List<Tuple<Tuple<int, int, int>, Tuple<double, int>>> inputList) {
-      List<Tuple<Tuple<int, int, int>, Tuple<double, int>>> reversed = new List<Tuple<Tuple<int, int, int>, Tuple<double, int>>>();
+    private static void AddReversed(List<Tuple<Tuple<int, int, int>, Heuristic>> inputList) {
+      List<Tuple<Tuple<int, int, int>, Heuristic>> reversed = new List<Tuple<Tuple<int, int, int>, Heuristic>>();
       int reversedPatternWhite, reversedPatternBlack, reversedPatternIgnore;
 
       for (int i = 0; i < inputList.Count; i++) {
-        foreach (Tuple<Tuple<int, int, int>, Tuple<double, int>> regular in inputList) {
+        foreach (Tuple<Tuple<int, int, int>, Heuristic> regular in inputList) {
           reversedPatternWhite = 0;
           reversedPatternBlack = 0;
           reversedPatternIgnore = 0;
@@ -255,7 +288,7 @@ namespace LoganPenteAI {
         }
       }
 
-      foreach (Tuple<Tuple<int, int, int>, Tuple<double, int>> val in reversed) {
+      foreach (Tuple<Tuple<int, int, int>, Heuristic> val in reversed) {
         inputList.Add(val);
       }
     }

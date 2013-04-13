@@ -16,6 +16,7 @@ namespace LoganPenteAI {
     private readonly int[] branchingCategories = {3, 10, 50, ROWS * COLS};
 
     public GameState(BoardInterface board) : base(board) {
+      mInfluenceMap = new int[ROWS];
       InitializeMaps();
       mRunningHeuristic = 0.0;
     }
@@ -26,6 +27,7 @@ namespace LoganPenteAI {
     }
 
     public GameState(Player nextPlayer, int capturesWhite, int capturesBlack, String boardStr) : base(nextPlayer, capturesWhite, capturesBlack, boardStr) {
+      mInfluenceMap = new int[ROWS];
       InitializeMaps();
       mRunningHeuristic = 0.0;
     }
@@ -44,12 +46,13 @@ namespace LoganPenteAI {
       mBaseDepth = GetMoveNumber();
       Tuple<int, int> move;
       double heuristic = Minimax(depthLimit, null, null, out move);
-      //Tuple<Tuple<int, int>, Tuple<double, int>> move = Negamax();
+      //Tuple<Tuple<int, int>, Heuristic> move = Negamax();
       Console.WriteLine(" < GetBestMove()... heuristic: " + heuristic + " mPositionsEvaluated: " + mPositionsEvaluated);
       return move;
     }
 
     double Minimax(int depthLimit, double? heuristicAlpha, double? heuristicBeta, out Tuple<int, int> bestMove) {
+      Console.WriteLine(" > Minimax");
       mPositionsEvaluated++;
       double? champHeur = null;
       double chumpHeur;
@@ -66,6 +69,7 @@ namespace LoganPenteAI {
       }
 
       if (IsMaxLevel()) {
+        Console.WriteLine("True:  IsMaxLevel");
         foreach (Tuple<int, int> candidateMove in GetCandidateMoves()) {
           child = new GameState(this);
           child.Move(candidateMove.Item1, candidateMove.Item2);
@@ -86,6 +90,7 @@ namespace LoganPenteAI {
           }
         }
       } else {
+        Console.WriteLine("False: IsMaxLevel");
         foreach (Tuple<int, int> candidateMove in GetCandidateMoves()) {
           child = new GameState(this);
           child.Move(candidateMove.Item1, candidateMove.Item2);
@@ -107,6 +112,7 @@ namespace LoganPenteAI {
         }
       }
 
+      Console.WriteLine(" < Minimax()  #=> " + bestMove + " | " + champHeur);
       return (double)champHeur + mRunningHeuristic;
     }
 
@@ -168,7 +174,7 @@ namespace LoganPenteAI {
         return;
       }
 
-      Tuple<double, int> heurVal;
+      Heuristic heurVal;
       heurVal = GetHeuristicValue(row, col);
       if (heurVal.Item2 < HeuristicValues.GetProximityPriority()) {
         mInfluenceMap[row] |= SPOT_MASKS[col];
@@ -176,8 +182,8 @@ namespace LoganPenteAI {
     }
 
     // After finding the expected winner and uncertainy (the second tuple) associated with a move (the first tuple), determine which one is better.
-    private Tuple<Tuple<int, int>, Tuple<double, int>> ChooseBest(Tuple<Tuple<int, int>, Tuple<double, int>> a,
-                                                                  Tuple<Tuple<int, int>, Tuple<double, int>> b) {
+    private Tuple<Tuple<int, int>, Heuristic> ChooseBest(Tuple<Tuple<int, int>, Heuristic> a,
+                                                                  Tuple<Tuple<int, int>, Heuristic> b) {
       if (a == null && b == null) {
         return null;
       } else if (a == null) {
@@ -191,7 +197,7 @@ namespace LoganPenteAI {
       }
     }
 
-    private int CmpHeuristics(Tuple<double, int> first, Tuple<double, int> second) {
+    private int CmpHeuristics(Heuristic first, Heuristic second) {
       if (first == null && second == null) {
         return 0;
       } else if (first == null) {
@@ -240,13 +246,13 @@ namespace LoganPenteAI {
     }
 
     // TODO, this doesn't check for captures.
-    public Tuple<double, int> GetHeuristicValue(int row, int col) {
+    public Heuristic GetHeuristicValue(int row, int col) {
       if (!IsLegal(row, col)) {
         return Tuple.Create(0.0, HeuristicValues.GetProximityPriority() + 1);
       }
 
-      Dictionary<Pattern, Tuple<double, int>> hDict = HeuristicValues.GetHeuristicDict();
-      Tuple<double, int> val = null;
+      Dictionary<Pattern, Heuristic> hDict = HeuristicValues.GetHeuristicDict();
+      Heuristic val = null;
       Pattern pattern;
 
       foreach (Tuple<int, int> window in GetWindows(row, col)) {
