@@ -105,7 +105,7 @@ namespace LoganPenteAI {
       mCapturesWhite = capturesWhite;
       mCapturesBlack = capturesBlack;
       mWinner = Player.Neither;
-      mMoveNumber = (nextPlayer == Player.White) ? 4 : 5;  // To avoid the rule on moves 0 and 2
+      mMoveNumber = 2 * capturesWhite + 2 * capturesBlack;
 
       mRowsWhite = new int[ROWS];
       mRowsBlack = new int[ROWS];
@@ -121,14 +121,20 @@ namespace LoganPenteAI {
         for (int col_dex = 0; col_dex < COLS; col_dex++) {
           if (boardStr[row_dex * ROWS + col_dex] == 'W') {
             color = Player.White;
+            mMoveNumber++;
           } else if (boardStr[row_dex * ROWS + col_dex] == 'B') {
             color = Player.Black;
+            mMoveNumber++;
           } else {
             color = Player.Neither;
           }
 
           SetSpot(row_dex, col_dex, color);
         }
+      }
+
+      if (GetCurrentPlayer() != nextPlayer) {
+        mMoveNumber++;
       }
     }
 

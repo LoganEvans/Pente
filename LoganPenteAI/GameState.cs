@@ -10,7 +10,6 @@ namespace LoganPenteAI {
   public class GameState : Board {
     private int[] mInfluenceMap;
     private static int mBaseDepth;
-    private double mRunningHeuristic;
     private static int mPositionsEvaluated = 0;
 
     private readonly int[] branchingCategories = {3, 10, 50, ROWS * COLS};
@@ -18,18 +17,15 @@ namespace LoganPenteAI {
     public GameState(BoardInterface board) : base(board) {
       mInfluenceMap = new int[ROWS];
       InitializeMaps();
-      mRunningHeuristic = 0.0;
     }
 
     public GameState(GameState copyFrom) : base(copyFrom) {
       CopyMaps(copyFrom);
-      mRunningHeuristic = copyFrom.mRunningHeuristic;
     }
 
     public GameState(Player nextPlayer, int capturesWhite, int capturesBlack, String boardStr) : base(nextPlayer, capturesWhite, capturesBlack, boardStr) {
       mInfluenceMap = new int[ROWS];
       InitializeMaps();
-      mRunningHeuristic = 0.0;
     }
 
     private void CopyMaps(GameState copyFrom) {
@@ -45,27 +41,23 @@ namespace LoganPenteAI {
       Console.WriteLine(" > GetBestMove()");
       mBaseDepth = GetMoveNumber();
       Tuple<int, int> move;
-      double heuristic = Minimax(depthLimit, null, null, out move);
+      Heuristic heuristic = Minimax(depthLimit, null, null, out move);
       //Tuple<Tuple<int, int>, Heuristic> move = Negamax();
       Console.WriteLine(" < GetBestMove()... heuristic: " + heuristic + " mPositionsEvaluated: " + mPositionsEvaluated);
       return move;
     }
 
-    double Minimax(int depthLimit, double? heuristicAlpha, double? heuristicBeta, out Tuple<int, int> bestMove) {
+    Heuristic Minimax(int depthLimit, Heuristic heuristicAlpha, Heuristic heuristicBeta, out Tuple<int, int> bestMove) {
       Console.WriteLine(" > Minimax");
       mPositionsEvaluated++;
-      double? champHeur = null;
-      double chumpHeur;
+      Heuristic champHeur = null;
+      Heuristic chumpHeur;
       GameState child = null;
       Tuple<int, int> move;
       bestMove = null;
 
       if (GetWinner() != Player.Neither) {
-        if (IsMaxLevel()) {
-          return HeuristicValues.GetWinHeuristic();
-        } else {
-          return -1 * HeuristicValues.GetWinHeuristic();
-        }
+        return Heuristic.GetWinHeuristic(IsMaxLevel());
       }
 
       if (IsMaxLevel()) {
@@ -76,7 +68,7 @@ namespace LoganPenteAI {
           if (depthLimit > 0) {
             chumpHeur = child.Minimax(depthLimit - 1, champHeur, heuristicBeta, out move);
           } else {
-            chumpHeur = GetHeuristicValue(candidateMove.Item1, candidateMove.Item2).Item1;
+            chumpHeur = GetHeuristicValue(candidateMove.Item1, candidateMove.Item2);
           }
 
           // Max level, so pick max.
@@ -97,7 +89,7 @@ namespace LoganPenteAI {
           if (depthLimit > 0) {
             chumpHeur = child.Minimax(depthLimit - 1, heuristicAlpha, champHeur, out move);
           } else {
-            chumpHeur = GetHeuristicValue(candidateMove.Item1, candidateMove.Item2).Item1;
+            chumpHeur = GetHeuristicValue(candidateMove.Item1, candidateMove.Item2);
           }
 
           // Min level, so pick min.
@@ -113,7 +105,8 @@ namespace LoganPenteAI {
       }
 
       Console.WriteLine(" < Minimax()  #=> " + bestMove + " | " + champHeur);
-      return (double)champHeur + mRunningHeuristic;
+      champHeur.AddValue(GetHeuristicValue(bestMove.Item1, bestMove.Item2).GetValue());
+      return champHeur;
     }
 
     private List<Tuple<int, int>> GetCandidateMoves() {
@@ -133,15 +126,28 @@ namespace LoganPenteAI {
       }
 
       if (candidates.Count == 0) {
-        for (int row_dex = 0; row_dex < ROWS; row_dex++) {
-          for (int col_dex = 0; col_dex < COLS; col_dex++) {
-            if (!IsLegal(row_dex, col_dex)) {
-              continue;
+        if (GetMoveNumber() == 1) {
+          for (int row_dex = 0; row_dex < ROWS; row_dex++) {
+            for (int col_dex = 0; col_dex < COLS; col_dex++) {
+              if (Math.Abs(row_dex - 9) <= 3 && Math.Abs(col_dex - 9) <= 3) {
+                if (!IsLegal(row_dex, col_dex)) {
+                  continue;
+                }
+                candidates.Add(Tuple.Create(row_dex, col_dex));
+              }
             }
+          }
+        } else {
+          for (int row_dex = 0; row_dex < ROWS; row_dex++) {
+            for (int col_dex = 0; col_dex < COLS; col_dex++) {
+              if (!IsLegal(row_dex, col_dex)) {
+                continue;
+              }
 
-            if (GetHeuristicValue(row_dex, col_dex).Item2 <= HeuristicValues.GetProximityPriority()) {
-              spot = Tuple.Create(row_dex, col_dex);
-              candidates.Add(spot);
+              if (GetHeuristicValue(row_dex, col_dex).GetPriority() <= Heuristic.PROXIMITY_PRIORITY) {
+                spot = Tuple.Create(row_dex, col_dex);
+                candidates.Add(spot);
+              }
             }
           }
         }
@@ -176,48 +182,12 @@ namespace LoganPenteAI {
 
       Heuristic heurVal;
       heurVal = GetHeuristicValue(row, col);
-      if (heurVal.Item2 < HeuristicValues.GetProximityPriority()) {
+      if (heurVal.GetPriority() < Heuristic.PROXIMITY_PRIORITY) {
         mInfluenceMap[row] |= SPOT_MASKS[col];
       }
     }
 
-    // After finding the expected winner and uncertainy (the second tuple) associated with a move (the first tuple), determine which one is better.
-    private Tuple<Tuple<int, int>, Heuristic> ChooseBest(Tuple<Tuple<int, int>, Heuristic> a,
-                                                                  Tuple<Tuple<int, int>, Heuristic> b) {
-      if (a == null && b == null) {
-        return null;
-      } else if (a == null) {
-        return b;
-      } else if (b == null) {
-        return a;
-      } else if (CmpHeuristics(a.Item2, b.Item2) >= 0) {
-        return a;
-      } else {
-        return b;
-      }
-    }
-
-    private int CmpHeuristics(Heuristic first, Heuristic second) {
-      if (first == null && second == null) {
-        return 0;
-      } else if (first == null) {
-        return 1;
-      } else if (second == null) {
-        return -1;
-      } else if (first.Item2 < second.Item2) {
-        return 1;
-      } else if (first.Item2 > first.Item2) {
-        return -1;
-      } else if (first.Item1 > second.Item1) {
-        return 1;
-      } else if (first.Item1 < second.Item1) {
-        return -1;
-      }
-      return 0;
-    }
-
     public override bool Move(int row, int col) {
-      mRunningHeuristic += GetHeuristicValue(row, col).Item1;
       bool retval = base.Move(row, col);
       MoveTriggeredMapsUpdate(row, col);
       return retval;
@@ -248,30 +218,28 @@ namespace LoganPenteAI {
     // TODO, this doesn't check for captures.
     public Heuristic GetHeuristicValue(int row, int col) {
       if (!IsLegal(row, col)) {
-        return Tuple.Create(0.0, HeuristicValues.GetProximityPriority() + 1);
+        return new Heuristic(0.0, Heuristic.PROXIMITY_PRIORITY + 1);
       }
 
       Dictionary<Pattern, Heuristic> hDict = HeuristicValues.GetHeuristicDict();
-      Heuristic val = null;
+      Heuristic val;
       Pattern pattern;
 
-      foreach (Tuple<int, int> window in GetWindows(row, col)) {
-        pattern = new Pattern();
+//    foreach (Tuple<int, int> window in GetWindows(row, col)) {
+//      if (IsMaxLevel()) {
+//        pattern = new Pattern(window.Item1, window.Item2);
+//        if (hDict.TryGetValue(pattern, out val)) {
+//          return val;
+//        }
+//      } else {
+//        pattern = new Pattern(window.Item2, window.Item1);
+//        if (hDict.TryGetValue(pattern, out val)) {
+//          return val;
+//        }
+//      }
+//    }
 
-        if (IsMaxLevel()) {
-          pattern.SetPattern(window.Item1, window.Item2);
-          if (hDict.TryGetValue(pattern, out val)) {
-            return val;
-          }
-        } else {
-          pattern.SetPattern(window.Item2, window.Item1);
-          if (hDict.TryGetValue(pattern, out val)) {
-            return Tuple.Create(0 - val.Item1, val.Item2);
-          }
-        }
-      }
-
-      return Tuple.Create(0.0, HeuristicValues.GetProximityPriority() + 1);
+      return new Heuristic(0.0, Heuristic.PROXIMITY_PRIORITY + 1);
     }
 
     private bool IsMaxLevel() {
@@ -283,11 +251,11 @@ namespace LoganPenteAI {
     }
 
     public Pattern WindowToPattern(Player color, Tuple<int, int> window) {
-      Pattern retval = new Pattern();
+      Pattern retval;
       if (color == Player.White) {
-        retval.SetPattern(window.Item1, window.Item2);
+        retval = new Pattern(window.Item1, window.Item2);
       } else {
-        retval.SetPattern(window.Item2, window.Item1);
+        retval = new Pattern(window.Item2, window.Item1);
       }
       return retval;
     }

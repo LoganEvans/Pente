@@ -93,21 +93,21 @@ namespace LoganUnitTests {
       //
 
       List<Tuple<int, int>> windows;
-      Tuple<double, int> heuristic;
+      Heuristic heuristic;
       windows = uut.GetWindows(2, 9);
       int expectedBlackDownDiag = Convert.ToInt32("001101100", 2);
       Assert.AreEqual(expectedBlackDownDiag, windows[3].Item2);
       heuristic = uut.GetHeuristicValue(2, 9);
-      Assert.AreEqual(1, heuristic.Item2);
+      Assert.AreEqual(1, heuristic.GetPriority());
 
       windows = uut.GetWindows(7, 9);
       int expectedWhiteUpDiag = Convert.ToInt32("111101000", 2);
       Assert.AreEqual(expectedWhiteUpDiag, windows[2].Item1);
-      Assert.AreEqual(0, uut.GetHeuristicValue(7, 9).Item2);
-      Assert.AreEqual(0, uut.GetHeuristicValue(9, 9).Item2);
-      Assert.AreEqual(1, uut.GetHeuristicValue(10, 9).Item2);
-      Assert.AreEqual(0, uut.GetHeuristicValue(11, 9).Item2);
-      Assert.AreEqual(1, uut.GetHeuristicValue(12, 9).Item2);
+      Assert.AreEqual(0, uut.GetHeuristicValue(7, 9).GetPriority());
+      Assert.AreEqual(0, uut.GetHeuristicValue(9, 9).GetPriority());
+      Assert.AreEqual(1, uut.GetHeuristicValue(10, 9).GetPriority());
+      Assert.AreEqual(0, uut.GetHeuristicValue(11, 9).GetPriority());
+      Assert.AreEqual(1, uut.GetHeuristicValue(12, 9).GetPriority());
     }
 
     [TestMethod]
@@ -139,21 +139,21 @@ namespace LoganUnitTests {
       //
 
       List<Tuple<int, int>> windows;
-      Tuple<double, int> heuristic;
+      Heuristic heuristic;
       windows = uut.GetWindows(2, 9);
       int expectedBlackDownDiag = Convert.ToInt32("001101100", 2);
       Assert.AreEqual(windows[3].Item2, expectedBlackDownDiag);
       heuristic = uut.GetHeuristicValue(2, 9);
-      Assert.AreEqual(0, heuristic.Item2);
+      Assert.AreEqual(0, heuristic.GetPriority());
 
       windows = uut.GetWindows(7, 9);
       int expectedWhiteUpDiag = Convert.ToInt32("111101000", 2);
       Assert.AreEqual(windows[2].Item1, expectedWhiteUpDiag);
-      Assert.AreEqual(1, uut.GetHeuristicValue(7, 9).Item2);
-      Assert.AreEqual(1, uut.GetHeuristicValue(9, 9).Item2);
-      Assert.AreEqual(0, uut.GetHeuristicValue(10, 9).Item2);
-      Assert.AreEqual(1, uut.GetHeuristicValue(11, 9).Item2);
-      Assert.AreEqual(0, uut.GetHeuristicValue(12, 9).Item2);
+      Assert.AreEqual(1, uut.GetHeuristicValue(7, 9).GetPriority());
+      Assert.AreEqual(1, uut.GetHeuristicValue(9, 9).GetPriority());
+      Assert.AreEqual(0, uut.GetHeuristicValue(10, 9).GetPriority());
+      Assert.AreEqual(1, uut.GetHeuristicValue(11, 9).GetPriority());
+      Assert.AreEqual(0, uut.GetHeuristicValue(12, 9).GetPriority());
     }
   }
 }

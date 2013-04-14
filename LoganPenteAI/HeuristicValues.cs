@@ -9,10 +9,10 @@ using System.Threading.Tasks;
 using CommonInterfaces;
 
 namespace LoganPenteAI {
-  public struct Heuristic {
+  public class Heuristic {
     private double mValue;
     private int mPriority;
-    public readonly int PROXIMITY_PRIORITY = 5;
+    public const int PROXIMITY_PRIORITY = 5;
 
     public Heuristic(double value, int priority) {
       mValue = value;
@@ -31,6 +31,10 @@ namespace LoganPenteAI {
       return mValue;
     }
 
+    public void AddValue(double value) {
+      mValue += value;
+    }
+
     public int GetPriority() {
       return mPriority;
     }
@@ -38,9 +42,61 @@ namespace LoganPenteAI {
     public override string ToString() {
       return mValue.ToString() + "," + mPriority.ToString();
     }
+
+    public static Heuristic GetWinHeuristic(bool isMaxLevel) {
+      if (isMaxLevel) {
+        return new Heuristic(10000.0, 0);
+      } else {
+        return new Heuristic(-10000.0, 0);
+      }
+    }
+
+    public override bool Equals(object obj) {
+      return base.Equals(obj);
+    }
+
+    public override int GetHashCode() {
+      return base.GetHashCode();
+    }
+
+    public static bool operator <(Heuristic first, Heuristic second) {
+      if (first.GetPriority() > second.GetPriority()) {
+        return true;
+      } else if (first.GetValue() < second.GetValue()) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+
+    public static bool operator ==(Heuristic first, Heuristic second) {
+      if (first.GetValue() != second.GetValue()) {
+        return false;
+      } else if (first.GetPriority() != second.GetPriority()) {
+        return false;
+      } else {
+        return true;
+      }
+    }
+
+    public static bool operator !=(Heuristic first, Heuristic second) {
+      return !(first == second);
+    }
+
+    public static bool operator >(Heuristic first, Heuristic second) {
+      return (!(first < second) && !(first == second));
+    }
+
+    public static bool operator <=(Heuristic first, Heuristic second) {
+      return (first < second) || (first == second);
+    }
+
+    public static bool operator >=(Heuristic first, Heuristic second) {
+      return (first == second) || (first > second);
+    }
   }
 
-  public struct Pattern {
+  public class Pattern {
     public const int PATTERN_MASK = 0x1FF;
     public const int PATTERN_RADIUS = 4;
     public const int PATTERN_DIAMETER = 9;
@@ -51,16 +107,21 @@ namespace LoganPenteAI {
 
     private int mPattern;
 
-    public void SetPattern(int patternWhite, int patternBlack) {
+    public Pattern(int patternWhite, int patternBlack) {
       mPattern = patternWhite + (patternBlack << Pattern.PATTERN_DIAMETER);
     }
 
-    public void SetPattern(string fromString) {
+    public Pattern(string fromString) {
       mPattern = Int32.Parse(fromString);
     }
 
     public override int GetHashCode() {
       return mPattern;
+    }
+
+    public override bool Equals(Object obj) {
+      var other = obj as Pattern;
+      return obj != null && this.mPattern == other.mPattern;
     }
 
     public int GetPatternCurrent() {
@@ -78,8 +139,7 @@ namespace LoganPenteAI {
 
       for (int i = 0; i < Math.Pow(2, 2 * PATTERN_DIAMETER); i++) {
         if ((i | filter) == filter) {
-          toAdd = new Pattern();
-          toAdd.SetPattern(patternTrio.Item1, patternTrio.Item2);
+          toAdd = new Pattern(patternTrio.Item1, patternTrio.Item2);
           toAdd.mPattern |= i;  // Augments the two patterns.
           retval.Add(toAdd);
         }
@@ -187,12 +247,10 @@ namespace LoganPenteAI {
         Heuristic conflict;
         foreach (Tuple<Tuple<int, int, int>, Heuristic> heurCollection in _heuristics) {
           foreach (Pattern pattern in Pattern.GetAllMatchingPatterns(heurCollection.Item1)) {
-            if (_hDict.ContainsKey(pattern)) {
-              conflict = _hDict[pattern];
-              if (conflict.GetPriority() > heurCollection.Item2.GetPriority()) {
-                _hDict[pattern] = heurCollection.Item2;
-              }
-            } else {
+            if (_hDict.ContainsKey(pattern) && _hDict[pattern].GetPriority() < heurCollection.Item2.GetPriority()) {
+              _hDict[pattern] = heurCollection.Item2;
+            } else if (!_hDict.ContainsKey(pattern)) {
+              //Console.WriteLine("adding: " + pattern + " | " + heurCollection.Item2);
               _hDict.Add(pattern, heurCollection.Item2);
             }
           }
@@ -211,9 +269,8 @@ namespace LoganPenteAI {
 
         foreach (String line in File.ReadAllLines(filename)) {
           GroupCollection groups = rx.Match(line).Groups;
-          if (groups.Count == 4) {
-            Pattern key = new Pattern();
-            key.SetPattern(groups["pattern"].Value);
+          if (groups.Count == 3) {
+            Pattern key = new Pattern(groups["pattern"].Value);
             Heuristic value = new Heuristic(groups["heuristic"].Value);
             _hDict[key] = value;
           }
@@ -253,11 +310,11 @@ namespace LoganPenteAI {
         capturesOther = capturesWhite;
       }
       int priority = 5 - Math.Max(capturesCurrent + 1, capturesOther);
-      double heuristic = 1.0 - 0.2 * priority;
+      double heuristicVal = 1.0 - 0.2 * priority;
       if (currentPlayer == Player.Black) {
-        heuristic *= -1;
+        heuristicVal *= -1;
       }
-      return Tuple.Create(heuristic, priority);
+      return new Heuristic(heuristicVal, priority);
     }
 
     private static void AddReversed(List<Tuple<Tuple<int, int, int>, Heuristic>> inputList) {

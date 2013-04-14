@@ -9,16 +9,49 @@ namespace LoganUnitTests {
   [TestClass]
   public class HeuristicValuesTest {
     [TestMethod]
+    public void TestHeuristicComparison() {
+      Heuristic uutA, uutB;
+      uutA = new Heuristic(1.0, 0);
+      uutB = new Heuristic(1.0, 1);
+      Boolean x;
+      Assert.IsTrue(uutA > uutB);
+      Assert.IsTrue(uutA != uutB);
+      Assert.IsTrue(uutA >= uutB);
+      x = uutB < uutA;
+      Assert.IsTrue(uutB < uutA);
+      Assert.IsTrue(uutB != uutA);
+      Assert.IsTrue(uutB <= uutA);
+      Assert.IsTrue(x);
+
+      uutA = new Heuristic(1.0, 2);
+      uutB = new Heuristic(0.0, 2);
+      Assert.IsTrue(uutA > uutB);
+      Assert.IsTrue(uutA != uutB);
+      Assert.IsTrue(uutA >= uutB);
+      Assert.IsTrue(uutB < uutA);
+      Assert.IsTrue(uutB != uutA);
+      Assert.IsTrue(uutB <= uutA);
+
+      uutA = new Heuristic(10.0, 5);
+      uutB = new Heuristic(10.0, 5);
+      Assert.IsTrue(uutA == uutB);
+      Assert.IsTrue(uutA <= uutB);
+      Assert.IsTrue(uutA >= uutB);
+      Assert.IsTrue(uutB <= uutA);
+      Assert.IsTrue(uutB >= uutA);
+    }
+
+    [TestMethod]
     public void TestDictionary() {
       // Note: the text file for this dictionary is NOT in the same location as the one for the main release.
-      Dictionary<Pattern, Tuple<double, int>> uut = HeuristicValues.GetHeuristicDict();
+      Dictionary<Pattern, Heuristic> uut = HeuristicValues.GetHeuristicDict();
 
       Assert.AreEqual(65280, uut.Count);
 
-      Pattern pattern = new Pattern();
-      pattern.SetPattern(0, Convert.ToInt32("111101000", 2));
+      Pattern pattern;
+      pattern = new Pattern(0, Convert.ToInt32("111101000", 2));
       Assert.IsTrue(uut.ContainsKey(pattern));
-      pattern.SetPattern(Convert.ToInt32("111101000", 2), 0);
+      pattern = new Pattern(Convert.ToInt32("111101000", 2), 0);
       Assert.IsTrue(uut.ContainsKey(pattern));
     }
   }
