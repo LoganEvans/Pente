@@ -13,6 +13,7 @@ namespace LoganPenteAI {
     private double mValue;
     private int mPriority;
     public const int PROXIMITY_PRIORITY = 5;
+    private static Regex mRx = null;
 
     public Heuristic(double value, int priority) {
       mValue = value;
@@ -21,8 +22,10 @@ namespace LoganPenteAI {
 
     // Note: no error detection.
     public Heuristic(string fromString) {
-      Regex rx = new Regex(@"(?<value>[^,]*),(?<priority>.*)$", RegexOptions.Compiled);
-      GroupCollection groups = rx.Match(fromString).Groups;
+      if (mRx == null) {
+        mRx = new Regex(@"(?<value>[^,]*),(?<priority>.*)$", RegexOptions.Compiled);
+      }
+      GroupCollection groups = mRx.Match(fromString).Groups;
       mValue = Double.Parse(groups["value"].Value);
       mPriority = Int32.Parse(groups["priority"].Value);
     }
@@ -265,6 +268,7 @@ namespace LoganPenteAI {
         File.WriteAllText(filename, sb.ToString());
       } else {
         //Regex rx = new Regex(@"(?<pattern>[^,]*),(?<heuristic>[^,]*),(?<priority>.*)$", RegexOptions.Compiled);
+        Console.WriteLine("from file...");
         Regex rx = new Regex(@"(?<pattern>[^,]*),(?<heuristic>.*)$", RegexOptions.Compiled);
 
         foreach (String line in File.ReadAllLines(filename)) {
@@ -275,6 +279,7 @@ namespace LoganPenteAI {
             _hDict[key] = value;
           }
         }
+        Console.WriteLine("from file done.");
       }
     }
 
