@@ -94,6 +94,7 @@ namespace LoganUnitTests {
 
       List<Tuple<int, int>> windows;
       Heuristic heuristic;
+      Dictionary<Pattern, Heuristic> heurDict = HeuristicValues.GetHeuristicDict();
       windows = uut.GetWindows(2, 9);
       int expectedBlackDownDiag = Convert.ToInt32("001101100", 2);
       Assert.AreEqual(expectedBlackDownDiag, windows[3].Item2);

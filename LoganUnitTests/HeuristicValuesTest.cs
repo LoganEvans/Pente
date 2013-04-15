@@ -22,6 +22,8 @@ namespace LoganUnitTests {
       Assert.IsTrue(uutB != uutA);
       Assert.IsTrue(uutB <= uutA);
       Assert.IsTrue(x);
+      Assert.IsTrue(uutA != null);
+      Assert.IsTrue(uutB != null);
 
       uutA = new Heuristic(1.0, 2);
       uutB = new Heuristic(0.0, 2);
@@ -31,6 +33,8 @@ namespace LoganUnitTests {
       Assert.IsTrue(uutB < uutA);
       Assert.IsTrue(uutB != uutA);
       Assert.IsTrue(uutB <= uutA);
+      Assert.IsTrue(uutA != null);
+      Assert.IsTrue(uutB != null);
 
       uutA = new Heuristic(10.0, 5);
       uutB = new Heuristic(10.0, 5);
@@ -39,6 +43,13 @@ namespace LoganUnitTests {
       Assert.IsTrue(uutA >= uutB);
       Assert.IsTrue(uutB <= uutA);
       Assert.IsTrue(uutB >= uutA);
+      Assert.IsTrue(uutA != null);
+      Assert.IsTrue(uutB != null);
+
+      uutA = null;
+      uutB = null;
+      Assert.IsTrue(uutA == null);
+      Assert.IsTrue(uutB == null);
     }
 
     [TestMethod]

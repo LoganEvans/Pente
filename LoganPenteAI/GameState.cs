@@ -225,19 +225,19 @@ namespace LoganPenteAI {
       Heuristic val;
       Pattern pattern;
 
-//    foreach (Tuple<int, int> window in GetWindows(row, col)) {
-//      if (IsMaxLevel()) {
-//        pattern = new Pattern(window.Item1, window.Item2);
-//        if (hDict.TryGetValue(pattern, out val)) {
-//          return val;
-//        }
-//      } else {
-//        pattern = new Pattern(window.Item2, window.Item1);
-//        if (hDict.TryGetValue(pattern, out val)) {
-//          return val;
-//        }
-//      }
-//    }
+      foreach (Tuple<int, int> window in GetWindows(row, col)) {
+        if (IsMaxLevel()) {
+          pattern = new Pattern(window.Item1, window.Item2);
+          if (hDict.TryGetValue(pattern, out val)) {
+            return val;
+          }
+        } else {
+          pattern = new Pattern(window.Item2, window.Item1);
+          if (hDict.TryGetValue(pattern, out val)) {
+            return val;
+          }
+        }
+      }
 
       return new Heuristic(0.0, Heuristic.PROXIMITY_PRIORITY + 1);
     }

@@ -73,7 +73,13 @@ namespace LoganPenteAI {
     }
 
     public static bool operator ==(Heuristic first, Heuristic second) {
-      if (first.GetValue() != second.GetValue()) {
+      if ((object)first == null || (object)second == null) {
+        if ((object)first == null && (object)second == null) {
+          return true;
+        } else {
+          return false;
+        }
+      } else if (first.GetValue() != second.GetValue()) {
         return false;
       } else if (first.GetPriority() != second.GetPriority()) {
         return false;
@@ -83,7 +89,11 @@ namespace LoganPenteAI {
     }
 
     public static bool operator !=(Heuristic first, Heuristic second) {
-      return !(first == second);
+      if ((object)first == null && (object)second == null) {
+        return false;
+      } else {
+        return !(first == second);
+      }
     }
 
     public static bool operator >(Heuristic first, Heuristic second) {
@@ -250,7 +260,7 @@ namespace LoganPenteAI {
         Heuristic conflict;
         foreach (Tuple<Tuple<int, int, int>, Heuristic> heurCollection in _heuristics) {
           foreach (Pattern pattern in Pattern.GetAllMatchingPatterns(heurCollection.Item1)) {
-            if (_hDict.ContainsKey(pattern) && _hDict[pattern].GetPriority() < heurCollection.Item2.GetPriority()) {
+            if (_hDict.ContainsKey(pattern) && _hDict[pattern].GetPriority() > heurCollection.Item2.GetPriority()) {
               _hDict[pattern] = heurCollection.Item2;
             } else if (!_hDict.ContainsKey(pattern)) {
               //Console.WriteLine("adding: " + pattern + " | " + heurCollection.Item2);
