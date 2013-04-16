@@ -12,7 +12,8 @@ namespace LoganPenteAI {
   class LPE_AI {
     [STAThread]
     static void Main(string[] args) {
-      //BoardInterface board = new Board();
+      BoardInterface board = new Board();
+      /*
       BoardInterface board = new GameState(Player.White, 2, 4,
 //123456789012345678
 "..................." +  // 0
@@ -34,6 +35,7 @@ namespace LoganPenteAI {
 "..................." +  // 16
 "..................." +  // 17
 "...................");  // 18
+      */
 
       //PlayerHuman pi1 = new PlayerHuman();
       PlayerBase pi1 = new PlayerAI();

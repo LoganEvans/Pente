@@ -10,44 +10,41 @@ namespace LoganUnitTests {
   public class HeuristicValuesTest {
     [TestMethod]
     public void TestHeuristicComparison() {
-      Heuristic uutA, uutB;
-      uutA = new Heuristic(1.0, 0);
-      uutB = new Heuristic(1.0, 1);
-      Boolean x;
-      Assert.IsTrue(uutA > uutB);
-      Assert.IsTrue(uutA != uutB);
-      Assert.IsTrue(uutA >= uutB);
-      x = uutB < uutA;
-      Assert.IsTrue(uutB < uutA);
-      Assert.IsTrue(uutB != uutA);
-      Assert.IsTrue(uutB <= uutA);
-      Assert.IsTrue(x);
-      Assert.IsTrue(uutA != null);
-      Assert.IsTrue(uutB != null);
+      var uutList = new List<Tuple<Heuristic, Heuristic>>();
+      // Note: First must be bettern than second. 
+      uutList.Add(Tuple.Create(new Heuristic(1.0, 0), new Heuristic(1.0, 1)));
+      uutList.Add(Tuple.Create(new Heuristic(1.0, 0), new Heuristic(2.0, 1)));
+      uutList.Add(Tuple.Create(new Heuristic(0.0001, 3), new Heuristic(1.0, 5)));
+      uutList.Add(Tuple.Create(new Heuristic(1.1, 0), new Heuristic(1.0, 0)));
+      uutList.Add(Tuple.Create(new Heuristic(-1.0, 1), new Heuristic(-2.0, 1)));
+      uutList.Add(Tuple.Create(new Heuristic(-50.0, 0), new Heuristic(1.0, 5)));
 
-      uutA = new Heuristic(1.0, 2);
-      uutB = new Heuristic(0.0, 2);
-      Assert.IsTrue(uutA > uutB);
-      Assert.IsTrue(uutA != uutB);
-      Assert.IsTrue(uutA >= uutB);
-      Assert.IsTrue(uutB < uutA);
-      Assert.IsTrue(uutB != uutA);
-      Assert.IsTrue(uutB <= uutA);
-      Assert.IsTrue(uutA != null);
-      Assert.IsTrue(uutB != null);
+      foreach (Tuple<Heuristic, Heuristic> uutTuple in uutList) {
+        Assert.IsTrue(uutTuple.Item2 < uutTuple.Item1);
+        Assert.IsTrue(uutTuple.Item1 != uutTuple.Item2);
+        Assert.IsTrue(uutTuple.Item2 != uutTuple.Item1);
+        Assert.IsTrue(uutTuple.Item2 <= uutTuple.Item1);
+        Assert.IsTrue(uutTuple.Item1 >= uutTuple.Item2);
+        Assert.IsTrue(uutTuple.Item1 > uutTuple.Item2);
+        Assert.IsTrue(uutTuple.Item1 != null);
+        Assert.IsTrue(uutTuple.Item2 != null);
+      }
 
-      uutA = new Heuristic(10.0, 5);
-      uutB = new Heuristic(10.0, 5);
-      Assert.IsTrue(uutA == uutB);
-      Assert.IsTrue(uutA <= uutB);
-      Assert.IsTrue(uutA >= uutB);
-      Assert.IsTrue(uutB <= uutA);
-      Assert.IsTrue(uutB >= uutA);
-      Assert.IsTrue(uutA != null);
-      Assert.IsTrue(uutB != null);
+      uutList.Clear();
+      // Note: Must be equal
+      uutList.Add(Tuple.Create(new Heuristic(0.0, 0), new Heuristic(0.0, 0)));
+      uutList.Add(Tuple.Create(new Heuristic(1.0, 3), new Heuristic(1.0, 3)));
+      uutList.Add(Tuple.Create(new Heuristic(0.0001, 2), new Heuristic(0.0001, 2)));
+      uutList.Add(new Tuple<Heuristic, Heuristic>(null, null));
 
-      uutA = null;
-      uutB = null;
+      foreach (Tuple<Heuristic, Heuristic> uutTuple in uutList) {
+        Assert.IsTrue(uutTuple.Item1 == uutTuple.Item2);
+        Assert.IsTrue(uutTuple.Item1 >= uutTuple.Item2);
+        Assert.IsTrue(uutTuple.Item1 <= uutTuple.Item2);
+      }
+
+      Heuristic uutA = null;
+      Heuristic uutB = null;
       Assert.IsTrue(uutA == null);
       Assert.IsTrue(uutB == null);
     }

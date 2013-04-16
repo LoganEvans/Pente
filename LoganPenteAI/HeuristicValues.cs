@@ -63,10 +63,18 @@ namespace LoganPenteAI {
     }
 
     public static bool operator <(Heuristic first, Heuristic second) {
-      if (first.GetPriority() > second.GetPriority()) {
-        return true;
-      } else if (first.GetValue() < second.GetValue()) {
-        return true;
+      if (first.GetPriority() != second.GetPriority()) {
+        if (first.GetPriority() > second.GetPriority()) {
+          return true;
+        } else {
+          return false;
+        }
+      } else if (first.GetValue() != second.GetValue()) {
+        if (first.GetValue() < second.GetValue()) {
+          return true;
+        } else {
+          return false;
+        }
       } else {
         return false;
       }
@@ -97,15 +105,15 @@ namespace LoganPenteAI {
     }
 
     public static bool operator >(Heuristic first, Heuristic second) {
-      return (!(first < second) && !(first == second));
+      return (!(first == second)) && (!(first < second));
     }
 
     public static bool operator <=(Heuristic first, Heuristic second) {
-      return (first < second) || (first == second);
+      return (first == second) || (first < second);
     }
 
     public static bool operator >=(Heuristic first, Heuristic second) {
-      return (first == second) || (first > second);
+      return (first == second) || !(first < second);
     }
   }
 
@@ -363,10 +371,6 @@ namespace LoganPenteAI {
       foreach (Tuple<Tuple<int, int, int>, Heuristic> val in reversed) {
         inputList.Add(val);
       }
-    }
-
-    public static double GetWinHeuristic() {
-      return 1000.0;
     }
   }
 }

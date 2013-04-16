@@ -11,7 +11,7 @@ namespace LoganPenteAI {
   public class PlayerAI : PlayerBase {
     private GameState mGameState;
     private Player mColor;
-    private int mLookahead = 3;
+    private int mLookahead = 1;
     private AutoResetEvent mWaitOnOpponent;
 
     public PlayerAI() {}

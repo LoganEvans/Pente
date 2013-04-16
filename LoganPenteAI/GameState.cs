@@ -48,7 +48,6 @@ namespace LoganPenteAI {
     }
 
     Heuristic Minimax(int depthLimit, Heuristic heuristicAlpha, Heuristic heuristicBeta, out Tuple<int, int> bestMove) {
-      Console.WriteLine(" > Minimax");
       mPositionsEvaluated++;
       Heuristic champHeur = null;
       Heuristic chumpHeur;
@@ -61,7 +60,6 @@ namespace LoganPenteAI {
       }
 
       if (IsMaxLevel()) {
-        Console.WriteLine("True:  IsMaxLevel");
         foreach (Tuple<int, int> candidateMove in GetCandidateMoves()) {
           child = new GameState(this);
           child.Move(candidateMove.Item1, candidateMove.Item2);
@@ -82,7 +80,6 @@ namespace LoganPenteAI {
           }
         }
       } else {
-        Console.WriteLine("False: IsMaxLevel");
         foreach (Tuple<int, int> candidateMove in GetCandidateMoves()) {
           child = new GameState(this);
           child.Move(candidateMove.Item1, candidateMove.Item2);
@@ -103,8 +100,6 @@ namespace LoganPenteAI {
           }
         }
       }
-
-      Console.WriteLine(" < Minimax()  #=> " + bestMove + " | " + champHeur);
       champHeur.AddValue(GetHeuristicValue(bestMove.Item1, bestMove.Item2).GetValue());
       return champHeur;
     }
