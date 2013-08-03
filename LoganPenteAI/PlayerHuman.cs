@@ -5,14 +5,16 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using CommonInterfaces;
+using PenteInterfaces;
 
-namespace LoganPenteAI {
+namespace PenteAI {
   public class PlayerHuman : PlayerBase {
     private Board mBoard;
     private Player mColor;
     private AutoResetEvent mWaitOnClick;
     private AutoResetEvent mWaitOnOpponent;
+
+    public PlayerHuman() { }
 
     public override void SetBoard(BoardInterface board) {
       mBoard = new Board(board);
@@ -28,7 +30,7 @@ namespace LoganPenteAI {
 
     public override void MoveSelectedEventHandler_GetOpponentMove(object sender, MoveSelectedEventArgs args) {
       mBoard.Move(args.row, args.col);
-      //Console.WriteLine(mColor + " Setting mWaitOnOpponent");
+      Console.WriteLine(mColor + " Setting mWaitOnOpponent");
       mWaitOnOpponent.Set();
     }
 
@@ -40,7 +42,7 @@ namespace LoganPenteAI {
       if (args.player == mColor) {
         mBoard.Move(args.row, args.col);
         OnMoveSelected(args);
-        //Console.WriteLine(mColor + " Setting mWaitOnClick");
+        Console.WriteLine(mColor + " Setting mWaitOnClick");
         mWaitOnClick.Set();
       }
     }
@@ -52,13 +54,13 @@ namespace LoganPenteAI {
 
       while (mBoard.GetWinner() == Player.Neither) {
         if (mBoard.GetCurrentPlayer() == mColor) {
-          //Console.WriteLine("(playerThread) " + mColor + " Waiting on click...");
+          Console.WriteLine("(playerThread) " + mColor + " Waiting on click...");
           mWaitOnClick.WaitOne();
-          //Console.WriteLine("(playerThread) " + mColor + " Done waiting on click...");
+          Console.WriteLine("(playerThread) " + mColor + " Done waiting on click...");
         } else {
-          //Console.WriteLine("(playerThread) " + mColor + " Waiting on opponent...");
+          Console.WriteLine("(playerThread) " + mColor + " Waiting on opponent...");
           mWaitOnOpponent.WaitOne();
-          //Console.WriteLine("(playerThread) " + mColor + " Done waiting on opponent...");
+          Console.WriteLine("(playerThread) " + mColor + " Done waiting on opponent...");
         }
       }
     }

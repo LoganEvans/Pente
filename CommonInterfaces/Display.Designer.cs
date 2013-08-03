@@ -1,4 +1,4 @@
-﻿namespace CommonInterfaces {
+﻿namespace PenteInterfaces {
   partial class Display {
     /// <summary>
     /// Required designer variable.
