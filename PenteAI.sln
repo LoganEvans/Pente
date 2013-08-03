@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PenteAI", "LoganPenteAI\PenteAI.csproj", "{744AE182-21BA-43A9-8E98-07D0A48A8C22}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PenteAI", "PenteAI\PenteAI.csproj", "{744AE182-21BA-43A9-8E98-07D0A48A8C22}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PenteInterfaces", "CommonInterfaces\PenteInterfaces.csproj", "{0F88AB94-A0C9-4EE8-B763-F49DFBDF3B24}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PenteInterfaces", "PenteInterfaces\PenteInterfaces.csproj", "{0F88AB94-A0C9-4EE8-B763-F49DFBDF3B24}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "LoganUnitTests\UnitTests.csproj", "{0363D4D9-5E48-4D7C-8B0A-B86350D5DEE7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{0363D4D9-5E48-4D7C-8B0A-B86350D5DEE7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
