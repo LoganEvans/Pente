@@ -1,10 +1,10 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using CommonInterfaces;
-using LoganPenteAI;
+using PenteInterfaces;
+using PenteAI;
 
-namespace LoganUnitTests {
+namespace UnitTests {
   [TestClass]
   public class AITests {
     [TestMethod]

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using CommonInterfaces;
+using PenteInterfaces;
 
-namespace LoganPenteAI {
+namespace PenteAI {
   public class GameState : Board {
     private int[] mInfluenceMap;
     private static int mBaseDepth;

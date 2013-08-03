@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 
-using CommonInterfaces;
+using PenteInterfaces;
 
-namespace LoganPenteAI {
+namespace PenteAI {
   public class Board : BoardInterface {
     public const int ROWS = 19;
     public const int COLS = 19;

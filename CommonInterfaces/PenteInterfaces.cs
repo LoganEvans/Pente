@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CommonInterfaces {
+namespace PenteInterfaces {
   // This can represent the player or the identity of the player that placed a stone in a spot.
   public enum Player {Black, White, Neither};
 

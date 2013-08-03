@@ -6,9 +6,9 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-using CommonInterfaces;
+using PenteInterfaces;
 
-namespace LoganPenteAI {
+namespace PenteAI {
   public class Heuristic {
     private double mValue;
     private int mPriority;

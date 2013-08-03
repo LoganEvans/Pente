@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using CommonInterfaces;
+using PenteInterfaces;
 
-namespace LoganPenteAI {
+namespace PenteAI {
   public class PlayerAI : PlayerBase {
     private GameState mGameState;
     private Player mColor;

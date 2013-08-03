@@ -6,10 +6,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-using CommonInterfaces;
+using PenteInterfaces;
 
-namespace LoganPenteAI {
-  class LPE_AI {
+namespace PenteAI {
+  class AI {
     [STAThread]
     static void Main(string[] args) {
       BoardInterface board = new Board();

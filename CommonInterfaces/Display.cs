@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace CommonInterfaces {
+namespace PenteInterfaces {
   public partial class Display : Form {
     public const int ROWS = 19;
     public const int COLS = 19;

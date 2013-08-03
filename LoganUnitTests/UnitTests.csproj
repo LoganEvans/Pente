@@ -6,7 +6,7 @@
     <ProjectGuid>{0363D4D9-5E48-4D7C-8B0A-B86350D5DEE7}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LoganUnitTests</RootNamespace>
+    <RootNamespace>UnitTests</RootNamespace>
     <AssemblyName>LoganUnitTests</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -57,13 +57,13 @@
     <Compile Include="HeuristicValuesTest.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CommonInterfaces\CommonInterfaces.csproj">
+    <ProjectReference Include="..\CommonInterfaces\PenteInterfaces.csproj">
       <Project>{0f88ab94-a0c9-4ee8-b763-f49dfbdf3b24}</Project>
-      <Name>CommonInterfaces</Name>
+      <Name>PenteInterfaces</Name>
     </ProjectReference>
-    <ProjectReference Include="..\LoganPenteAI\LoganPenteAI.csproj">
+    <ProjectReference Include="..\LoganPenteAI\PenteAI.csproj">
       <Project>{744ae182-21ba-43a9-8e98-07d0a48a8c22}</Project>
-      <Name>LoganPenteAI</Name>
+      <Name>PenteAI</Name>
     </ProjectReference>
   </ItemGroup>
   <Choose>
