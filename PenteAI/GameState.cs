@@ -38,12 +38,10 @@ namespace PenteAI {
 
     // This method triggers the Negamax search. It should only be called externally.
     public Tuple<int, int> GetBestMove(int depthLimit) {
-      Console.WriteLine(" > GetBestMove()");
       mBaseDepth = GetMoveNumber();
       Tuple<int, int> move;
       Heuristic heuristic = Minimax(depthLimit, null, null, out move);
       //Tuple<Tuple<int, int>, Heuristic> move = Negamax();
-      Console.WriteLine(" < GetBestMove()... heuristic: " + heuristic + " mPositionsEvaluated: " + mPositionsEvaluated);
       return move;
     }
 

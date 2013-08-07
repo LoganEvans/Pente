@@ -10,8 +10,7 @@ using PenteInterfaces;
 
 namespace PenteAI {
   class AI {
-    [STAThread]
-    static void Main(string[] args) {
+    static void StartGame() {
       BoardInterface board = new Board();
       /*
       BoardInterface board = new GameState(Player.White, 2, 4,
@@ -63,6 +62,18 @@ namespace PenteAI {
 
       Application.EnableVisualStyles();
       Application.Run(display);
+    }
+
+    static void Benchmark() {
+      Benchmarks bench = new Benchmarks();
+      // bench.RandomGameToCSV(1000000);
+      bench.TimeRandomGames(1000000);
+    }
+
+    [STAThread]
+    static void Main(string[] args) {
+      // AI.StartGame();
+      AI.Benchmark();
     }
   }
 }

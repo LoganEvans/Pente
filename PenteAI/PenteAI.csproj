@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Benchmarks.cs" />
     <Compile Include="GameState.cs" />
     <Compile Include="HeuristicResources.Designer.cs">
       <AutoGen>True</AutoGen>
