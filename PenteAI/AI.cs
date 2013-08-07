@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -67,7 +66,8 @@ namespace PenteAI {
     static void Benchmark() {
       Benchmarks bench = new Benchmarks();
       // bench.RandomGameToCSV(1000000);
-      bench.TimeRandomGames(1000000);
+      // bench.TimeRandomGames(1000000);
+      bench.TimeRandomGames(1000);
     }
 
     [STAThread]
