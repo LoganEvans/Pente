@@ -32,7 +32,31 @@ namespace PenteAI {
     private int mCapturesWhite;
     private int mCapturesBlack;
 
+    public enum Direction {ByRow = 0, ByCol = 1, ByUpDiag = 2, ByDownDiag = 3};
+    private static List<Tuple<int, int>> sDirectionIncrements = null;
+    private static List<Direction> sAllDirections = null;
+
+    // This should be called early on.
+    public static void InitBoard() {
+      if (sDirectionIncrements == null) {
+        sDirectionIncrements = new List<Tuple<int, int>>();
+        sDirectionIncrements.Add(Tuple.Create(0, 1));  // mDirections[Direction.ByRow]
+        sDirectionIncrements.Add(Tuple.Create(1, 0));  // mDirections[Direction.ByCol]
+        sDirectionIncrements.Add(Tuple.Create(-1, 1));  // mDirections[Direction.ByUpDiag]
+        sDirectionIncrements.Add(Tuple.Create(1, 1));  // mDirections[Direction.ByDownDiag]
+
+        sAllDirections = new List<Direction>();
+        sAllDirections.Add(Direction.ByRow);
+        sAllDirections.Add(Direction.ByCol);
+        sAllDirections.Add(Direction.ByUpDiag);
+        sAllDirections.Add(Direction.ByDownDiag);
+      }
+    }
+
     public Board() {
+      if (sDirectionIncrements == null) {
+        InitBoard();
+      }
       mRowsWhite = new int[ROWS];
       mRowsBlack = new int[ROWS];
       mColsWhite = new int[ROWS];
@@ -50,6 +74,9 @@ namespace PenteAI {
     }
 
     public Board(BoardInterface copyFrom) {
+      if (sDirectionIncrements == null) {
+        InitBoard();
+      }
       mRowsWhite = new int[ROWS];
       mRowsBlack = new int[ROWS];
       mColsWhite = new int[ROWS];
@@ -70,6 +97,9 @@ namespace PenteAI {
     }
 
     public Board(Board copyFrom) {
+      if (sDirectionIncrements == null) {
+        InitBoard();
+      }
       mRowsWhite = new int[ROWS];
       mRowsBlack = new int[ROWS];
       mColsWhite = new int[ROWS];
@@ -100,6 +130,9 @@ namespace PenteAI {
     }
 
     public Board(Player nextPlayer, int capturesWhite, int capturesBlack, String boardStr) {
+      if (sDirectionIncrements == null) {
+        InitBoard();
+      }
       Debug.Assert(boardStr.Length == ROWS * COLS);
       mCapturesWhite = capturesWhite;
       mCapturesBlack = capturesBlack;
@@ -145,8 +178,7 @@ namespace PenteAI {
 
       SetSpot(row, col, GetCurrentPlayer());
 
-      PerformCaptures(row, col);
-      if (IsGameOver(row, col)) {
+      if (PerformCapturesAndCheckWin(row, col)) {
         mWinner = current_player;
       }
       mMoveNumber++;
@@ -162,40 +194,49 @@ namespace PenteAI {
       }
     }
 
-    private bool PerformCaptures(int row, int col) {
-      Debug.Assert(Pattern.ROW_PATTERN == 0);
-      Debug.Assert(Pattern.COL_PATTERN == 1);
-      Debug.Assert(Pattern.UP_DIAG_PATTERN == 2);
-      Debug.Assert(Pattern.DOWN_DIAG_PATTERN == 3);
-
-      Player current = GetCurrentPlayer();
-
-      bool retval = false;
+    // Returns false if there is no win, true if there is.
+    private bool PerformCapturesAndCheckWin(int row, int col) {
+      Player currentPlayer = GetCurrentPlayer();
       List<Tuple<int, int>> windows = GetWindows(row, col);
 
-      var directions = new List<Tuple<int, int>>();
-      directions.Add(Tuple.Create(0, 1));  // by row
-      directions.Add(Tuple.Create(1, 0));  // by col
-      directions.Add(Tuple.Create(-1, 1));  // by up diag
-      directions.Add(Tuple.Create(1, 1));  // by down diag
-
-      for (int i = 0; i < directions.Count; i++) {
-        if (MatchesPattern(current, windows[i], HeuristicValues.FORWARD_CAPTURE_PATTERN)) {
-          SetSpot(row + directions[i].Item1, col + directions[i].Item2, Player.Neither);
-          SetSpot(row + 2 * directions[i].Item1, col + 2 * directions[i].Item2, Player.Neither);
-          IncrementPlayerCaptures(current);
-          retval = true;
+      foreach (Direction direction in sAllDirections) {
+        if (MatchesPattern(currentPlayer, windows[(int)direction], HeuristicValues.FORWARD_CAPTURE_PATTERN)) {
+          SetSpot(row + sDirectionIncrements[(int)direction].Item1,
+                  col + sDirectionIncrements[(int)direction].Item2, Player.Neither);
+          SetSpot(row + 2 * sDirectionIncrements[(int)direction].Item1,
+                  col + 2 * sDirectionIncrements[(int)direction].Item2, Player.Neither);
+          IncrementPlayerCaptures(currentPlayer);
         }
 
-        if (MatchesPattern(current, windows[i], HeuristicValues.BACKWARD_CAPTURE_PATTERN)) {
-          SetSpot(row - directions[i].Item1, col - directions[i].Item2, Player.Neither);
-          SetSpot(row - 2 * directions[i].Item1, col - 2 * directions[i].Item2, Player.Neither);
-          IncrementPlayerCaptures(current);
-          retval = true;
+        if (MatchesPattern(currentPlayer, windows[(int)direction], HeuristicValues.BACKWARD_CAPTURE_PATTERN)) {
+          SetSpot(row - sDirectionIncrements[(int)direction].Item1,
+                  col - sDirectionIncrements[(int)direction].Item2, Player.Neither);
+          SetSpot(row - 2 * sDirectionIncrements[(int)direction].Item1,
+                  col - 2 * sDirectionIncrements[(int)direction].Item2, Player.Neither);
+          IncrementPlayerCaptures(currentPlayer);
         }
       }
 
-      return retval;
+      if (GetWinner() != Player.Neither) {
+        return true;
+      }
+
+      if (mCapturesWhite >= 5 || mCapturesBlack >= 5) {
+        return true;
+      }
+
+      if (mMoveNumber > ROWS * COLS) {
+        return true;
+      }
+
+      foreach (Tuple<int, int> window in windows) {
+        int currentWindow = (currentPlayer == Player.White) ? window.Item1 : window.Item2;
+        if ((currentWindow & (currentWindow << 1) & (currentWindow << 2) & (currentWindow << 3) & (currentWindow << 4)) != 0) {
+          return true;
+        }
+      }
+
+      return false;
     }
 
     public List<Tuple<int, int>> GetWindows(int row, int col) {
@@ -233,31 +274,6 @@ namespace PenteAI {
           return true;
         }
       }
-      return false;
-    }
-
-    // Specifies the row of the last move. This allows the method to shorten its
-    // check for a game over.
-    private bool IsGameOver(int row, int col) {
-      if (GetWinner() != Player.Neither) {
-        return true;
-      }
-
-      if (mCapturesWhite >= 5 || mCapturesBlack >= 5) {
-        return true;
-      }
-
-      if (mMoveNumber > ROWS * COLS) {
-        return true;
-      }
-
-      foreach (Tuple<int, int> window in GetWindows(row, col)) {
-        int currentWindow = (GetCurrentPlayer() == Player.White) ? window.Item1 : window.Item2;
-        if ((currentWindow & (currentWindow << 1) & (currentWindow << 2) & (currentWindow << 3) & (currentWindow << 4)) != 0) {
-          return true;
-        }
-      }
-
       return false;
     }
 

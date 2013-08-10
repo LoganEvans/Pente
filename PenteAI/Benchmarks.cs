@@ -22,7 +22,7 @@ namespace PenteAI {
         board.Move(9, 9);
 
         while (board.GetWinner() == Player.Neither) {
-          board.Move(rand.Next(Board.ROWS - 1), rand.Next(Board.COLS - 1));
+          board.Move(rand.Next(Board.ROWS), rand.Next(Board.COLS));
         }
 
         sb.Append(board.GetWinner().ToString() + "," +
@@ -50,7 +50,7 @@ namespace PenteAI {
         board.Move(9, 9);
 
         while (board.GetWinner() == Player.Neither) {
-          board.Move(rand.Next(Board.ROWS - 1), rand.Next(Board.COLS - 1));
+          board.Move(rand.Next(Board.ROWS), rand.Next(Board.COLS));
         }
 
         totalMoves += board.GetMoveNumber();

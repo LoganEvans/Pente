@@ -72,6 +72,8 @@ namespace PenteAI {
 
     [STAThread]
     static void Main(string[] args) {
+      Board.InitBoard();
+
       // AI.StartGame();
       AI.Benchmark();
     }

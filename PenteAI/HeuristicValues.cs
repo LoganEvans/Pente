@@ -179,6 +179,8 @@ namespace PenteAI {
     private static Tuple<int, int, int> _captureCheck;
     private static double[] mWin;
     private static int mProximityPriority;
+    // These are bit masks. 0x10 would be the 5th bit... so it would represent a stone that was just
+    // placed.
     public static readonly Tuple<int, int, int> BACKWARD_CAPTURE_PATTERN = Tuple.Create(0x12, 0xc, 0x1e1);
     public static readonly Tuple<int, int, int> FORWARD_CAPTURE_PATTERN = Tuple.Create(0x90, 0x60, 0x10f);
 

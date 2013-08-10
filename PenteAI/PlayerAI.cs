@@ -18,7 +18,7 @@ namespace PenteAI {
     public PlayerAI(Player color, BoardInterface board) {
     }
 
-    public void SetLookeahd(int lookahead) {
+    public void SetLookahead(int lookahead) {
       mLookahead = lookahead;
     }
 
