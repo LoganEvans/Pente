@@ -39,8 +39,8 @@ namespace UnitTests {
 
       int row = 9;
       int col = 9;
-      List<Tuple<int, int>> windows = uut.GetWindows(row, col);
-      List<Tuple<int, int>> windowsB = uut.GetWindows(row + 1, col + 1);
+      Tuple<int, int>[] windows = uut.GetWindows(row, col);
+      Tuple<int, int>[] windowsB = uut.GetWindows(row + 1, col + 1);
       Assert.AreNotEqual(windows[0].Item1, windowsB[0].Item1);
 
       int expectedWhiteRow = Convert.ToInt32("000000000", 2);
@@ -92,7 +92,7 @@ namespace UnitTests {
       // Must block win: priority == 1
       //
 
-      List<Tuple<int, int>> windows;
+      Tuple<int, int>[] windows;
       Heuristic heuristic;
       Dictionary<Pattern, Heuristic> heurDict = HeuristicValues.GetHeuristicDict();
       windows = uut.GetWindows(2, 9);
@@ -139,7 +139,7 @@ namespace UnitTests {
       // Must block win: priority == 1
       //
 
-      List<Tuple<int, int>> windows;
+      Tuple<int, int>[] windows;
       Heuristic heuristic;
       windows = uut.GetWindows(2, 9);
       int expectedBlackDownDiag = Convert.ToInt32("001101100", 2);

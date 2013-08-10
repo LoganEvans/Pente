@@ -32,24 +32,25 @@ namespace PenteAI {
     private int mCapturesWhite;
     private int mCapturesBlack;
 
+    public const int NUM_DIRECTIONS = 4;
     public enum Direction {ByRow = 0, ByCol = 1, ByUpDiag = 2, ByDownDiag = 3};
-    private static List<Tuple<int, int>> sDirectionIncrements = null;
-    private static List<Direction> sAllDirections = null;
+    private static Tuple<int, int>[] sDirectionIncrements = null;
+    private static Direction[] sAllDirections = null;
 
     // This should be called early on.
     public static void InitBoard() {
       if (sDirectionIncrements == null) {
-        sDirectionIncrements = new List<Tuple<int, int>>();
-        sDirectionIncrements.Add(Tuple.Create(0, 1));  // mDirections[Direction.ByRow]
-        sDirectionIncrements.Add(Tuple.Create(1, 0));  // mDirections[Direction.ByCol]
-        sDirectionIncrements.Add(Tuple.Create(-1, 1));  // mDirections[Direction.ByUpDiag]
-        sDirectionIncrements.Add(Tuple.Create(1, 1));  // mDirections[Direction.ByDownDiag]
+        sDirectionIncrements = new Tuple<int, int>[NUM_DIRECTIONS];
+        sDirectionIncrements[(int)Direction.ByRow] = Tuple.Create(0, 1);
+        sDirectionIncrements[(int)Direction.ByCol] = Tuple.Create(1, 0);
+        sDirectionIncrements[(int)Direction.ByUpDiag] = Tuple.Create(-1, 1);
+        sDirectionIncrements[(int)Direction.ByDownDiag] = Tuple.Create(1, 1);
 
-        sAllDirections = new List<Direction>();
-        sAllDirections.Add(Direction.ByRow);
-        sAllDirections.Add(Direction.ByCol);
-        sAllDirections.Add(Direction.ByUpDiag);
-        sAllDirections.Add(Direction.ByDownDiag);
+        sAllDirections = new Direction[4];
+        sAllDirections[(int)Direction.ByRow] = Direction.ByRow;
+        sAllDirections[(int)Direction.ByCol] = Direction.ByCol;
+        sAllDirections[(int)Direction.ByUpDiag] = Direction.ByUpDiag;
+        sAllDirections[(int)Direction.ByDownDiag] = Direction.ByDownDiag;
       }
     }
 
@@ -197,7 +198,7 @@ namespace PenteAI {
     // Returns false if there is no win, true if there is.
     private bool PerformCapturesAndCheckWin(int row, int col) {
       Player currentPlayer = GetCurrentPlayer();
-      List<Tuple<int, int>> windows = GetWindows(row, col);
+      Tuple<int, int>[] windows = GetWindows(row, col);
 
       foreach (Direction direction in sAllDirections) {
         // Check for a capture forward
@@ -238,25 +239,25 @@ namespace PenteAI {
       return false;
     }
 
-    public List<Tuple<int, int>> GetWindows(int row, int col) {
-      var retval = new List<Tuple<int, int>>();
+    public Tuple<int, int>[] GetWindows(int row, int col) {
+      var retval = new Tuple<int, int>[NUM_DIRECTIONS];
       int whiteRow, blackRow, whiteCol, blackCol, whiteUpDiag, blackUpDiag, whiteDownDiag, blackDownDiag;
 
       whiteRow = ((mRowsWhite[row] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
       blackRow = ((mRowsBlack[row] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
-      retval.Add(Tuple.Create(whiteRow, blackRow));  // ROW_PATTERN == 0
+      retval[(int)Direction.ByRow] = Tuple.Create(whiteRow, blackRow);
 
       whiteCol = ((mColsWhite[col] << Pattern.PATTERN_RADIUS) >> row) & Pattern.PATTERN_MASK;
       blackCol = ((mColsBlack[col] << Pattern.PATTERN_RADIUS) >> row) & Pattern.PATTERN_MASK;
-      retval.Add(Tuple.Create(whiteCol, blackCol));  // COL_Pattern.PATTERN == 1
+      retval[(int)Direction.ByCol] = Tuple.Create(whiteCol, blackCol);
 
       whiteUpDiag = ((mUpDiagWhite[UpDiagIndex(row, col)] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
       blackUpDiag = ((mUpDiagBlack[UpDiagIndex(row, col)] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
-      retval.Add(Tuple.Create(whiteUpDiag, blackUpDiag));  // UP_DIAG_Pattern.PATTERN == 2
+      retval[(int)Direction.ByUpDiag] = Tuple.Create(whiteUpDiag, blackUpDiag);
 
       whiteDownDiag = ((mDownDiagWhite[DownDiagIndex(row, col)] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
       blackDownDiag = ((mDownDiagBlack[DownDiagIndex(row, col)] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
-      retval.Add(Tuple.Create(whiteDownDiag, blackDownDiag));  // DOWN_DIAG_PATTERN == 3
+      retval[(int)Direction.ByDownDiag] = Tuple.Create(whiteDownDiag, blackDownDiag);
 
       return retval;
     }
