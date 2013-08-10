@@ -69,7 +69,8 @@ namespace PenteAI {
       // bench.TimeRandomGames(1000000);
       // bench.TimeRandomGames(100000);
 
-      bench.TimeRandomGamesWithLookahead(n:10000, depthLimit:0, branchingFactor:1);
+      // bench.TimeRandomGamesWithLookahead(n:10000, depthLimit:0, branchingFactor:1);
+      bench.TimeRandomGamesWithLookaheadNoPlayer(n: 1000, depthLimit: 1, branchingFactor: 1);
       // bench.CountFailsInN(1000);
     }
 

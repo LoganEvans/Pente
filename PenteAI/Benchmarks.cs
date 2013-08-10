@@ -179,20 +179,43 @@ namespace PenteAI {
         pi1Thread.Join();
         pi2Thread.Join();
 
-        if (pi1.mGameState != pi2.mGameState) {
-          Console.WriteLine("============");
-          Console.Write(pi1.mGameState.GetBoardStateStr());
-          Console.WriteLine("------------");
-          Console.Write(pi2.mGameState.GetBoardStateStr());
-          Console.WriteLine("============");
-          Console.ReadLine();
-        }
+        Debug.Assert(pi1.mGameState == pi2.mGameState);
 
         totalMoves += pi1.GetPlies();
       }
 
       // Stop timing
       stopwatch.Stop();
+      Console.WriteLine("Average: {0}", (float)totalMoves / n);
+
+      // Write result
+      Console.WriteLine("Time elapsed: {0}",
+          stopwatch.Elapsed);
+      Console.WriteLine("Total moves: {0}", totalMoves);
+      Console.WriteLine("Average moves per second: {0}",
+          1000.0 * (float)totalMoves / stopwatch.ElapsedMilliseconds);
+    }
+
+    public void TimeRandomGamesWithLookaheadNoPlayer(int n, int depthLimit, int branchingFactor) {
+      Stopwatch stopwatch = new Stopwatch();
+      int totalMoves = 0;
+
+      // Begin timing
+      stopwatch.Start();
+
+      for (int i = 0; i < n; i++) {
+        BoardInterface board = new Board();
+        GameStateBenchmark gs_bench = new GameStateBenchmark(board, depthLimit, branchingFactor);
+
+        while (gs_bench.GetWinner() == Player.Neither) {
+          gs_bench.Move(gs_bench.GetBestMove(depthLimit));
+        }
+        totalMoves += gs_bench.GetMoveNumber();
+      }
+
+      // Stop timing
+      stopwatch.Stop();
+      Console.WriteLine("Average: {0}", (float)totalMoves / n);
 
       // Write result
       Console.WriteLine("Time elapsed: {0}",
