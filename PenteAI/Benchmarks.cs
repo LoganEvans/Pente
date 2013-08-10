@@ -66,5 +66,33 @@ namespace PenteAI {
       Console.WriteLine("Average moves per second: {0}",
           1000.0 * (float)totalMoves / stopwatch.ElapsedMilliseconds);
     }
+
+    public void CountFailsInN(int n) {
+      // Create new stopwatch
+      int COUNT = 10000;
+      Random rand = new Random();
+      int fails = 0;
+      for (int trial = 0; trial < n; trial++) {
+        int count = 0;
+        for (int i = 0; i < COUNT; i++) {
+          Board board = new Board();
+          board.Move(9, 9);
+
+          while (board.GetWinner() == Player.Neither) {
+            board.Move(rand.Next(Board.ROWS), rand.Next(Board.COLS));
+          }
+
+          count += board.GetMoveNumber();
+        }
+        double avg = count / (float)COUNT;
+        Console.Write("avg: {0}", avg);
+        if (!(153 < avg && avg < 155)) {
+          fails += 1;
+          Console.Write("  !!!");
+        }
+        Console.WriteLine();
+      }
+      Console.WriteLine("{0}", fails);
+    }
   }
 }

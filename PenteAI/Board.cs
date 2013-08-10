@@ -217,10 +217,6 @@ namespace PenteAI {
         }
       }
 
-      if (GetWinner() != Player.Neither) {
-        return true;
-      }
-
       if (mCapturesWhite >= 5 || mCapturesBlack >= 5) {
         return true;
       }

@@ -68,6 +68,7 @@ namespace PenteAI {
       // bench.RandomGameToCSV(1000000);
       // bench.TimeRandomGames(1000000);
       bench.TimeRandomGames(100000);
+      // bench.CountFailsInN(1000);
     }
 
     [STAThread]

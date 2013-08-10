@@ -43,6 +43,27 @@ namespace UnitTests {
       Assert.AreEqual(4, board.GetCaptures(Player.Black));
     }
 
+    // After some testing, the mean for the number of moves per game is quite
+    // close to 154, and the variance is quite close to 
+    [TestMethod]
+    public void TestAvgForRandomGame() {
+      var rand = new Random();
+      int trials = 10000;
+
+      int count = 0;
+      for (int i = 0; i < trials; i++) {
+        Board board = new Board();
+        board.Move(9, 9);
+
+        while (board.GetWinner() == Player.Neither) {
+          board.Move(rand.Next(Board.ROWS), rand.Next(Board.COLS));
+        }
+        count += board.GetMoveNumber();
+      }
+      double average = count / (float)trials;
+      Assert.IsTrue(152 < average);
+      Assert.IsTrue(average < 156);
+    }
 
     [TestMethod]
     public void TestWhiteSecondMoveIllegal() {
