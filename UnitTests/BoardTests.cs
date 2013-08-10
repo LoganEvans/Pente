@@ -8,7 +8,7 @@ namespace UnitTests {
   [TestClass]
   public class BoardTests {
     [TestMethod]
-    public void TestDebugConsstructor() {
+    public void TestDebugConstructor() {
       var board = new Board(Player.White, 2, 4,
         //123456789012345678
 "W.................B" +  // 0

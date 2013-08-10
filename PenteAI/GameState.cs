@@ -10,8 +10,15 @@ namespace PenteAI {
     private int[] mInfluenceMap;
     private static int mBaseDepth;
     private static int mPositionsEvaluated = 0;
+    public static Random staticRand = null;
 
     private readonly int[] branchingCategories = {3, 10, 50, ROWS * COLS};
+
+    public static void InitGameState() {
+      if (staticRand == null) {
+        staticRand = new Random();
+      }
+    }
 
     public GameState(BoardInterface board) : base(board) {
       mInfluenceMap = new int[ROWS];
@@ -22,7 +29,8 @@ namespace PenteAI {
       CopyMaps(copyFrom);
     }
 
-    public GameState(Player nextPlayer, int capturesWhite, int capturesBlack, String boardStr) : base(nextPlayer, capturesWhite, capturesBlack, boardStr) {
+    public GameState(Player nextPlayer, int capturesWhite, int capturesBlack, String boardStr)
+        : base(nextPlayer, capturesWhite, capturesBlack, boardStr) {
       mInfluenceMap = new int[ROWS];
       InitializeMaps();
     }
@@ -36,7 +44,7 @@ namespace PenteAI {
     }
 
     // This method triggers the Negamax search. It should only be called externally.
-    public Tuple<int, int> GetBestMove(int depthLimit) {
+    public virtual Tuple<int, int> GetBestMove(int depthLimit) {
       mBaseDepth = GetMoveNumber();
       Tuple<int, int> move;
       Heuristic heuristic = Minimax(depthLimit, null, null, out move);
@@ -44,7 +52,7 @@ namespace PenteAI {
       return move;
     }
 
-    Heuristic Minimax(int depthLimit, Heuristic heuristicAlpha, Heuristic heuristicBeta, out Tuple<int, int> bestMove) {
+    protected virtual Heuristic Minimax(int depthLimit, Heuristic heuristicAlpha, Heuristic heuristicBeta, out Tuple<int, int> bestMove) {
       mPositionsEvaluated++;
       Heuristic champHeur = null;
       Heuristic chumpHeur;
@@ -101,7 +109,7 @@ namespace PenteAI {
       return champHeur;
     }
 
-    private List<Tuple<int, int>> GetCandidateMoves() {
+    protected virtual List<Tuple<int, int>> GetCandidateMoves() {
       Tuple<int, int> spot;
       List<Tuple<int, int>> candidates = new List<Tuple<int, int>>();
       for (int row_dex = 0; row_dex < ROWS; row_dex++) {
@@ -208,7 +216,7 @@ namespace PenteAI {
     }
 
     // TODO, this doesn't check for captures.
-    public Heuristic GetHeuristicValue(int row, int col) {
+    public virtual Heuristic GetHeuristicValue(int row, int col) {
       if (!IsLegal(row, col)) {
         return new Heuristic(0.0, Heuristic.PROXIMITY_PRIORITY + 1);
       }

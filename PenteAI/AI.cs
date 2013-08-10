@@ -67,13 +67,16 @@ namespace PenteAI {
       Benchmarks bench = new Benchmarks();
       // bench.RandomGameToCSV(1000000);
       // bench.TimeRandomGames(1000000);
-      bench.TimeRandomGames(1000000);
+      // bench.TimeRandomGames(100000);
+
+      bench.TimeRandomGamesWithLookahead(n:10000, depthLimit:0, branchingFactor:1);
       // bench.CountFailsInN(1000);
     }
 
     [STAThread]
     static void Main(string[] args) {
       Board.InitBoard();
+      GameState.InitGameState();
 
       // AI.StartGame();
       AI.Benchmark();

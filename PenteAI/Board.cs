@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
@@ -188,6 +189,13 @@ namespace PenteAI {
       return true;
     }
 
+    // The intention is that this method is a convenience
+    // overload for the other one, but since this isn't
+    // virtual, I won't have to override it later.
+    public bool Move(Tuple<int, int> move) {
+      return Move(move.Item1, move.Item2);
+    }
+
     private void IncrementPlayerCaptures(Player color) {
       if (color == Player.White) {
         mCapturesWhite++;
@@ -348,6 +356,10 @@ namespace PenteAI {
       return true;
     }
 
+    public bool IsLegal(Tuple<int, int> move) {
+      return IsLegal(move.Item1, move.Item2);
+    }
+
     private void SetSpot(int row, int col, Player color) {
       if (color == Player.White) {
         mRowsWhite[row] |= SPOT_MASKS[col];
@@ -382,6 +394,53 @@ namespace PenteAI {
     [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
     private static int DownDiagIndex(int row, int col) {
       return row - col + COLS - 1;
+    }
+
+    public string GetBoardStateStr() {
+      StringBuilder sb = new StringBuilder();
+      sb.Append(String.Format("turn: {0} white: {1} black: {2} winner: {3}",
+                GetMoveNumber(), GetCaptures(Player.White), GetCaptures(Player.Black), GetWinner()));
+      sb.Append(Environment.NewLine);
+      for (int row_dex = 0; row_dex < ROWS; row_dex++) {
+        for (int col_dex = 0; col_dex < COLS; col_dex++) {
+          if (GetSpot(row_dex, col_dex) == Player.White) {
+            sb.Append(" W");
+          } else if (GetSpot(row_dex, col_dex) == Player.Black) {
+            sb.Append(" B");
+          } else {
+            sb.Append(" .");
+          }
+        }
+        sb.Append(" | ");
+        sb.Append(row_dex.ToString());
+        sb.Append(Environment.NewLine);
+      }
+      for (int col_dex = 0; col_dex < COLS; col_dex++) {
+        sb.Append(String.Format("{0,2}", col_dex));
+      }
+      sb.Append(Environment.NewLine);
+      return sb.ToString();
+    }
+
+    public static bool operator ==(Board first, Board second) {
+      return (
+          Enumerable.SequenceEqual(first.mRowsWhite, second.mRowsWhite) &&
+          Enumerable.SequenceEqual(first.mRowsBlack, second.mRowsBlack) &&
+          Enumerable.SequenceEqual(first.mColsWhite, second.mColsWhite) &&
+          Enumerable.SequenceEqual(first.mColsBlack, second.mColsBlack) &&
+          Enumerable.SequenceEqual(first.mUpDiagWhite, second.mUpDiagWhite) &&
+          Enumerable.SequenceEqual(first.mUpDiagBlack, second.mUpDiagBlack) &&
+          Enumerable.SequenceEqual(first.mDownDiagWhite, second.mDownDiagWhite) &&
+          Enumerable.SequenceEqual(first.mDownDiagBlack, second.mDownDiagBlack) &&
+          (first.GetWinner() == second.GetWinner()) &&
+          (first.GetCaptures(Player.White) == second.GetCaptures(Player.White)) &&
+          (first.GetCaptures(Player.Black) == second.GetCaptures(Player.Black)) &&
+          (first.GetMoveNumber() == second.GetMoveNumber())
+      );
+    }
+
+    public static bool operator !=(Board first, Board second) {
+      return (first == second) ? false : true;
     }
   }
 }

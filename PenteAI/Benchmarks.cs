@@ -3,26 +3,86 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using PenteInterfaces;
 
 namespace PenteAI {
+  public class GameStateBenchmark : GameState {
+    protected int mDepthLimit, mBranchingFactor;
+    public GameStateBenchmark(BoardInterface board, int depthLimit, int branchingFactor)
+      : base(board) {
+      mDepthLimit = depthLimit;
+      mBranchingFactor = branchingFactor;
+    }
+
+    public override Tuple<int, int> GetBestMove(int depthLimit) {
+      while (true) {
+        Tuple<int, int> move = base.GetBestMove(depthLimit);
+        if (IsLegal(move)) {
+          return move;
+        }
+      }
+    }
+
+    protected override List<Tuple<int, int>> GetCandidateMoves() {
+      List<Tuple<int, int>> retval = new List<Tuple<int, int>>();
+      // We need mBranchingFactor legal candidate moves...
+      for (int i = 0; i < mBranchingFactor; i++) {
+        // We might need to try a few times before we stumble on something legal...
+        while (true) {
+          Tuple<int, int> move = Benchmarks.GetRandomMove();
+          if (IsLegal(move)) {
+            retval.Add(move);
+            break;
+          }
+        }
+      }
+      return retval;
+    }
+
+    public override Heuristic GetHeuristicValue(int row, int col) {
+      return new Heuristic(0, 0);
+    }
+  }
+
+  public class PlayerBenchmark : PlayerAI {
+    protected int mDepthLimit, mBranchingFactor;
+
+    public PlayerBenchmark(int depthLimit, int branchingFactor) {
+      mLookahead = depthLimit;
+      mDepthLimit = depthLimit;
+      mBranchingFactor = branchingFactor;
+    }
+
+    public override void SetBoard(BoardInterface board) {
+      mGameState = new GameStateBenchmark(board, mDepthLimit, mBranchingFactor);
+    }
+
+    public int GetPlies() {
+      return mGameState.GetMoveNumber();
+    }
+  }
+
   class Benchmarks {
+    public static Tuple<int, int> GetRandomMove() {
+      return Tuple.Create(GameState.staticRand.Next(Board.ROWS), GameState.staticRand.Next(Board.COLS));
+    }
+
     public void RandomGameToCSV(int n) {
       String filename = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), @"RandomGames.csv");
 
       StringBuilder sb = new StringBuilder();
       sb.Append("Winner,Moves,WhiteCaptures,BlackCaptures");
       sb.Append(Environment.NewLine);
-      var rand = new Random();
 
       for (int i = 0; i < n; i++) {
         Board board = new Board();
         board.Move(9, 9);
 
         while (board.GetWinner() == Player.Neither) {
-          board.Move(rand.Next(Board.ROWS), rand.Next(Board.COLS));
+          board.Move(GetRandomMove());
         }
 
         sb.Append(board.GetWinner().ToString() + "," +
@@ -38,7 +98,6 @@ namespace PenteAI {
     public void TimeRandomGames(int n) {
       // Create new stopwatch
       Stopwatch stopwatch = new Stopwatch();
-      Random rand = new Random();
       int totalMoves = 0;
 
       // Begin timing
@@ -50,7 +109,7 @@ namespace PenteAI {
         board.Move(9, 9);
 
         while (board.GetWinner() == Player.Neither) {
-          board.Move(rand.Next(Board.ROWS), rand.Next(Board.COLS));
+          board.Move(GetRandomMove());
         }
 
         totalMoves += board.GetMoveNumber();
@@ -68,9 +127,7 @@ namespace PenteAI {
     }
 
     public void CountFailsInN(int n) {
-      // Create new stopwatch
       int COUNT = 10000;
-      Random rand = new Random();
       int fails = 0;
       for (int trial = 0; trial < n; trial++) {
         int count = 0;
@@ -79,7 +136,7 @@ namespace PenteAI {
           board.Move(9, 9);
 
           while (board.GetWinner() == Player.Neither) {
-            board.Move(rand.Next(Board.ROWS), rand.Next(Board.COLS));
+            board.Move(GetRandomMove());
           }
 
           count += board.GetMoveNumber();
@@ -93,6 +150,56 @@ namespace PenteAI {
         Console.WriteLine();
       }
       Console.WriteLine("{0}", fails);
+    }
+
+    public void TimeRandomGamesWithLookahead(int n, int depthLimit, int branchingFactor) {
+      Stopwatch stopwatch = new Stopwatch();
+      int totalMoves = 0;
+
+      // Begin timing
+      stopwatch.Start();
+      for (int i = 0; i < n; i++) {
+        BoardInterface board = new Board();
+        PlayerBenchmark pi1 = new PlayerBenchmark(depthLimit, branchingFactor);
+        pi1.SetBoard(board);
+        pi1.SetColor(Player.White);
+
+        PlayerBenchmark pi2 = new PlayerBenchmark(depthLimit, branchingFactor);
+        pi2.SetBoard(board);
+        pi2.SetColor(Player.Black);
+
+        pi1.SetOpponent(pi2);
+        pi2.SetOpponent(pi1);
+
+        Thread pi1Thread = new Thread(pi1.PlayerThread);
+        pi1Thread.Start();
+        Thread pi2Thread = new Thread(pi2.PlayerThread);
+        pi2Thread.Start();
+
+        pi1Thread.Join();
+        pi2Thread.Join();
+
+        if (pi1.mGameState != pi2.mGameState) {
+          Console.WriteLine("============");
+          Console.Write(pi1.mGameState.GetBoardStateStr());
+          Console.WriteLine("------------");
+          Console.Write(pi2.mGameState.GetBoardStateStr());
+          Console.WriteLine("============");
+          Console.ReadLine();
+        }
+
+        totalMoves += pi1.GetPlies();
+      }
+
+      // Stop timing
+      stopwatch.Stop();
+
+      // Write result
+      Console.WriteLine("Time elapsed: {0}",
+          stopwatch.Elapsed);
+      Console.WriteLine("Total moves: {0}", totalMoves);
+      Console.WriteLine("Average moves per second: {0}",
+          1000.0 * (float)totalMoves / stopwatch.ElapsedMilliseconds);
     }
   }
 }
