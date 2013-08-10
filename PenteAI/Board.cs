@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 using PenteInterfaces;
 
@@ -299,6 +300,7 @@ namespace PenteAI {
       }
     }
 
+    [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
     public int GetMoveNumber() {
       return mMoveNumber;
     }
@@ -320,6 +322,7 @@ namespace PenteAI {
     }
 
     // if the return value is Player.Neither, then the game is not finished.
+    [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
     public Player GetWinner() {
       return mWinner;
     }
@@ -371,10 +374,12 @@ namespace PenteAI {
       }
     }
 
+    [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
     private static int UpDiagIndex(int row, int col) {
       return row + col;
     }
 
+    [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
     private static int DownDiagIndex(int row, int col) {
       return row - col + COLS - 1;
     }
