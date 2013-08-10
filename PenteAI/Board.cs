@@ -200,6 +200,7 @@ namespace PenteAI {
       List<Tuple<int, int>> windows = GetWindows(row, col);
 
       foreach (Direction direction in sAllDirections) {
+        // Check for a capture forward
         if (MatchesPattern(currentPlayer, windows[(int)direction], HeuristicValues.FORWARD_CAPTURE_PATTERN)) {
           SetSpot(row + sDirectionIncrements[(int)direction].Item1,
                   col + sDirectionIncrements[(int)direction].Item2, Player.Neither);
@@ -208,6 +209,7 @@ namespace PenteAI {
           IncrementPlayerCaptures(currentPlayer);
         }
 
+        // Check for a capture backward
         if (MatchesPattern(currentPlayer, windows[(int)direction], HeuristicValues.BACKWARD_CAPTURE_PATTERN)) {
           SetSpot(row - sDirectionIncrements[(int)direction].Item1,
                   col - sDirectionIncrements[(int)direction].Item2, Player.Neither);
@@ -215,22 +217,23 @@ namespace PenteAI {
                   col - 2 * sDirectionIncrements[(int)direction].Item2, Player.Neither);
           IncrementPlayerCaptures(currentPlayer);
         }
+
+        // Check for a pente
+        int currentWindow = (currentPlayer == Player.White) ? windows[(int)direction].Item1 : windows[(int)direction].Item2;
+        if ((currentWindow & (currentWindow << 1) & (currentWindow << 2) & (currentWindow << 3) & (currentWindow << 4)) != 0) {
+          return true;
+        }
       }
 
       if (mCapturesWhite >= 5 || mCapturesBlack >= 5) {
         return true;
       }
 
+      /*
       if (mMoveNumber > ROWS * COLS) {
         return true;
       }
-
-      foreach (Tuple<int, int> window in windows) {
-        int currentWindow = (currentPlayer == Player.White) ? window.Item1 : window.Item2;
-        if ((currentWindow & (currentWindow << 1) & (currentWindow << 2) & (currentWindow << 3) & (currentWindow << 4)) != 0) {
-          return true;
-        }
-      }
+      */
 
       return false;
     }
