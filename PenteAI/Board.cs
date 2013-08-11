@@ -30,7 +30,7 @@ namespace PenteAI {
     private int[] mDownDiagBlack;
 
     private Player mWinner;
-    private int mMoveNumber;
+    private int mPlyNumber;
     private int mCapturesWhite;
     private int mCapturesBlack;
 
@@ -70,7 +70,7 @@ namespace PenteAI {
       mDownDiagBlack = new int[DIAGONALS];
 
       mWinner = Player.Neither;
-      mMoveNumber = 0;
+      mPlyNumber = 0;
       mCapturesWhite = 0;
       mCapturesBlack = 0;
       Move(ROWS / 2, COLS / 2);
@@ -94,7 +94,7 @@ namespace PenteAI {
         }
       }
       mWinner = copyFrom.GetWinner();
-      mMoveNumber = copyFrom.GetMoveNumber();
+      mPlyNumber = copyFrom.GetPlyNumber();
       mCapturesWhite = copyFrom.GetCaptures(Player.White);
       mCapturesBlack = copyFrom.GetCaptures(Player.Black);
     }
@@ -127,7 +127,7 @@ namespace PenteAI {
       }
 
       mWinner = copyFrom.mWinner;
-      mMoveNumber = copyFrom.mMoveNumber;
+      mPlyNumber = copyFrom.mPlyNumber;
       mCapturesWhite = copyFrom.mCapturesWhite;
       mCapturesBlack = copyFrom.mCapturesBlack;
     }
@@ -140,7 +140,7 @@ namespace PenteAI {
       mCapturesWhite = capturesWhite;
       mCapturesBlack = capturesBlack;
       mWinner = Player.Neither;
-      mMoveNumber = 2 * capturesWhite + 2 * capturesBlack;
+      mPlyNumber = 2 * capturesWhite + 2 * capturesBlack;
 
       mRowsWhite = new int[ROWS];
       mRowsBlack = new int[ROWS];
@@ -156,10 +156,10 @@ namespace PenteAI {
         for (int col_dex = 0; col_dex < COLS; col_dex++) {
           if (boardStr[row_dex * ROWS + col_dex] == 'W') {
             color = Player.White;
-            mMoveNumber++;
+            mPlyNumber++;
           } else if (boardStr[row_dex * ROWS + col_dex] == 'B') {
             color = Player.Black;
-            mMoveNumber++;
+            mPlyNumber++;
           } else {
             color = Player.Neither;
           }
@@ -169,7 +169,7 @@ namespace PenteAI {
       }
 
       if (GetCurrentPlayer() != nextPlayer) {
-        mMoveNumber++;
+        mPlyNumber++;
       }
     }
 
@@ -184,7 +184,7 @@ namespace PenteAI {
       if (PerformCapturesAndCheckWin(row, col)) {
         mWinner = current_player;
       }
-      mMoveNumber++;
+      mPlyNumber++;
 
       return true;
     }
@@ -240,7 +240,7 @@ namespace PenteAI {
       }
 
       /*
-      if (mMoveNumber > ROWS * COLS) {
+      if (mPlyNumber > ROWS * COLS) {
         return true;
       }
       */
@@ -309,12 +309,12 @@ namespace PenteAI {
     }
 
     [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
-    public int GetMoveNumber() {
-      return mMoveNumber;
+    public int GetPlyNumber() {
+      return mPlyNumber;
     }
 
     public Player GetCurrentPlayer() {
-      if (mMoveNumber % 2 == 0) {
+      if (mPlyNumber % 2 == 0) {
         return Player.White;
       } else {
         return Player.Black;
@@ -322,7 +322,7 @@ namespace PenteAI {
     }
 
     public Player GetOtherPlayer() {
-      if (mMoveNumber % 2 == 0) {
+      if (mPlyNumber % 2 == 0) {
         return Player.Black;
       } else {
         return Player.White;
@@ -336,7 +336,7 @@ namespace PenteAI {
     }
 
     public bool IsLegal(int row, int col) {
-      if (mMoveNumber == 2) {
+      if (mPlyNumber == 2) {
         int center = ROWS / 2;
         if (center - 2 <= row && row <= center + 2 &&
             center - 2 <= col && col <= center + 2) {
@@ -399,7 +399,7 @@ namespace PenteAI {
     public string GetBoardStateStr() {
       StringBuilder sb = new StringBuilder();
       sb.Append(String.Format("turn: {0} white: {1} black: {2} winner: {3}",
-                GetMoveNumber(), GetCaptures(Player.White), GetCaptures(Player.Black), GetWinner()));
+                GetPlyNumber(), GetCaptures(Player.White), GetCaptures(Player.Black), GetWinner()));
       sb.Append(Environment.NewLine);
       for (int row_dex = 0; row_dex < ROWS; row_dex++) {
         for (int col_dex = 0; col_dex < COLS; col_dex++) {
@@ -435,7 +435,7 @@ namespace PenteAI {
           (first.GetWinner() == second.GetWinner()) &&
           (first.GetCaptures(Player.White) == second.GetCaptures(Player.White)) &&
           (first.GetCaptures(Player.Black) == second.GetCaptures(Player.Black)) &&
-          (first.GetMoveNumber() == second.GetMoveNumber())
+          (first.GetPlyNumber() == second.GetPlyNumber())
       );
     }
 

@@ -45,7 +45,7 @@ namespace PenteAI {
 
     // This method triggers the Negamax search. It should only be called externally.
     public virtual Tuple<int, int> GetBestMove(int depthLimit) {
-      mBaseDepth = GetMoveNumber();
+      mBaseDepth = GetPlyNumber();
       Tuple<int, int> move;
       Heuristic heuristic = Minimax(depthLimit, null, null, out move);
       //Tuple<Tuple<int, int>, Heuristic> move = Negamax();
@@ -126,7 +126,7 @@ namespace PenteAI {
       }
 
       if (candidates.Count == 0) {
-        if (GetMoveNumber() == 1) {
+        if (GetPlyNumber() == 1) {
           for (int row_dex = 0; row_dex < ROWS; row_dex++) {
             for (int col_dex = 0; col_dex < COLS; col_dex++) {
               if (Math.Abs(row_dex - 9) <= 3 && Math.Abs(col_dex - 9) <= 3) {

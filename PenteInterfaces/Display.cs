@@ -26,7 +26,7 @@ namespace PenteInterfaces {
     }
 
     private void SetText() {
-      this.Text = "Pente -- Turn: " + mBoard.GetMoveNumber() +
+      this.Text = "Pente -- Turn: " + mBoard.GetPlyNumber() +
                   " White captures: " + mBoard.GetCaptures(Player.White) +
                   " Black captures: " + mBoard.GetCaptures(Player.Black);
     }

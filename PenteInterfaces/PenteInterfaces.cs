@@ -13,7 +13,7 @@ namespace PenteInterfaces {
     bool Move(int row, int col);
     Player GetSpot(int row, int col);
     int GetCaptures(Player player);
-    int GetMoveNumber();
+    int GetPlyNumber();
     Player GetCurrentPlayer();
 
     // if the return value is neither, then the game is not finished.

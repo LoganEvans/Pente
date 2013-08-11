@@ -58,7 +58,7 @@ namespace UnitTests {
         while (board.GetWinner() == Player.Neither) {
           board.Move(rand.Next(Board.ROWS), rand.Next(Board.COLS));
         }
-        count += board.GetMoveNumber();
+        count += board.GetPlyNumber();
       }
       double average = count / (float)trials;
       Assert.IsTrue(152 < average);

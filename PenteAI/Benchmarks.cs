@@ -61,7 +61,7 @@ namespace PenteAI {
     }
 
     public int GetPlies() {
-      return mGameState.GetMoveNumber();
+      return mGameState.GetPlyNumber();
     }
   }
 
@@ -74,7 +74,7 @@ namespace PenteAI {
       String filename = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), @"RandomGames.csv");
 
       StringBuilder sb = new StringBuilder();
-      sb.Append("Winner,Moves,WhiteCaptures,BlackCaptures");
+      sb.Append("Winner,Plies,WhiteCaptures,BlackCaptures");
       sb.Append(Environment.NewLine);
 
       for (int i = 0; i < n; i++) {
@@ -86,7 +86,7 @@ namespace PenteAI {
         }
 
         sb.Append(board.GetWinner().ToString() + "," +
-                  board.GetMoveNumber().ToString() + "," +
+                  board.GetPlyNumber().ToString() + "," +
                   board.GetCaptures(Player.White) + "," +
                   board.GetCaptures(Player.Black));
         sb.Append(Environment.NewLine);
@@ -98,7 +98,7 @@ namespace PenteAI {
     public void TimeRandomGames(int n) {
       // Create new stopwatch
       Stopwatch stopwatch = new Stopwatch();
-      int totalMoves = 0;
+      int totalPlies = 0;
 
       // Begin timing
       stopwatch.Start();
@@ -112,7 +112,7 @@ namespace PenteAI {
           board.Move(GetRandomMove());
         }
 
-        totalMoves += board.GetMoveNumber();
+        totalPlies += board.GetPlyNumber();
       }
 
       // Stop timing
@@ -121,9 +121,9 @@ namespace PenteAI {
       // Write result
       Console.WriteLine("Time elapsed: {0}",
           stopwatch.Elapsed);
-      Console.WriteLine("Total moves: {0}", totalMoves);
+      Console.WriteLine("Total moves: {0}", totalPlies);
       Console.WriteLine("Average moves per second: {0}",
-          1000.0 * (float)totalMoves / stopwatch.ElapsedMilliseconds);
+          1000.0 * (float)totalPlies / stopwatch.ElapsedMilliseconds);
     }
 
     public void CountFailsInN(int n) {
@@ -139,7 +139,7 @@ namespace PenteAI {
             board.Move(GetRandomMove());
           }
 
-          count += board.GetMoveNumber();
+          count += board.GetPlyNumber();
         }
         double avg = count / (float)COUNT;
         Console.Write("avg: {0}", avg);
@@ -154,7 +154,7 @@ namespace PenteAI {
 
     public void TimeRandomGamesWithLookahead(int n, int depthLimit, int branchingFactor) {
       Stopwatch stopwatch = new Stopwatch();
-      int totalMoves = 0;
+      int totalPlies = 0;
 
       // Begin timing
       stopwatch.Start();
@@ -181,24 +181,24 @@ namespace PenteAI {
 
         Debug.Assert(pi1.mGameState == pi2.mGameState);
 
-        totalMoves += pi1.GetPlies();
+        totalPlies += pi1.GetPlies();
       }
 
       // Stop timing
       stopwatch.Stop();
-      Console.WriteLine("Average: {0}", (float)totalMoves / n);
+      Console.WriteLine("Average: {0}", (float)totalPlies / n);
 
       // Write result
       Console.WriteLine("Time elapsed: {0}",
           stopwatch.Elapsed);
-      Console.WriteLine("Total moves: {0}", totalMoves);
+      Console.WriteLine("Total moves: {0}", totalPlies);
       Console.WriteLine("Average moves per second: {0}",
-          1000.0 * (float)totalMoves / stopwatch.ElapsedMilliseconds);
+          1000.0 * (float)totalPlies / stopwatch.ElapsedMilliseconds);
     }
 
     public void TimeRandomGamesWithLookaheadNoPlayer(int n, int depthLimit, int branchingFactor) {
       Stopwatch stopwatch = new Stopwatch();
-      int totalMoves = 0;
+      int totalPlies = 0;
 
       // Begin timing
       stopwatch.Start();
@@ -210,19 +210,19 @@ namespace PenteAI {
         while (gs_bench.GetWinner() == Player.Neither) {
           gs_bench.Move(gs_bench.GetBestMove(depthLimit));
         }
-        totalMoves += gs_bench.GetMoveNumber();
+        totalPlies += gs_bench.GetPlyNumber();
       }
 
       // Stop timing
       stopwatch.Stop();
-      Console.WriteLine("Average: {0}", (float)totalMoves / n);
+      Console.WriteLine("Average: {0}", (float)totalPlies / n);
 
       // Write result
       Console.WriteLine("Time elapsed: {0}",
           stopwatch.Elapsed);
-      Console.WriteLine("Total moves: {0}", totalMoves);
-      Console.WriteLine("Average moves per second: {0}",
-          1000.0 * (float)totalMoves / stopwatch.ElapsedMilliseconds);
+      Console.WriteLine("Total plies: {0}", totalPlies);
+      Console.WriteLine("Average plies per second: {0}",
+          1000.0 * (float)totalPlies / stopwatch.ElapsedMilliseconds);
     }
   }
 }

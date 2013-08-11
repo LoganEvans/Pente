@@ -47,7 +47,7 @@ namespace PenteAI {
     public Tuple<int, int> GetMove() {
       Tuple<int, int> move = mGameState.GetBestMove(mLookahead);
 #if Trace
-      Console.WriteLine("move number: " + mGameState.GetMoveNumber() + " color: " + mColor + ", best move: " + move);
+      Console.WriteLine("move number: " + mGameState.GetPlyNumber() + " color: " + mColor + ", best move: " + move);
 #endif
       return move;
     }
