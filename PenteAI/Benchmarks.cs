@@ -10,19 +10,19 @@ using PenteInterfaces;
 
 namespace PenteAI {
   public class GameStateBenchmark : GameState {
-    protected int mDepthLimit, mBranchingFactor;
+    protected int _depthLimit, _branchingFactor;
     public GameStateBenchmark(BoardInterface board, int depthLimit, int branchingFactor)
       : base(board) {
-      mDepthLimit = depthLimit;
-      mBranchingFactor = branchingFactor;
+      _depthLimit = depthLimit;
+      _branchingFactor = branchingFactor;
     }
 
     public GameStateBenchmark(GameStateBenchmark copyFrom)
       : base(copyFrom) {
       CopyMaps(copyFrom);
-      mPliesEvaluated = 0;
-      mDepthLimit = copyFrom.mDepthLimit;
-      mBranchingFactor = copyFrom.mBranchingFactor;
+      _pliesEvaluated = 0;
+      _depthLimit = copyFrom._depthLimit;
+      _branchingFactor = copyFrom._branchingFactor;
     }
 
     public override Tuple<int, int> GetBestMove(int depthLimit) {
@@ -37,7 +37,7 @@ namespace PenteAI {
     protected override List<Tuple<int, int>> GetCandidateMoves() {
       List<Tuple<int, int>> retval = new List<Tuple<int, int>>();
       // We need mBranchingFactor legal candidate moves...
-      for (int i = 0; i < mBranchingFactor; i++) {
+      for (int i = 0; i < _branchingFactor; i++) {
         // We might need to try a few times before we stumble on something legal...
         while (true) {
           Tuple<int, int> move = Benchmarks.GetRandomMove();
@@ -58,26 +58,26 @@ namespace PenteAI {
       GameStateBenchmark child = new GameStateBenchmark(this);
       child.Move(move.Item1, move.Item2);
       Heuristic retval = child.Minimax(depthLimit - 1, alpha, beta, out move);
-      mPliesEvaluated += child.mPliesEvaluated;
+      _pliesEvaluated += child._pliesEvaluated;
       return retval;
     }
   }
 
   public class PlayerBenchmark : PlayerAI {
-    protected int mDepthLimit, mBranchingFactor;
+    protected int _depthLimit, _branchingFactor;
 
     public PlayerBenchmark(int depthLimit, int branchingFactor) {
-      mLookahead = depthLimit;
-      mDepthLimit = depthLimit;
-      mBranchingFactor = branchingFactor;
+      _lookahead = depthLimit;
+      _depthLimit = depthLimit;
+      _branchingFactor = branchingFactor;
     }
 
     public override void SetBoard(BoardInterface board) {
-      mGameState = new GameStateBenchmark(board, mDepthLimit, mBranchingFactor);
+      _gameState = new GameStateBenchmark(board, _depthLimit, _branchingFactor);
     }
 
     public int GetPlies() {
-      return mGameState.GetPlyNumber();
+      return _gameState.GetPlyNumber();
     }
   }
 
@@ -195,7 +195,7 @@ namespace PenteAI {
         pi1Thread.Join();
         pi2Thread.Join();
 
-        Debug.Assert(pi1.mGameState == pi2.mGameState);
+        Debug.Assert(pi1._gameState == pi2._gameState);
 
         totalPlies += pi1.GetPlies();
       }

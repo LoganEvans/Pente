@@ -69,8 +69,16 @@ namespace PenteAI {
       // bench.TimeRandomGames(1000000);
       // bench.TimeRandomGames(100000);
 
-      // bench.TimeRandomGamesWithLookahead(n:10000, depthLimit:0, branchingFactor:1);
-      bench.TimeRandomGamesWithLookaheadNoPlayer(n: 1000, depthLimit: 3, branchingFactor: 3);
+      bench.TimeRandomGamesWithLookaheadNoPlayer(n:1000, depthLimit:100, branchingFactor:1);
+
+    //for (int depth_dex = 0; depth_dex < 5; depth_dex++) {
+    //  for (int branch_dex = 1; branch_dex < 5; branch_dex++) {
+    //    Console.WriteLine();
+    //    Console.WriteLine("==============");
+    //    Console.WriteLine("depth: {0} branching: {1}", depth_dex, branch_dex);
+    //    bench.TimeRandomGamesWithLookaheadNoPlayer(n: 5000, depthLimit: depth_dex, branchingFactor: branch_dex);
+    //  }
+    //}
       // bench.CountFailsInN(1000);
     }
 

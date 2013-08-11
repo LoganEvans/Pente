@@ -20,146 +20,148 @@ namespace PenteAI {
 
     // Note: It is possible to fix the size of this by using a struct and an unsafe code block. It is possible
     // that doing so would greatly speed up code that deals with the board. Evaluate this.
-    private int[] mRowsWhite;
-    private int[] mRowsBlack;
-    private int[] mColsWhite;
-    private int[] mColsBlack;
-    private int[] mUpDiagWhite;
-    private int[] mUpDiagBlack;
-    private int[] mDownDiagWhite;
-    private int[] mDownDiagBlack;
+    private int[] _rowsWhite;
+    private int[] _rowsBlack;
+    private int[] _colsWhite;
+    private int[] _colsBlack;
+    private int[] _upDiagWhite;
+    private int[] _upDiagBlack;
+    private int[] _downDiagWhite;
+    private int[] _downDiagBlack;
 
-    private Player mWinner;
-    private int mPlyNumber;
-    private int mCapturesWhite;
-    private int mCapturesBlack;
+    private Player _winner;
+    private int _plyNumber;
+    private int _capturesWhite;
+    private int _capturesBlack;
 
     public const int NUM_DIRECTIONS = 4;
     public enum Direction {ByRow = 0, ByCol = 1, ByUpDiag = 2, ByDownDiag = 3};
-    private static Tuple<int, int>[] sDirectionIncrements = null;
-    private static Direction[] sAllDirections = null;
+    private static Tuple<int, int>[] _directionIncrements = null;
+    protected static Tuple<int, int>[] DirectionIncrements { get { return _directionIncrements; } }
+    private static Direction[] _allDirections = null;
+    protected static Direction[] AllDirections { get { return _allDirections; } }
 
     // This should be called early on.
     public static void InitBoard() {
-      if (sDirectionIncrements == null) {
-        sDirectionIncrements = new Tuple<int, int>[NUM_DIRECTIONS];
-        sDirectionIncrements[(int)Direction.ByRow] = Tuple.Create(0, 1);
-        sDirectionIncrements[(int)Direction.ByCol] = Tuple.Create(1, 0);
-        sDirectionIncrements[(int)Direction.ByUpDiag] = Tuple.Create(-1, 1);
-        sDirectionIncrements[(int)Direction.ByDownDiag] = Tuple.Create(1, 1);
+      if (_directionIncrements == null) {
+        _directionIncrements = new Tuple<int, int>[NUM_DIRECTIONS];
+        _directionIncrements[(int)Direction.ByRow] = Tuple.Create(0, 1);
+        _directionIncrements[(int)Direction.ByCol] = Tuple.Create(1, 0);
+        _directionIncrements[(int)Direction.ByUpDiag] = Tuple.Create(-1, 1);
+        _directionIncrements[(int)Direction.ByDownDiag] = Tuple.Create(1, 1);
 
-        sAllDirections = new Direction[4];
-        sAllDirections[(int)Direction.ByRow] = Direction.ByRow;
-        sAllDirections[(int)Direction.ByCol] = Direction.ByCol;
-        sAllDirections[(int)Direction.ByUpDiag] = Direction.ByUpDiag;
-        sAllDirections[(int)Direction.ByDownDiag] = Direction.ByDownDiag;
+        _allDirections = new Direction[4];
+        _allDirections[(int)Direction.ByRow] = Direction.ByRow;
+        _allDirections[(int)Direction.ByCol] = Direction.ByCol;
+        _allDirections[(int)Direction.ByUpDiag] = Direction.ByUpDiag;
+        _allDirections[(int)Direction.ByDownDiag] = Direction.ByDownDiag;
       }
     }
 
     public Board() {
-      if (sDirectionIncrements == null) {
+      if (DirectionIncrements == null) {
         InitBoard();
       }
-      mRowsWhite = new int[ROWS];
-      mRowsBlack = new int[ROWS];
-      mColsWhite = new int[ROWS];
-      mColsBlack = new int[ROWS];
-      mUpDiagWhite = new int[DIAGONALS];
-      mUpDiagBlack = new int[DIAGONALS];
-      mDownDiagWhite = new int[DIAGONALS];
-      mDownDiagBlack = new int[DIAGONALS];
+      _rowsWhite = new int[ROWS];
+      _rowsBlack = new int[ROWS];
+      _colsWhite = new int[ROWS];
+      _colsBlack = new int[ROWS];
+      _upDiagWhite = new int[DIAGONALS];
+      _upDiagBlack = new int[DIAGONALS];
+      _downDiagWhite = new int[DIAGONALS];
+      _downDiagBlack = new int[DIAGONALS];
 
-      mWinner = Player.Neither;
-      mPlyNumber = 0;
-      mCapturesWhite = 0;
-      mCapturesBlack = 0;
+      _winner = Player.Neither;
+      _plyNumber = 0;
+      _capturesWhite = 0;
+      _capturesBlack = 0;
       Move(ROWS / 2, COLS / 2);
     }
 
     public Board(BoardInterface copyFrom) {
-      if (sDirectionIncrements == null) {
+      if (DirectionIncrements == null) {
         InitBoard();
       }
-      mRowsWhite = new int[ROWS];
-      mRowsBlack = new int[ROWS];
-      mColsWhite = new int[ROWS];
-      mColsBlack = new int[ROWS];
-      mUpDiagWhite = new int[DIAGONALS];
-      mUpDiagBlack = new int[DIAGONALS];
-      mDownDiagWhite = new int[DIAGONALS];
-      mDownDiagBlack = new int[DIAGONALS];
+      _rowsWhite = new int[ROWS];
+      _rowsBlack = new int[ROWS];
+      _colsWhite = new int[ROWS];
+      _colsBlack = new int[ROWS];
+      _upDiagWhite = new int[DIAGONALS];
+      _upDiagBlack = new int[DIAGONALS];
+      _downDiagWhite = new int[DIAGONALS];
+      _downDiagBlack = new int[DIAGONALS];
       for (int row_dex = 0; row_dex < ROWS; row_dex++) {
         for (int col_dex = 0; col_dex < COLS; col_dex++) {
           SetSpot(row_dex, col_dex, copyFrom.GetSpot(row_dex, col_dex));
         }
       }
-      mWinner = copyFrom.GetWinner();
-      mPlyNumber = copyFrom.GetPlyNumber();
-      mCapturesWhite = copyFrom.GetCaptures(Player.White);
-      mCapturesBlack = copyFrom.GetCaptures(Player.Black);
+      _winner = copyFrom.GetWinner();
+      _plyNumber = copyFrom.GetPlyNumber();
+      _capturesWhite = copyFrom.GetCaptures(Player.White);
+      _capturesBlack = copyFrom.GetCaptures(Player.Black);
     }
 
     public Board(Board copyFrom) {
-      if (sDirectionIncrements == null) {
+      if (DirectionIncrements == null) {
         InitBoard();
       }
-      mRowsWhite = new int[ROWS];
-      mRowsBlack = new int[ROWS];
-      mColsWhite = new int[ROWS];
-      mColsBlack = new int[ROWS];
-      mUpDiagWhite = new int[DIAGONALS];
-      mUpDiagBlack = new int[DIAGONALS];
-      mDownDiagWhite = new int[DIAGONALS];
-      mDownDiagBlack = new int[DIAGONALS];
+      _rowsWhite = new int[ROWS];
+      _rowsBlack = new int[ROWS];
+      _colsWhite = new int[ROWS];
+      _colsBlack = new int[ROWS];
+      _upDiagWhite = new int[DIAGONALS];
+      _upDiagBlack = new int[DIAGONALS];
+      _downDiagWhite = new int[DIAGONALS];
+      _downDiagBlack = new int[DIAGONALS];
 
       for (int i = 0; i < ROWS; i++) {
-        mRowsWhite[i] = copyFrom.mRowsWhite[i];
-        mRowsBlack[i] = copyFrom.mRowsBlack[i];
-        mColsWhite[i] = copyFrom.mColsWhite[i];
-        mColsBlack[i] = copyFrom.mColsBlack[i];
+        _rowsWhite[i] = copyFrom._rowsWhite[i];
+        _rowsBlack[i] = copyFrom._rowsBlack[i];
+        _colsWhite[i] = copyFrom._colsWhite[i];
+        _colsBlack[i] = copyFrom._colsBlack[i];
       }
 
       for (int i = 0; i < DIAGONALS; i++) {
-        mUpDiagWhite[i] = copyFrom.mUpDiagWhite[i];
-        mUpDiagBlack[i] = copyFrom.mUpDiagBlack[i];
-        mDownDiagWhite[i] = copyFrom.mDownDiagWhite[i];
-        mDownDiagBlack[i] = copyFrom.mDownDiagBlack[i];
+        _upDiagWhite[i] = copyFrom._upDiagWhite[i];
+        _upDiagBlack[i] = copyFrom._upDiagBlack[i];
+        _downDiagWhite[i] = copyFrom._downDiagWhite[i];
+        _downDiagBlack[i] = copyFrom._downDiagBlack[i];
       }
 
-      mWinner = copyFrom.mWinner;
-      mPlyNumber = copyFrom.mPlyNumber;
-      mCapturesWhite = copyFrom.mCapturesWhite;
-      mCapturesBlack = copyFrom.mCapturesBlack;
+      _winner = copyFrom._winner;
+      _plyNumber = copyFrom._plyNumber;
+      _capturesWhite = copyFrom._capturesWhite;
+      _capturesBlack = copyFrom._capturesBlack;
     }
 
     public Board(Player nextPlayer, int capturesWhite, int capturesBlack, String boardStr) {
-      if (sDirectionIncrements == null) {
+      if (DirectionIncrements == null) {
         InitBoard();
       }
       Debug.Assert(boardStr.Length == ROWS * COLS);
-      mCapturesWhite = capturesWhite;
-      mCapturesBlack = capturesBlack;
-      mWinner = Player.Neither;
-      mPlyNumber = 2 * capturesWhite + 2 * capturesBlack;
+      _capturesWhite = capturesWhite;
+      _capturesBlack = capturesBlack;
+      _winner = Player.Neither;
+      _plyNumber = 2 * capturesWhite + 2 * capturesBlack;
 
-      mRowsWhite = new int[ROWS];
-      mRowsBlack = new int[ROWS];
-      mColsWhite = new int[ROWS];
-      mColsBlack = new int[ROWS];
-      mUpDiagWhite = new int[DIAGONALS];
-      mUpDiagBlack = new int[DIAGONALS];
-      mDownDiagWhite = new int[DIAGONALS];
-      mDownDiagBlack = new int[DIAGONALS];
+      _rowsWhite = new int[ROWS];
+      _rowsBlack = new int[ROWS];
+      _colsWhite = new int[ROWS];
+      _colsBlack = new int[ROWS];
+      _upDiagWhite = new int[DIAGONALS];
+      _upDiagBlack = new int[DIAGONALS];
+      _downDiagWhite = new int[DIAGONALS];
+      _downDiagBlack = new int[DIAGONALS];
 
       Player color;
       for (int row_dex = 0; row_dex < ROWS; row_dex++) {
         for (int col_dex = 0; col_dex < COLS; col_dex++) {
           if (boardStr[row_dex * ROWS + col_dex] == 'W') {
             color = Player.White;
-            mPlyNumber++;
+            _plyNumber++;
           } else if (boardStr[row_dex * ROWS + col_dex] == 'B') {
             color = Player.Black;
-            mPlyNumber++;
+            _plyNumber++;
           } else {
             color = Player.Neither;
           }
@@ -169,7 +171,7 @@ namespace PenteAI {
       }
 
       if (GetCurrentPlayer() != nextPlayer) {
-        mPlyNumber++;
+        _plyNumber++;
       }
     }
 
@@ -182,9 +184,9 @@ namespace PenteAI {
       SetSpot(row, col, GetCurrentPlayer());
 
       if (PerformCapturesAndCheckWin(row, col)) {
-        mWinner = current_player;
+        _winner = current_player;
       }
-      mPlyNumber++;
+      _plyNumber++;
 
       return true;
     }
@@ -198,9 +200,9 @@ namespace PenteAI {
 
     private void IncrementPlayerCaptures(Player color) {
       if (color == Player.White) {
-        mCapturesWhite++;
+        _capturesWhite++;
       } else {
-        mCapturesBlack++;
+        _capturesBlack++;
       }
     }
 
@@ -209,22 +211,22 @@ namespace PenteAI {
       Player currentPlayer = GetCurrentPlayer();
       Tuple<int, int>[] windows = GetWindows(row, col);
 
-      foreach (Direction direction in sAllDirections) {
+      foreach (Direction direction in AllDirections) {
         // Check for a capture forward
         if (MatchesPattern(currentPlayer, windows[(int)direction], HeuristicValues.FORWARD_CAPTURE_PATTERN)) {
-          SetSpot(row + sDirectionIncrements[(int)direction].Item1,
-                  col + sDirectionIncrements[(int)direction].Item2, Player.Neither);
-          SetSpot(row + 2 * sDirectionIncrements[(int)direction].Item1,
-                  col + 2 * sDirectionIncrements[(int)direction].Item2, Player.Neither);
+          SetSpot(row + DirectionIncrements[(int)direction].Item1,
+                  col + DirectionIncrements[(int)direction].Item2, Player.Neither);
+          SetSpot(row + 2 * DirectionIncrements[(int)direction].Item1,
+                  col + 2 * DirectionIncrements[(int)direction].Item2, Player.Neither);
           IncrementPlayerCaptures(currentPlayer);
         }
 
         // Check for a capture backward
         if (MatchesPattern(currentPlayer, windows[(int)direction], HeuristicValues.BACKWARD_CAPTURE_PATTERN)) {
-          SetSpot(row - sDirectionIncrements[(int)direction].Item1,
-                  col - sDirectionIncrements[(int)direction].Item2, Player.Neither);
-          SetSpot(row - 2 * sDirectionIncrements[(int)direction].Item1,
-                  col - 2 * sDirectionIncrements[(int)direction].Item2, Player.Neither);
+          SetSpot(row - DirectionIncrements[(int)direction].Item1,
+                  col - DirectionIncrements[(int)direction].Item2, Player.Neither);
+          SetSpot(row - 2 * DirectionIncrements[(int)direction].Item1,
+                  col - 2 * DirectionIncrements[(int)direction].Item2, Player.Neither);
           IncrementPlayerCaptures(currentPlayer);
         }
 
@@ -235,7 +237,7 @@ namespace PenteAI {
         }
       }
 
-      if (mCapturesWhite >= 5 || mCapturesBlack >= 5) {
+      if (_capturesWhite >= 5 || _capturesBlack >= 5) {
         return true;
       }
 
@@ -252,20 +254,20 @@ namespace PenteAI {
       var retval = new Tuple<int, int>[NUM_DIRECTIONS];
       int whiteRow, blackRow, whiteCol, blackCol, whiteUpDiag, blackUpDiag, whiteDownDiag, blackDownDiag;
 
-      whiteRow = ((mRowsWhite[row] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
-      blackRow = ((mRowsBlack[row] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
+      whiteRow = ((_rowsWhite[row] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
+      blackRow = ((_rowsBlack[row] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
       retval[(int)Direction.ByRow] = Tuple.Create(whiteRow, blackRow);
 
-      whiteCol = ((mColsWhite[col] << Pattern.PATTERN_RADIUS) >> row) & Pattern.PATTERN_MASK;
-      blackCol = ((mColsBlack[col] << Pattern.PATTERN_RADIUS) >> row) & Pattern.PATTERN_MASK;
+      whiteCol = ((_colsWhite[col] << Pattern.PATTERN_RADIUS) >> row) & Pattern.PATTERN_MASK;
+      blackCol = ((_colsBlack[col] << Pattern.PATTERN_RADIUS) >> row) & Pattern.PATTERN_MASK;
       retval[(int)Direction.ByCol] = Tuple.Create(whiteCol, blackCol);
 
-      whiteUpDiag = ((mUpDiagWhite[UpDiagIndex(row, col)] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
-      blackUpDiag = ((mUpDiagBlack[UpDiagIndex(row, col)] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
+      whiteUpDiag = ((_upDiagWhite[UpDiagIndex(row, col)] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
+      blackUpDiag = ((_upDiagBlack[UpDiagIndex(row, col)] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
       retval[(int)Direction.ByUpDiag] = Tuple.Create(whiteUpDiag, blackUpDiag);
 
-      whiteDownDiag = ((mDownDiagWhite[DownDiagIndex(row, col)] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
-      blackDownDiag = ((mDownDiagBlack[DownDiagIndex(row, col)] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
+      whiteDownDiag = ((_downDiagWhite[DownDiagIndex(row, col)] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
+      blackDownDiag = ((_downDiagBlack[DownDiagIndex(row, col)] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
       retval[(int)Direction.ByDownDiag] = Tuple.Create(whiteDownDiag, blackDownDiag);
 
       return retval;
@@ -288,9 +290,9 @@ namespace PenteAI {
 
     public Player GetSpot(int row, int col) {
       if (0 <= row && row < ROWS && 0 <= col && col < COLS) {
-        if ((mRowsWhite[row] & SPOT_MASKS[col]) != 0) {
+        if ((_rowsWhite[row] & SPOT_MASKS[col]) != 0) {
           return Player.White;
-        } else if ((mRowsBlack[row] & SPOT_MASKS[col]) != 0) {
+        } else if ((_rowsBlack[row] & SPOT_MASKS[col]) != 0) {
           return Player.Black;
         } else {
           return Player.Neither;
@@ -302,19 +304,19 @@ namespace PenteAI {
 
     public int GetCaptures(Player player) {
       if (player == Player.White) {
-        return mCapturesWhite;
+        return _capturesWhite;
       } else {
-        return mCapturesBlack;
+        return _capturesBlack;
       }
     }
 
     [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
     public int GetPlyNumber() {
-      return mPlyNumber;
+      return _plyNumber;
     }
 
     public Player GetCurrentPlayer() {
-      if (mPlyNumber % 2 == 0) {
+      if (_plyNumber % 2 == 0) {
         return Player.White;
       } else {
         return Player.Black;
@@ -322,7 +324,7 @@ namespace PenteAI {
     }
 
     public Player GetOtherPlayer() {
-      if (mPlyNumber % 2 == 0) {
+      if (_plyNumber % 2 == 0) {
         return Player.Black;
       } else {
         return Player.White;
@@ -332,11 +334,11 @@ namespace PenteAI {
     // if the return value is Player.Neither, then the game is not finished.
     [MethodImplAttribute(MethodImplOptions.AggressiveInlining)]
     public Player GetWinner() {
-      return mWinner;
+      return _winner;
     }
 
     public bool IsLegal(int row, int col) {
-      if (mPlyNumber == 2) {
+      if (_plyNumber == 2) {
         int center = ROWS / 2;
         if (center - 2 <= row && row <= center + 2 &&
             center - 2 <= col && col <= center + 2) {
@@ -348,8 +350,8 @@ namespace PenteAI {
         return false;
       }
 
-      if ((mRowsWhite[row] & SPOT_MASKS[col]) != 0 ||
-          (mRowsBlack[row] & SPOT_MASKS[col]) != 0) {
+      if ((_rowsWhite[row] & SPOT_MASKS[col]) != 0 ||
+          (_rowsBlack[row] & SPOT_MASKS[col]) != 0) {
         return false;
       }
 
@@ -362,27 +364,27 @@ namespace PenteAI {
 
     private void SetSpot(int row, int col, Player color) {
       if (color == Player.White) {
-        mRowsWhite[row] |= SPOT_MASKS[col];
-        mColsWhite[col] |= SPOT_MASKS[row];
-        mUpDiagWhite[UpDiagIndex(row, col)] |= SPOT_MASKS[col];
-        mDownDiagWhite[DownDiagIndex(row, col)] |= SPOT_MASKS[col];
+        _rowsWhite[row] |= SPOT_MASKS[col];
+        _colsWhite[col] |= SPOT_MASKS[row];
+        _upDiagWhite[UpDiagIndex(row, col)] |= SPOT_MASKS[col];
+        _downDiagWhite[DownDiagIndex(row, col)] |= SPOT_MASKS[col];
       } else if (color == Player.Black) {
-        mRowsBlack[row] |= SPOT_MASKS[col];
-        mColsBlack[col] |= SPOT_MASKS[row];
-        mUpDiagBlack[UpDiagIndex(row, col)] |= SPOT_MASKS[col];
-        mDownDiagBlack[DownDiagIndex(row, col)] |= SPOT_MASKS[col];
+        _rowsBlack[row] |= SPOT_MASKS[col];
+        _colsBlack[col] |= SPOT_MASKS[row];
+        _upDiagBlack[UpDiagIndex(row, col)] |= SPOT_MASKS[col];
+        _downDiagBlack[DownDiagIndex(row, col)] |= SPOT_MASKS[col];
       } else {
-        mRowsWhite[row] &= (~SPOT_MASKS[col]);
-        mRowsBlack[row] &= (~SPOT_MASKS[col]);
+        _rowsWhite[row] &= (~SPOT_MASKS[col]);
+        _rowsBlack[row] &= (~SPOT_MASKS[col]);
 
-        mColsWhite[col] &= (~SPOT_MASKS[row]);
-        mColsBlack[col] &= (~SPOT_MASKS[row]);
+        _colsWhite[col] &= (~SPOT_MASKS[row]);
+        _colsBlack[col] &= (~SPOT_MASKS[row]);
 
-        mUpDiagWhite[UpDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
-        mUpDiagBlack[UpDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
+        _upDiagWhite[UpDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
+        _upDiagBlack[UpDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
 
-        mDownDiagWhite[DownDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
-        mDownDiagBlack[DownDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
+        _downDiagWhite[DownDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
+        _downDiagBlack[DownDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
       }
     }
 
@@ -424,14 +426,14 @@ namespace PenteAI {
 
     public static bool operator ==(Board first, Board second) {
       return (
-          Enumerable.SequenceEqual(first.mRowsWhite, second.mRowsWhite) &&
-          Enumerable.SequenceEqual(first.mRowsBlack, second.mRowsBlack) &&
-          Enumerable.SequenceEqual(first.mColsWhite, second.mColsWhite) &&
-          Enumerable.SequenceEqual(first.mColsBlack, second.mColsBlack) &&
-          Enumerable.SequenceEqual(first.mUpDiagWhite, second.mUpDiagWhite) &&
-          Enumerable.SequenceEqual(first.mUpDiagBlack, second.mUpDiagBlack) &&
-          Enumerable.SequenceEqual(first.mDownDiagWhite, second.mDownDiagWhite) &&
-          Enumerable.SequenceEqual(first.mDownDiagBlack, second.mDownDiagBlack) &&
+          Enumerable.SequenceEqual(first._rowsWhite, second._rowsWhite) &&
+          Enumerable.SequenceEqual(first._rowsBlack, second._rowsBlack) &&
+          Enumerable.SequenceEqual(first._colsWhite, second._colsWhite) &&
+          Enumerable.SequenceEqual(first._colsBlack, second._colsBlack) &&
+          Enumerable.SequenceEqual(first._upDiagWhite, second._upDiagWhite) &&
+          Enumerable.SequenceEqual(first._upDiagBlack, second._upDiagBlack) &&
+          Enumerable.SequenceEqual(first._downDiagWhite, second._downDiagWhite) &&
+          Enumerable.SequenceEqual(first._downDiagBlack, second._downDiagBlack) &&
           (first.GetWinner() == second.GetWinner()) &&
           (first.GetCaptures(Player.White) == second.GetCaptures(Player.White)) &&
           (first.GetCaptures(Player.Black) == second.GetCaptures(Player.Black)) &&

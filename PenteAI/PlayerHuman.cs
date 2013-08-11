@@ -8,19 +8,19 @@ using PenteInterfaces;
 
 namespace PenteAI {
   public class PlayerHuman : PlayerBase {
-    private Board mBoard;
-    private Player mColor;
-    private AutoResetEvent mWaitOnClick;
-    private AutoResetEvent mWaitOnOpponent;
+    private Board _board;
+    private Player _color;
+    private AutoResetEvent _waitOnClick;
+    private AutoResetEvent _waitOnOpponent;
 
     public PlayerHuman() { }
 
     public override void SetBoard(BoardInterface board) {
-      mBoard = new Board(board);
+      _board = new Board(board);
     }
 
     public override void SetColor(Player color) {
-      mColor = color;
+      _color = color;
     }
 
     public override void SetOpponent(PlayerBase opponent) {
@@ -28,9 +28,9 @@ namespace PenteAI {
     }
 
     public override void MoveSelectedEventHandler_GetOpponentMove(object sender, MoveSelectedEventArgs args) {
-      mBoard.Move(args.row, args.col);
-      Console.WriteLine(mColor + " Setting mWaitOnOpponent");
-      mWaitOnOpponent.Set();
+      _board.Move(args.row, args.col);
+      Console.WriteLine(_color + " Setting mWaitOnOpponent");
+      _waitOnOpponent.Set();
     }
 
     public void SetMoveSelectedByClickListener(Display display) {
@@ -38,28 +38,28 @@ namespace PenteAI {
     }
 
     public void MoveSelectedByClickEventHandler(object sender, MoveSelectedEventArgs args) {
-      if (args.player == mColor) {
-        mBoard.Move(args.row, args.col);
+      if (args.player == _color) {
+        _board.Move(args.row, args.col);
         OnMoveSelected(args);
-        Console.WriteLine(mColor + " Setting mWaitOnClick");
-        mWaitOnClick.Set();
+        Console.WriteLine(_color + " Setting mWaitOnClick");
+        _waitOnClick.Set();
       }
     }
 
     public override void PlayerThread() {
       //Console.WriteLine(" > PlayerThread() " + mColor);
-      mWaitOnClick = new AutoResetEvent(false);
-      mWaitOnOpponent = new AutoResetEvent(false);
+      _waitOnClick = new AutoResetEvent(false);
+      _waitOnOpponent = new AutoResetEvent(false);
 
-      while (mBoard.GetWinner() == Player.Neither) {
-        if (mBoard.GetCurrentPlayer() == mColor) {
-          Console.WriteLine("(playerThread) " + mColor + " Waiting on click...");
-          mWaitOnClick.WaitOne();
-          Console.WriteLine("(playerThread) " + mColor + " Done waiting on click...");
+      while (_board.GetWinner() == Player.Neither) {
+        if (_board.GetCurrentPlayer() == _color) {
+          Console.WriteLine("(playerThread) " + _color + " Waiting on click...");
+          _waitOnClick.WaitOne();
+          Console.WriteLine("(playerThread) " + _color + " Done waiting on click...");
         } else {
-          Console.WriteLine("(playerThread) " + mColor + " Waiting on opponent...");
-          mWaitOnOpponent.WaitOne();
-          Console.WriteLine("(playerThread) " + mColor + " Done waiting on opponent...");
+          Console.WriteLine("(playerThread) " + _color + " Waiting on opponent...");
+          _waitOnOpponent.WaitOne();
+          Console.WriteLine("(playerThread) " + _color + " Done waiting on opponent...");
         }
       }
     }

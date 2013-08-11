@@ -9,40 +9,40 @@ using PenteInterfaces;
 
 namespace PenteAI {
   public class Heuristic {
-    private double mValue;
-    private int mPriority;
+    private double _value;
+    private int _priority;
     public const int PROXIMITY_PRIORITY = 5;
-    private static Regex mRx = null;
+    private static Regex _prio_regex = null;
 
     public Heuristic(double value, int priority) {
-      mValue = value;
-      mPriority = priority;
+      _value = value;
+      _priority = priority;
     }
 
     // Note: no error detection.
     public Heuristic(string fromString) {
-      if (mRx == null) {
-        mRx = new Regex(@"(?<value>[^,]*),(?<priority>.*)$", RegexOptions.Compiled);
+      if (_prio_regex == null) {
+        _prio_regex = new Regex(@"(?<value>[^,]*),(?<priority>.*)$", RegexOptions.Compiled);
       }
-      GroupCollection groups = mRx.Match(fromString).Groups;
-      mValue = Double.Parse(groups["value"].Value);
-      mPriority = Int32.Parse(groups["priority"].Value);
+      GroupCollection groups = _prio_regex.Match(fromString).Groups;
+      _value = Double.Parse(groups["value"].Value);
+      _priority = Int32.Parse(groups["priority"].Value);
     }
 
     public double GetValue() {
-      return mValue;
+      return _value;
     }
 
     public void AddValue(double value) {
-      mValue += value;
+      _value += value;
     }
 
     public int GetPriority() {
-      return mPriority;
+      return _priority;
     }
 
     public override string ToString() {
-      return mValue.ToString() + "," + mPriority.ToString();
+      return _value.ToString() + "," + _priority.ToString();
     }
 
     public static Heuristic GetWinHeuristic(bool isMaxLevel) {
@@ -125,31 +125,31 @@ namespace PenteAI {
     public const int UP_DIAG_PATTERN = 2;
     public const int DOWN_DIAG_PATTERN = 3;
 
-    private int mPattern;
+    private int _pattern;
 
     public Pattern(int patternWhite, int patternBlack) {
-      mPattern = patternWhite + (patternBlack << Pattern.PATTERN_DIAMETER);
+      _pattern = patternWhite + (patternBlack << Pattern.PATTERN_DIAMETER);
     }
 
     public Pattern(string fromString) {
-      mPattern = Int32.Parse(fromString);
+      _pattern = Int32.Parse(fromString);
     }
 
     public override int GetHashCode() {
-      return mPattern;
+      return _pattern;
     }
 
     public override bool Equals(Object obj) {
       var other = obj as Pattern;
-      return obj != null && this.mPattern == other.mPattern;
+      return obj != null && this._pattern == other._pattern;
     }
 
     public int GetPatternCurrent() {
-      return mPattern & PATTERN_MASK;
+      return _pattern & PATTERN_MASK;
     }
 
     public int GetPatternOther() {
-      return (mPattern >> PATTERN_DIAMETER) & PATTERN_MASK;
+      return (_pattern >> PATTERN_DIAMETER) & PATTERN_MASK;
     }
 
     public static List<Pattern> GetAllMatchingPatterns(Tuple<int, int, int> patternTrio) {
@@ -160,7 +160,7 @@ namespace PenteAI {
       for (int i = 0; i < Math.Pow(2, 2 * PATTERN_DIAMETER); i++) {
         if ((i | filter) == filter) {
           toAdd = new Pattern(patternTrio.Item1, patternTrio.Item2);
-          toAdd.mPattern |= i;  // Augments the two patterns.
+          toAdd._pattern |= i;  // Augments the two patterns.
           retval.Add(toAdd);
         }
       }
@@ -169,7 +169,7 @@ namespace PenteAI {
     }
 
     public override string ToString() {
-      return mPattern.ToString();
+      return _pattern.ToString();
     }
   }
 
@@ -177,8 +177,8 @@ namespace PenteAI {
     private static List<Tuple<Tuple<int, int, int>, Heuristic>> _heuristics = null;
     private static Dictionary<Pattern, Heuristic> _hDict = null;
     private static Tuple<int, int, int> _captureCheck;
-    private static double[] mWin;
-    private static int mProximityPriority;
+    private static double[] _win;
+    private static int _proximityPriority;
     // These are bit masks. 0x10 would be the 5th bit... so it would represent a stone that was just
     // placed.
     public static readonly Tuple<int, int, int> BACKWARD_CAPTURE_PATTERN = Tuple.Create(0x12, 0xc, 0x1e1);
@@ -245,16 +245,16 @@ namespace PenteAI {
       _heuristics.Add(Tuple.Create(Tuple.Create(0x28, 0x0, 0x183), new Heuristic(mWin[2] + bigDelta / 2 + delta, 4)));  // 0bXX01.10XX
       _heuristics.Add(Tuple.Create(Tuple.Create(0xc, 0x0, 0x1c1), new Heuristic(mWin[2] + bigDelta / 2 + delta, 4)));  // 0bXXX0.110X
 
-      mProximityPriority = 5;
+      _proximityPriority = 5;
       // Proximity checks
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x1, 0x0, 0x1ee), new Heuristic(delta / 6, mProximityPriority)));  // 0bXXXX.XXX1
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x1, 0x1ee), new Heuristic(delta / 10, mProximityPriority)));  // 0bXXXX.XXX2
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x2, 0x0, 0x1ed), new Heuristic(delta / 7, mProximityPriority)));  // 0bXXXX.XX1X
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x2, 0x1ed), new Heuristic(delta / 10, mProximityPriority)));  // 0bXXXX.XX2X
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x4, 0x0, 0x1eb), new Heuristic(delta / 5, mProximityPriority)));  // 0bXXXX.X1XX
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x4, 0x1eb), new Heuristic(delta / 10, mProximityPriority)));  // 0bXXXX.X2XX
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x8, 0x0, 0x1e7), new Heuristic(delta / 9, mProximityPriority)));  // 0bXXXX.1XXX
-      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x8, 0x1e7), new Heuristic(delta / 9, mProximityPriority)));  // 0bXXXX.2XXX
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x1, 0x0, 0x1ee), new Heuristic(delta / 6, _proximityPriority)));  // 0bXXXX.XXX1
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x1, 0x1ee), new Heuristic(delta / 10, _proximityPriority)));  // 0bXXXX.XXX2
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x2, 0x0, 0x1ed), new Heuristic(delta / 7, _proximityPriority)));  // 0bXXXX.XX1X
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x2, 0x1ed), new Heuristic(delta / 10, _proximityPriority)));  // 0bXXXX.XX2X
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x4, 0x0, 0x1eb), new Heuristic(delta / 5, _proximityPriority)));  // 0bXXXX.X1XX
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x4, 0x1eb), new Heuristic(delta / 10, _proximityPriority)));  // 0bXXXX.X2XX
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x8, 0x0, 0x1e7), new Heuristic(delta / 9, _proximityPriority)));  // 0bXXXX.1XXX
+      _heuristics.Add(Tuple.Create(Tuple.Create(0x0, 0x8, 0x1e7), new Heuristic(delta / 9, _proximityPriority)));  // 0bXXXX.2XXX
 
       AddReversed(_heuristics);
 
@@ -320,7 +320,7 @@ namespace PenteAI {
     }
 
     public static int GetProximityPriority() {
-      return mProximityPriority;
+      return _proximityPriority;
     }
 
     public static Heuristic EstimateQualityOfCapture(Player currentPlayer, int capturesWhite, int capturesBlack) {

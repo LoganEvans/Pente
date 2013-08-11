@@ -7,9 +7,11 @@ using PenteInterfaces;
 
 namespace PenteAI {
   public class GameState : Board {
-    private int[] mInfluenceMap;
-    private static int mBaseDepth;
-    protected int mPliesEvaluated;
+    private int[] _influenceMap;
+    private static int _baseDepth;
+
+    protected int _pliesEvaluated;
+
     public static Random staticRand = null;
 
     private readonly int[] branchingCategories = {3, 10, 50, ROWS * COLS};
@@ -21,34 +23,34 @@ namespace PenteAI {
     }
 
     public GameState(BoardInterface board) : base(board) {
-      mPliesEvaluated = 0;
-      mInfluenceMap = new int[ROWS];
+      _pliesEvaluated = 0;
+      _influenceMap = new int[ROWS];
       InitializeMaps();
     }
 
     public GameState(GameState copyFrom) : base(copyFrom) {
       CopyMaps(copyFrom);
-      mPliesEvaluated = copyFrom.mPliesEvaluated;
+      _pliesEvaluated = copyFrom._pliesEvaluated;
     }
 
     public GameState(Player nextPlayer, int capturesWhite, int capturesBlack, String boardStr)
         : base(nextPlayer, capturesWhite, capturesBlack, boardStr) {
-      mPliesEvaluated = 0;
-      mInfluenceMap = new int[ROWS];
+      _pliesEvaluated = 0;
+      _influenceMap = new int[ROWS];
       InitializeMaps();
     }
 
     protected void CopyMaps(GameState copyFrom) {
-      mInfluenceMap = new int[ROWS];
+      _influenceMap = new int[ROWS];
 
       for (int row_dex = 0; row_dex < ROWS; row_dex++) {
-        mInfluenceMap[row_dex] = copyFrom.mInfluenceMap[row_dex];
+        _influenceMap[row_dex] = copyFrom._influenceMap[row_dex];
       }
     }
 
     // This method triggers the Negamax search. It should only be called externally.
     public virtual Tuple<int, int> GetBestMove(int depthLimit) {
-      mBaseDepth = GetPlyNumber();
+      _baseDepth = GetPlyNumber();
       Tuple<int, int> move;
       Heuristic heuristic = Minimax(depthLimit, null, null, out move);
       //Tuple<Tuple<int, int>, Heuristic> move = Negamax();
@@ -67,7 +69,7 @@ namespace PenteAI {
 
       if (IsMaxLevel()) {
         foreach (Tuple<int, int> candidateMove in GetCandidateMoves()) {
-          mPliesEvaluated++;
+          _pliesEvaluated++;
           if (depthLimit > 0) {
             chumpHeur = GetHeuristicForMove(move:candidateMove, depthLimit:depthLimit,
                                             alpha:champHeur, beta:heuristicBeta);
@@ -87,7 +89,7 @@ namespace PenteAI {
         }
       } else {
         foreach (Tuple<int, int> candidateMove in GetCandidateMoves()) {
-          mPliesEvaluated++;
+          _pliesEvaluated++;
           if (depthLimit > 0) {
             chumpHeur = GetHeuristicForMove(move: candidateMove, depthLimit: depthLimit,
                                             alpha: heuristicAlpha, beta: champHeur);
@@ -116,7 +118,7 @@ namespace PenteAI {
       GameState child = new GameState(this);
       child.Move(move.Item1, move.Item2);
       Heuristic retval = child.Minimax(depthLimit - 1, alpha, beta, out move);
-      mPliesEvaluated += child.mPliesEvaluated;
+      _pliesEvaluated += child._pliesEvaluated;
       return retval;
     }
 
@@ -129,7 +131,7 @@ namespace PenteAI {
             continue;
           }
 
-          if (IsOnMap(row_dex, col_dex, mInfluenceMap)) {
+          if (IsOnMap(row_dex, col_dex, _influenceMap)) {
             spot = Tuple.Create(row_dex, col_dex);
             candidates.Add(spot);
           }
@@ -177,7 +179,7 @@ namespace PenteAI {
 
     // This function should (almost) never need to be called. Use UpdateMaps instead if possible.
     private void InitializeMaps() {
-      mInfluenceMap = new int[ROWS];
+      _influenceMap = new int[ROWS];
 
       for (int row_dex = 0; row_dex < ROWS; row_dex++) {
         for (int col_dex = 0; col_dex < COLS; col_dex++) {
@@ -187,14 +189,14 @@ namespace PenteAI {
     }
 
     private void UpdateMaps(int row, int col) {
-      if (IsOnMap(row, col, mInfluenceMap)) {
+      if (IsOnMap(row, col, _influenceMap)) {
         return;
       }
 
       Heuristic heurVal;
       heurVal = GetHeuristicValue(row, col);
       if (heurVal.GetPriority() < Heuristic.PROXIMITY_PRIORITY) {
-        mInfluenceMap[row] |= SPOT_MASKS[col];
+        _influenceMap[row] |= SPOT_MASKS[col];
       }
     }
 
@@ -272,7 +274,7 @@ namespace PenteAI {
     }
 
     public int GetPliesEvaluated() {
-      return mPliesEvaluated;
+      return _pliesEvaluated;
     }
   }
 }

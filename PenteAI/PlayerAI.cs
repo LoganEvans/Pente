@@ -12,10 +12,10 @@ using PenteInterfaces;
 
 namespace PenteAI {
   public class PlayerAI : PlayerBase {
-    public GameState mGameState;
-    protected Player mColor;
-    protected int mLookahead = 1;
-    protected AutoResetEvent mWaitOnOpponent;
+    public GameState _gameState;
+    protected Player _color;
+    protected int _lookahead = 1;
+    protected AutoResetEvent _waitOnOpponent;
 
     public PlayerAI() {}
 
@@ -23,15 +23,15 @@ namespace PenteAI {
     }
 
     public void SetLookahead(int lookahead) {
-      mLookahead = lookahead;
+      _lookahead = lookahead;
     }
 
     public override void SetBoard(BoardInterface board) {
-      mGameState = new GameState(board);
+      _gameState = new GameState(board);
     }
 
     public override void SetColor(Player color) {
-      mColor = color;
+      _color = color;
     }
 
     public override void SetOpponent(PlayerBase opponent) {
@@ -39,13 +39,13 @@ namespace PenteAI {
     }
 
     public override void MoveSelectedEventHandler_GetOpponentMove(object sender, MoveSelectedEventArgs args) {
-      mGameState.Move(args.row, args.col);
-      mWaitOnOpponent.Set();
+      _gameState.Move(args.row, args.col);
+      _waitOnOpponent.Set();
     }
 
     // The order of the Tuple is <row, col>
     public Tuple<int, int> GetMove() {
-      Tuple<int, int> move = mGameState.GetBestMove(mLookahead);
+      Tuple<int, int> move = _gameState.GetBestMove(_lookahead);
 #if Trace
       Console.WriteLine("move number: " + mGameState.GetPlyNumber() + " color: " + mColor + ", best move: " + move);
 #endif
@@ -54,12 +54,12 @@ namespace PenteAI {
 
     public override void PlayerThread() {
       //Console.WriteLine(" > PlayerThread() " + mColor);
-      mWaitOnOpponent = new AutoResetEvent(false);
+      _waitOnOpponent = new AutoResetEvent(false);
       MoveSelectedEventArgs args;
       Tuple<int, int> move;
 
-      while (mGameState.GetWinner() == Player.Neither) {
-        if (mGameState.GetCurrentPlayer() == mColor) {
+      while (_gameState.GetWinner() == Player.Neither) {
+        if (_gameState.GetCurrentPlayer() == _color) {
 #if Trace
           Console.WriteLine("(playerThread) " + mColor + " Thinking...");
 #endif
@@ -67,8 +67,8 @@ namespace PenteAI {
           args = new MoveSelectedEventArgs();
           args.row = move.Item1;
           args.col = move.Item2;
-          args.player = mGameState.GetCurrentPlayer();
-          mGameState.Move(move.Item1, move.Item2);
+          args.player = _gameState.GetCurrentPlayer();
+          _gameState.Move(move.Item1, move.Item2);
           OnMoveSelected(args);
 #if Trace
           Console.WriteLine("(playerThread) " + mColor + " Done thinking...");
@@ -77,7 +77,7 @@ namespace PenteAI {
 #if Trace
           Console.WriteLine("(playerThread) " + mColor + " Waiting on opponent...");
 #endif
-          mWaitOnOpponent.WaitOne();
+          _waitOnOpponent.WaitOne();
 #if Trace
           Console.WriteLine("(playerThread) " + mColor + " Done waiting on opponent...");
 #endif
