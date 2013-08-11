@@ -17,6 +17,14 @@ namespace PenteAI {
       mBranchingFactor = branchingFactor;
     }
 
+    public GameStateBenchmark(GameStateBenchmark copyFrom)
+      : base(copyFrom) {
+      CopyMaps(copyFrom);
+      mPliesEvaluated = 0;
+      mDepthLimit = copyFrom.mDepthLimit;
+      mBranchingFactor = copyFrom.mBranchingFactor;
+    }
+
     public override Tuple<int, int> GetBestMove(int depthLimit) {
       while (true) {
         Tuple<int, int> move = base.GetBestMove(depthLimit);
@@ -44,6 +52,14 @@ namespace PenteAI {
 
     public override Heuristic GetHeuristicValue(int row, int col) {
       return new Heuristic(0, 0);
+    }
+
+    protected override Heuristic GetHeuristicForMove(Tuple<int, int> move, int depthLimit, Heuristic alpha, Heuristic beta) {
+      GameStateBenchmark child = new GameStateBenchmark(this);
+      child.Move(move.Item1, move.Item2);
+      Heuristic retval = child.Minimax(depthLimit - 1, alpha, beta, out move);
+      mPliesEvaluated += child.mPliesEvaluated;
+      return retval;
     }
   }
 
@@ -199,6 +215,7 @@ namespace PenteAI {
     public void TimeRandomGamesWithLookaheadNoPlayer(int n, int depthLimit, int branchingFactor) {
       Stopwatch stopwatch = new Stopwatch();
       int totalPlies = 0;
+      int totalPliesEvaluated = 0;
 
       // Begin timing
       stopwatch.Start();
@@ -211,18 +228,23 @@ namespace PenteAI {
           gs_bench.Move(gs_bench.GetBestMove(depthLimit));
         }
         totalPlies += gs_bench.GetPlyNumber();
+        totalPliesEvaluated += gs_bench.GetPliesEvaluated();
       }
 
       // Stop timing
       stopwatch.Stop();
-      Console.WriteLine("Average: {0}", (float)totalPlies / n);
 
       // Write result
       Console.WriteLine("Time elapsed: {0}",
           stopwatch.Elapsed);
       Console.WriteLine("Total plies: {0}", totalPlies);
+      Console.WriteLine("Average plies per game: {0}", (float)totalPlies / n);
       Console.WriteLine("Average plies per second: {0}",
           1000.0 * (float)totalPlies / stopwatch.ElapsedMilliseconds);
+      Console.WriteLine("Total plies evaluated: {0}", totalPliesEvaluated);
+      Console.WriteLine("Average plies evaluated per game: {0}", (float)totalPliesEvaluated / n);
+      Console.WriteLine("Average plies evaluated per second: {0}",
+          1000.0 * (float)totalPliesEvaluated / stopwatch.ElapsedMilliseconds);
     }
   }
 }

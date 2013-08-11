@@ -9,7 +9,7 @@ namespace PenteAI {
   public class GameState : Board {
     private int[] mInfluenceMap;
     private static int mBaseDepth;
-    private static int mPositionsEvaluated = 0;
+    protected int mPliesEvaluated;
     public static Random staticRand = null;
 
     private readonly int[] branchingCategories = {3, 10, 50, ROWS * COLS};
@@ -21,21 +21,24 @@ namespace PenteAI {
     }
 
     public GameState(BoardInterface board) : base(board) {
+      mPliesEvaluated = 0;
       mInfluenceMap = new int[ROWS];
       InitializeMaps();
     }
 
     public GameState(GameState copyFrom) : base(copyFrom) {
       CopyMaps(copyFrom);
+      mPliesEvaluated = copyFrom.mPliesEvaluated;
     }
 
     public GameState(Player nextPlayer, int capturesWhite, int capturesBlack, String boardStr)
         : base(nextPlayer, capturesWhite, capturesBlack, boardStr) {
+      mPliesEvaluated = 0;
       mInfluenceMap = new int[ROWS];
       InitializeMaps();
     }
 
-    private void CopyMaps(GameState copyFrom) {
+    protected void CopyMaps(GameState copyFrom) {
       mInfluenceMap = new int[ROWS];
 
       for (int row_dex = 0; row_dex < ROWS; row_dex++) {
@@ -53,23 +56,21 @@ namespace PenteAI {
     }
 
     protected virtual Heuristic Minimax(int depthLimit, Heuristic heuristicAlpha, Heuristic heuristicBeta, out Tuple<int, int> bestMove) {
-      mPositionsEvaluated++;
       Heuristic champHeur = null;
       Heuristic chumpHeur;
-      GameState child = null;
-      Tuple<int, int> move;
       bestMove = null;
 
       if (GetWinner() != Player.Neither) {
         return Heuristic.GetWinHeuristic(IsMaxLevel());
       }
+      bool maxLevel = IsMaxLevel();
 
       if (IsMaxLevel()) {
         foreach (Tuple<int, int> candidateMove in GetCandidateMoves()) {
-          child = new GameState(this);
-          child.Move(candidateMove.Item1, candidateMove.Item2);
+          mPliesEvaluated++;
           if (depthLimit > 0) {
-            chumpHeur = child.Minimax(depthLimit - 1, champHeur, heuristicBeta, out move);
+            chumpHeur = GetHeuristicForMove(move:candidateMove, depthLimit:depthLimit,
+                                            alpha:champHeur, beta:heuristicBeta);
           } else {
             chumpHeur = GetHeuristicValue(candidateMove.Item1, candidateMove.Item2);
           }
@@ -86,10 +87,10 @@ namespace PenteAI {
         }
       } else {
         foreach (Tuple<int, int> candidateMove in GetCandidateMoves()) {
-          child = new GameState(this);
-          child.Move(candidateMove.Item1, candidateMove.Item2);
+          mPliesEvaluated++;
           if (depthLimit > 0) {
-            chumpHeur = child.Minimax(depthLimit - 1, heuristicAlpha, champHeur, out move);
+            chumpHeur = GetHeuristicForMove(move: candidateMove, depthLimit: depthLimit,
+                                            alpha: heuristicAlpha, beta: champHeur);
           } else {
             chumpHeur = GetHeuristicValue(candidateMove.Item1, candidateMove.Item2);
           }
@@ -107,6 +108,16 @@ namespace PenteAI {
       }
       champHeur.AddValue(GetHeuristicValue(bestMove.Item1, bestMove.Item2).GetValue());
       return champHeur;
+    }
+
+    // This is split out from the rest of Minimax so that GameStateBenchmark can override it
+    // and make sure that the child is still a GameStateHeuristic object.
+    protected virtual Heuristic GetHeuristicForMove(Tuple<int, int> move, int depthLimit, Heuristic alpha, Heuristic beta) {
+      GameState child = new GameState(this);
+      child.Move(move.Item1, move.Item2);
+      Heuristic retval = child.Minimax(depthLimit - 1, alpha, beta, out move);
+      mPliesEvaluated += child.mPliesEvaluated;
+      return retval;
     }
 
     protected virtual List<Tuple<int, int>> GetCandidateMoves() {
@@ -258,6 +269,10 @@ namespace PenteAI {
         retval = new Pattern(window.Item2, window.Item1);
       }
       return retval;
+    }
+
+    public int GetPliesEvaluated() {
+      return mPliesEvaluated;
     }
   }
 }

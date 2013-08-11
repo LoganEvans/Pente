@@ -442,5 +442,13 @@ namespace PenteAI {
     public static bool operator !=(Board first, Board second) {
       return (first == second) ? false : true;
     }
+
+    public override bool Equals(object obj) {
+      return base.Equals(obj);
+    }
+
+    public override int GetHashCode() {
+      return base.GetHashCode();
+    }
   }
 }
