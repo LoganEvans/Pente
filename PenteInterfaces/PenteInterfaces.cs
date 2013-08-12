@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace PenteInterfaces {
   // This can represent the player or the identity of the player that placed a stone in a spot.
-  public enum Player {Black, White, Neither};
+  public enum Player {Neither, Black, White};
 
   public interface BoardInterface {
     // The assumption will be that the current player is making the move. If the move was

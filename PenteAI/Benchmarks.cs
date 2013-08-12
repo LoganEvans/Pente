@@ -55,11 +55,17 @@ namespace PenteAI {
     }
 
     protected override Heuristic GetHeuristicForMove(Tuple<int, int> move, int depthLimit, Heuristic alpha, Heuristic beta) {
-      GameStateBenchmark child = new GameStateBenchmark(this);
-      child.Move(move.Item1, move.Item2);
-      Heuristic retval = child.Minimax(depthLimit - 1, alpha, beta, out move);
-      _pliesEvaluated += child._pliesEvaluated;
+      Tuple<int, int, int, int> snapshotData = GetSnapshotData();
+      Move(move);
+      Heuristic retval = Minimax(depthLimit - 1, alpha, beta, out move);
+      Rollback(snapshotData);
       return retval;
+
+  //  GameStateBenchmark child = new GameStateBenchmark(this);
+  //  child.Move(move);
+  //  Heuristic retval = child.Minimax(depthLimit - 1, alpha, beta, out move);
+  //  _pliesEvaluated += child._pliesEvaluated;
+  //  return retval;
     }
   }
 

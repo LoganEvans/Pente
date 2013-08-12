@@ -116,7 +116,7 @@ namespace PenteAI {
     // and make sure that the child is still a GameStateHeuristic object.
     protected virtual Heuristic GetHeuristicForMove(Tuple<int, int> move, int depthLimit, Heuristic alpha, Heuristic beta) {
       GameState child = new GameState(this);
-      child.Move(move.Item1, move.Item2);
+      child.Move(move);
       Heuristic retval = child.Minimax(depthLimit - 1, alpha, beta, out move);
       _pliesEvaluated += child._pliesEvaluated;
       return retval;

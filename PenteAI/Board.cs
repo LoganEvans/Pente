@@ -12,6 +12,7 @@ namespace PenteAI {
   public class Board : BoardInterface {
     public const int ROWS = 19;
     public const int COLS = 19;
+    public const int WIN_CAPS = 5;
     public const int ROW_MASK = 0x7FFFF;
     private const int DIAGONALS = ROWS + COLS - 1;
     public static readonly int[] SPOT_MASKS = {0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80,
@@ -20,14 +21,30 @@ namespace PenteAI {
 
     // Note: It is possible to fix the size of this by using a struct and an unsafe code block. It is possible
     // that doing so would greatly speed up code that deals with the board. Evaluate this.
-    private int[] _rowsWhite;
-    private int[] _rowsBlack;
-    private int[] _colsWhite;
-    private int[] _colsBlack;
-    private int[] _upDiagWhite;
-    private int[] _upDiagBlack;
-    private int[] _downDiagWhite;
-    private int[] _downDiagBlack;
+    private enum BoardRep {
+      RowsWhite = 0,
+      RowsBlack = 1,
+      ColsWhite = 2,
+      ColsBlack = 3,
+      UpDiagWhite = 4,
+      UpDiagBlack = 5,
+      DownDiagWhite = 6,
+      DownDiagBlack = 7
+    };
+
+    private int[][] _boardRepresentations;
+    private static readonly int _NUM_BOARD_REPS = 8;
+
+    public struct _snapEntry {
+      public int row;
+      public int col;
+      public Player newValue;
+      public Player oldValue;
+    }
+
+    public _snapEntry[] _snapLog;
+    private int _snapIdx;
+    private const int _SNAP_LOG_LENGTH = ROWS * COLS + 2 * 2 * WIN_CAPS;
 
     private Player _winner;
     private int _plyNumber;
@@ -58,80 +75,84 @@ namespace PenteAI {
       }
     }
 
+    private void InitializeBoardRepresentations() {
+      _boardRepresentations = new int[_NUM_BOARD_REPS][];
+      _boardRepresentations[(int)BoardRep.RowsWhite] = new int[ROWS];
+      _boardRepresentations[(int)BoardRep.RowsBlack] = new int[ROWS];
+      _boardRepresentations[(int)BoardRep.ColsWhite] = new int[COLS];
+      _boardRepresentations[(int)BoardRep.ColsBlack] = new int[COLS];
+      _boardRepresentations[(int)BoardRep.UpDiagWhite] = new int[DIAGONALS];
+      _boardRepresentations[(int)BoardRep.UpDiagBlack] = new int[DIAGONALS];
+      _boardRepresentations[(int)BoardRep.DownDiagWhite] = new int[DIAGONALS];
+      _boardRepresentations[(int)BoardRep.DownDiagBlack] = new int[DIAGONALS];
+    }
+
+    private void InitializeBoardRepresentations(int[][] copyFrom) {
+      InitializeBoardRepresentations();
+      for (int i = 0; i < _NUM_BOARD_REPS; i++) {
+        for (int count = 0; count < _boardRepresentations[i].Length; count++) {
+          _boardRepresentations[i][count] = copyFrom[i][count];
+        }
+      }
+    }
+
     public Board() {
       if (DirectionIncrements == null) {
         InitBoard();
       }
-      _rowsWhite = new int[ROWS];
-      _rowsBlack = new int[ROWS];
-      _colsWhite = new int[ROWS];
-      _colsBlack = new int[ROWS];
-      _upDiagWhite = new int[DIAGONALS];
-      _upDiagBlack = new int[DIAGONALS];
-      _downDiagWhite = new int[DIAGONALS];
-      _downDiagBlack = new int[DIAGONALS];
+
+      InitializeBoardRepresentations();
 
       _winner = Player.Neither;
       _plyNumber = 0;
       _capturesWhite = 0;
       _capturesBlack = 0;
-      Move(ROWS / 2, COLS / 2);
+
+      // 2 players, 2 board modifications per capture, WIN_CAPS captures per player.
+
+      _snapIdx = 0;
+      _snapLog = new _snapEntry[_SNAP_LOG_LENGTH];
+      for (int i = 0; i < _SNAP_LOG_LENGTH; i++) {
+        _snapLog[i] = new _snapEntry();
+      }
     }
 
     public Board(BoardInterface copyFrom) {
       if (DirectionIncrements == null) {
         InitBoard();
       }
-      _rowsWhite = new int[ROWS];
-      _rowsBlack = new int[ROWS];
-      _colsWhite = new int[ROWS];
-      _colsBlack = new int[ROWS];
-      _upDiagWhite = new int[DIAGONALS];
-      _upDiagBlack = new int[DIAGONALS];
-      _downDiagWhite = new int[DIAGONALS];
-      _downDiagBlack = new int[DIAGONALS];
-      for (int row_dex = 0; row_dex < ROWS; row_dex++) {
-        for (int col_dex = 0; col_dex < COLS; col_dex++) {
-          SetSpot(row_dex, col_dex, copyFrom.GetSpot(row_dex, col_dex));
-        }
-      }
+      InitializeBoardRepresentations();
       _winner = copyFrom.GetWinner();
       _plyNumber = copyFrom.GetPlyNumber();
       _capturesWhite = copyFrom.GetCaptures(Player.White);
       _capturesBlack = copyFrom.GetCaptures(Player.Black);
+
+      _snapLog = new _snapEntry[_SNAP_LOG_LENGTH];
+      for (int i = 0; i < _SNAP_LOG_LENGTH; i++) {
+        _snapLog[i] = new _snapEntry();
+      }
+      _snapIdx = 0;
     }
 
     public Board(Board copyFrom) {
       if (DirectionIncrements == null) {
         InitBoard();
       }
-      _rowsWhite = new int[ROWS];
-      _rowsBlack = new int[ROWS];
-      _colsWhite = new int[ROWS];
-      _colsBlack = new int[ROWS];
-      _upDiagWhite = new int[DIAGONALS];
-      _upDiagBlack = new int[DIAGONALS];
-      _downDiagWhite = new int[DIAGONALS];
-      _downDiagBlack = new int[DIAGONALS];
-
-      for (int i = 0; i < ROWS; i++) {
-        _rowsWhite[i] = copyFrom._rowsWhite[i];
-        _rowsBlack[i] = copyFrom._rowsBlack[i];
-        _colsWhite[i] = copyFrom._colsWhite[i];
-        _colsBlack[i] = copyFrom._colsBlack[i];
-      }
-
-      for (int i = 0; i < DIAGONALS; i++) {
-        _upDiagWhite[i] = copyFrom._upDiagWhite[i];
-        _upDiagBlack[i] = copyFrom._upDiagBlack[i];
-        _downDiagWhite[i] = copyFrom._downDiagWhite[i];
-        _downDiagBlack[i] = copyFrom._downDiagBlack[i];
-      }
-
+      InitializeBoardRepresentations(copyFrom._boardRepresentations);
       _winner = copyFrom._winner;
       _plyNumber = copyFrom._plyNumber;
       _capturesWhite = copyFrom._capturesWhite;
       _capturesBlack = copyFrom._capturesBlack;
+
+      _snapLog = new _snapEntry[_SNAP_LOG_LENGTH];
+      for (int i = 0; i < _SNAP_LOG_LENGTH; i++) {
+        _snapLog[i] = new _snapEntry();
+      }
+      for (int i = 0; i < copyFrom._snapIdx; i++) {
+        // Structs are copy on assign.
+        _snapLog[i] = copyFrom._snapLog[i];
+      }
+      _snapIdx = copyFrom._snapIdx;
     }
 
     public Board(Player nextPlayer, int capturesWhite, int capturesBlack, String boardStr) {
@@ -143,15 +164,15 @@ namespace PenteAI {
       _capturesBlack = capturesBlack;
       _winner = Player.Neither;
       _plyNumber = 2 * capturesWhite + 2 * capturesBlack;
+      InitializeBoardRepresentations();
 
-      _rowsWhite = new int[ROWS];
-      _rowsBlack = new int[ROWS];
-      _colsWhite = new int[ROWS];
-      _colsBlack = new int[ROWS];
-      _upDiagWhite = new int[DIAGONALS];
-      _upDiagBlack = new int[DIAGONALS];
-      _downDiagWhite = new int[DIAGONALS];
-      _downDiagBlack = new int[DIAGONALS];
+      // We can't really roll back any farther than this if we're initializing
+      // from a raw board.
+      _snapLog = new _snapEntry[_SNAP_LOG_LENGTH];
+      for (int i = 0; i < _SNAP_LOG_LENGTH; i++) {
+        _snapLog[i] = new _snapEntry();
+      }
+      _snapIdx = 0;
 
       Player color;
       for (int row_dex = 0; row_dex < ROWS; row_dex++) {
@@ -166,7 +187,7 @@ namespace PenteAI {
             color = Player.Neither;
           }
 
-          SetSpot(row_dex, col_dex, color);
+          SetSpot(row_dex, col_dex, color, disableSnap: true);
         }
       }
 
@@ -237,7 +258,7 @@ namespace PenteAI {
         }
       }
 
-      if (_capturesWhite >= 5 || _capturesBlack >= 5) {
+      if (_capturesWhite >= WIN_CAPS || _capturesBlack >= WIN_CAPS) {
         return true;
       }
 
@@ -254,20 +275,24 @@ namespace PenteAI {
       var retval = new Tuple<int, int>[NUM_DIRECTIONS];
       int whiteRow, blackRow, whiteCol, blackCol, whiteUpDiag, blackUpDiag, whiteDownDiag, blackDownDiag;
 
-      whiteRow = ((_rowsWhite[row] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
-      blackRow = ((_rowsBlack[row] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
+      whiteRow = ((_boardRepresentations[(int)BoardRep.RowsWhite][row] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
+      blackRow = ((_boardRepresentations[(int)BoardRep.RowsBlack][row] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
       retval[(int)Direction.ByRow] = Tuple.Create(whiteRow, blackRow);
 
-      whiteCol = ((_colsWhite[col] << Pattern.PATTERN_RADIUS) >> row) & Pattern.PATTERN_MASK;
-      blackCol = ((_colsBlack[col] << Pattern.PATTERN_RADIUS) >> row) & Pattern.PATTERN_MASK;
+      whiteCol = ((_boardRepresentations[(int)BoardRep.ColsWhite][col] << Pattern.PATTERN_RADIUS) >> row) & Pattern.PATTERN_MASK;
+      blackCol = ((_boardRepresentations[(int)BoardRep.ColsBlack][col] << Pattern.PATTERN_RADIUS) >> row) & Pattern.PATTERN_MASK;
       retval[(int)Direction.ByCol] = Tuple.Create(whiteCol, blackCol);
 
-      whiteUpDiag = ((_upDiagWhite[UpDiagIndex(row, col)] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
-      blackUpDiag = ((_upDiagBlack[UpDiagIndex(row, col)] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
+      whiteUpDiag = ((_boardRepresentations[(int)BoardRep.UpDiagWhite][UpDiagIndex(row, col)] << Pattern.PATTERN_RADIUS) >> col)
+        & Pattern.PATTERN_MASK;
+      blackUpDiag = ((_boardRepresentations[(int)BoardRep.UpDiagBlack][UpDiagIndex(row, col)] << Pattern.PATTERN_RADIUS) >> col)
+        & Pattern.PATTERN_MASK;
       retval[(int)Direction.ByUpDiag] = Tuple.Create(whiteUpDiag, blackUpDiag);
 
-      whiteDownDiag = ((_downDiagWhite[DownDiagIndex(row, col)] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
-      blackDownDiag = ((_downDiagBlack[DownDiagIndex(row, col)] << Pattern.PATTERN_RADIUS) >> col) & Pattern.PATTERN_MASK;
+      whiteDownDiag = ((_boardRepresentations[(int)BoardRep.DownDiagWhite][DownDiagIndex(row, col)] << Pattern.PATTERN_RADIUS) >> col)
+        & Pattern.PATTERN_MASK;
+      blackDownDiag = ((_boardRepresentations[(int)BoardRep.DownDiagBlack][DownDiagIndex(row, col)] << Pattern.PATTERN_RADIUS) >> col)
+        & Pattern.PATTERN_MASK;
       retval[(int)Direction.ByDownDiag] = Tuple.Create(whiteDownDiag, blackDownDiag);
 
       return retval;
@@ -290,9 +315,9 @@ namespace PenteAI {
 
     public Player GetSpot(int row, int col) {
       if (0 <= row && row < ROWS && 0 <= col && col < COLS) {
-        if ((_rowsWhite[row] & SPOT_MASKS[col]) != 0) {
+        if ((_boardRepresentations[(int)BoardRep.RowsWhite][row] & SPOT_MASKS[col]) != 0) {
           return Player.White;
-        } else if ((_rowsBlack[row] & SPOT_MASKS[col]) != 0) {
+        } else if ((_boardRepresentations[(int)BoardRep.RowsBlack][row] & SPOT_MASKS[col]) != 0) {
           return Player.Black;
         } else {
           return Player.Neither;
@@ -350,8 +375,8 @@ namespace PenteAI {
         return false;
       }
 
-      if ((_rowsWhite[row] & SPOT_MASKS[col]) != 0 ||
-          (_rowsBlack[row] & SPOT_MASKS[col]) != 0) {
+      if ((_boardRepresentations[(int)BoardRep.RowsWhite][row] & SPOT_MASKS[col]) != 0 ||
+          (_boardRepresentations[(int)BoardRep.RowsBlack][row] & SPOT_MASKS[col]) != 0) {
         return false;
       }
 
@@ -362,29 +387,61 @@ namespace PenteAI {
       return IsLegal(move.Item1, move.Item2);
     }
 
-    private void SetSpot(int row, int col, Player color) {
+    public Tuple<int, int, int, int> GetSnapshotData() {
+      return Tuple.Create(_plyNumber, _capturesWhite, _capturesBlack, _snapIdx);
+    }
+
+    // Caution: A Rollback WILL clear the _winner field, so don't use it if the board is already
+    // in that state.
+    public void Rollback(Tuple<int, int, int, int> snapshotData) {
+      _winner = Player.Neither;
+      _plyNumber = snapshotData.Item1;
+      _capturesWhite = snapshotData.Item2;
+      _capturesBlack = snapshotData.Item3;
+      // _snapIdx is pointing at the next log location, but nothing has been written there.
+      _snapIdx--;
+      for (; _snapIdx > snapshotData.Item4; _snapIdx--) {
+        SetSpot(_snapLog[_snapIdx].row, _snapLog[_snapIdx].col, _snapLog[_snapIdx].oldValue, disableSnap: true);
+      }
+      SetSpot(_snapLog[_snapIdx].row, _snapLog[_snapIdx].col, _snapLog[_snapIdx].oldValue, disableSnap: true);
+    }
+
+    private void SetSpot(int row, int col, Player color, bool disableSnap = false) {
+      if (!disableSnap) {
+        _snapLog[_snapIdx].row = row;
+        _snapLog[_snapIdx].col = col;
+        _snapLog[_snapIdx].newValue = color;
+        // If color == Player.Neither, we just made a capture.
+        if (color == Player.Neither) {
+          _snapLog[_snapIdx].oldValue = GetSpot(row, col);
+        } else {
+          _snapLog[_snapIdx].oldValue = Player.Neither;
+        }
+        _snapIdx++;
+      }
+
       if (color == Player.White) {
-        _rowsWhite[row] |= SPOT_MASKS[col];
-        _colsWhite[col] |= SPOT_MASKS[row];
-        _upDiagWhite[UpDiagIndex(row, col)] |= SPOT_MASKS[col];
-        _downDiagWhite[DownDiagIndex(row, col)] |= SPOT_MASKS[col];
+        _boardRepresentations[(int)BoardRep.RowsWhite][row] |= SPOT_MASKS[col];
+        _boardRepresentations[(int)BoardRep.ColsWhite][col] |= SPOT_MASKS[row];
+        _boardRepresentations[(int)BoardRep.UpDiagWhite][UpDiagIndex(row, col)] |= SPOT_MASKS[col];
+        _boardRepresentations[(int)BoardRep.DownDiagWhite][DownDiagIndex(row, col)] |= SPOT_MASKS[col];
       } else if (color == Player.Black) {
-        _rowsBlack[row] |= SPOT_MASKS[col];
-        _colsBlack[col] |= SPOT_MASKS[row];
-        _upDiagBlack[UpDiagIndex(row, col)] |= SPOT_MASKS[col];
-        _downDiagBlack[DownDiagIndex(row, col)] |= SPOT_MASKS[col];
+        _boardRepresentations[(int)BoardRep.RowsBlack][row] |= SPOT_MASKS[col];
+        _boardRepresentations[(int)BoardRep.ColsBlack][col] |= SPOT_MASKS[row];
+        _boardRepresentations[(int)BoardRep.UpDiagBlack][UpDiagIndex(row, col)] |= SPOT_MASKS[col];
+        _boardRepresentations[(int)BoardRep.DownDiagBlack][DownDiagIndex(row, col)] |= SPOT_MASKS[col];
       } else {
-        _rowsWhite[row] &= (~SPOT_MASKS[col]);
-        _rowsBlack[row] &= (~SPOT_MASKS[col]);
+        _boardRepresentations[(int)BoardRep.RowsWhite][row] &= (~SPOT_MASKS[col]);
+        _boardRepresentations[(int)BoardRep.RowsBlack][row] &= (~SPOT_MASKS[col]);
 
-        _colsWhite[col] &= (~SPOT_MASKS[row]);
-        _colsBlack[col] &= (~SPOT_MASKS[row]);
+        _boardRepresentations[(int)BoardRep.ColsWhite][col] &= (~SPOT_MASKS[row]);
+        _boardRepresentations[(int)BoardRep.ColsBlack][col] &= (~SPOT_MASKS[row]);
 
-        _upDiagWhite[UpDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
-        _upDiagBlack[UpDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
+        _boardRepresentations[(int)BoardRep.UpDiagWhite][UpDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
+        _boardRepresentations[(int)BoardRep.UpDiagBlack][UpDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
 
-        _downDiagWhite[DownDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
-        _downDiagBlack[DownDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
+        _boardRepresentations[(int)BoardRep.DownDiagWhite][DownDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
+        _boardRepresentations[(int)BoardRep.DownDiagBlack][DownDiagIndex(row, col)] &= (~SPOT_MASKS[col]);
       }
     }
 
@@ -425,20 +482,19 @@ namespace PenteAI {
     }
 
     public static bool operator ==(Board first, Board second) {
-      return (
-          Enumerable.SequenceEqual(first._rowsWhite, second._rowsWhite) &&
-          Enumerable.SequenceEqual(first._rowsBlack, second._rowsBlack) &&
-          Enumerable.SequenceEqual(first._colsWhite, second._colsWhite) &&
-          Enumerable.SequenceEqual(first._colsBlack, second._colsBlack) &&
-          Enumerable.SequenceEqual(first._upDiagWhite, second._upDiagWhite) &&
-          Enumerable.SequenceEqual(first._upDiagBlack, second._upDiagBlack) &&
-          Enumerable.SequenceEqual(first._downDiagWhite, second._downDiagWhite) &&
-          Enumerable.SequenceEqual(first._downDiagBlack, second._downDiagBlack) &&
-          (first.GetWinner() == second.GetWinner()) &&
-          (first.GetCaptures(Player.White) == second.GetCaptures(Player.White)) &&
-          (first.GetCaptures(Player.Black) == second.GetCaptures(Player.Black)) &&
-          (first.GetPlyNumber() == second.GetPlyNumber())
-      );
+      if (!(first.GetWinner() == second.GetWinner()) &&
+           (first.GetCaptures(Player.White) == second.GetCaptures(Player.White)) &&
+           (first.GetCaptures(Player.Black) == second.GetCaptures(Player.Black)) &&
+           (first.GetPlyNumber() == second.GetPlyNumber())) {
+        return false;
+      }
+
+      for (int i = 0; i < _NUM_BOARD_REPS; i++) {
+        if (!first._boardRepresentations[i].SequenceEqual(second._boardRepresentations[i])) {
+          return false;
+        }
+      }
+      return true;
     }
 
     public static bool operator !=(Board first, Board second) {

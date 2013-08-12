@@ -66,8 +66,7 @@ namespace PenteAI {
     static void Benchmark() {
       Benchmarks bench = new Benchmarks();
       // bench.RandomGameToCSV(1000000);
-      // bench.TimeRandomGames(1000000);
-      // bench.TimeRandomGames(100000);
+      //bench.TimeRandomGames(100000);
 
       bench.TimeRandomGamesWithLookaheadNoPlayer(n:1000, depthLimit:100, branchingFactor:1);
 
