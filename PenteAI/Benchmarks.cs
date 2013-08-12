@@ -61,11 +61,11 @@ namespace PenteAI {
       Rollback(snapshotData);
       return retval;
 
-  //  GameStateBenchmark child = new GameStateBenchmark(this);
-  //  child.Move(move);
-  //  Heuristic retval = child.Minimax(depthLimit - 1, alpha, beta, out move);
-  //  _pliesEvaluated += child._pliesEvaluated;
-  //  return retval;
+ //   GameStateBenchmark child = new GameStateBenchmark(this);
+ //   child.Move(move);
+ //   Heuristic retval = child.Minimax(depthLimit - 1, alpha, beta, out move);
+ //   _pliesEvaluated += child._pliesEvaluated;
+ //   return retval;
     }
   }
 
