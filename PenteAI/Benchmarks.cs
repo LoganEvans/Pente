@@ -55,7 +55,7 @@ namespace PenteAI {
     }
 
     protected override Heuristic GetHeuristicForMove(Tuple<int, int> move, int depthLimit, Heuristic alpha, Heuristic beta) {
-      Tuple<int, int, int, int> snapshotData = GetSnapshotData();
+      Tuple<Tuple<int, int, int, int>, int> snapshotData = GetSnapshotData();
       Move(move);
       Heuristic retval = Minimax(depthLimit - 1, alpha, beta, out move);
       Rollback(snapshotData);

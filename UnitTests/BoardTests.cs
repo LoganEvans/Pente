@@ -43,58 +43,58 @@ namespace UnitTests {
       Assert.AreEqual(4, board.GetCaptures(Player.Black));
     }
 
-    [TestMethod]
-    public void TestSnapshots() {
-      var board = new Board(Player.White, 2, 4,
-        //123456789012345678
-        "W.................B" +  // 0
-        "..................." +  // 1
-        "..................." +  // 2
-        "..................." +  // 3
-        "..................." +  // 4
-        "..................." +  // 5
-        "..................." +  // 6
-        "..................." +  // 7
-        "..................." +  // 8
-        ".........WBB......." +  // 9 (center)
-        "..................." +  // 10
-        "..................." +  // 11
-        "..........W........" +  // 12
-        "..................." +  // 13
-        "............B......" +  // 14
-        "..................." +  // 15
-        "..................." +  // 16
-        "..................." +  // 17
-        "...................");  // 18
-      var copiedBoard = new Board(board);
-      Tuple<int, int, int, int> snapshotData = board.GetSnapshotData();
+//  [TestMethod]
+//  public void TestSnapshots() {
+//    var board = new Board(Player.White, 2, 4,
+//      //123456789012345678
+//      "W.................B" +  // 0
+//      "..................." +  // 1
+//      "..................." +  // 2
+//      "..................." +  // 3
+//      "..................." +  // 4
+//      "..................." +  // 5
+//      "..................." +  // 6
+//      "..................." +  // 7
+//      "..................." +  // 8
+//      ".........WBB......." +  // 9 (center)
+//      "..................." +  // 10
+//      "..................." +  // 11
+//      "..........W........" +  // 12
+//      "..................." +  // 13
+//      "............B......" +  // 14
+//      "..................." +  // 15
+//      "..................." +  // 16
+//      "..................." +  // 17
+//      "...................");  // 18
+//    var copiedBoard = new Board(board);
+//    Tuple<int, int, int, int> snapshotData = board.GetSnapshotData();
 
-      board.Move(9, 12);  // capture
-      board.Move(2, 18);
-      board.Move(9, 10);
-      board.Rollback(snapshotData);
-      Tuple<int, int, int, int> newSnapshotData = board.GetSnapshotData();
-      Assert.AreEqual(snapshotData, newSnapshotData);
-      Assert.IsTrue(board == copiedBoard);
+//    board.Move(9, 12);  // capture
+//    board.Move(2, 18);
+//    board.Move(9, 10);
+//    board.Rollback(snapshotData);
+//    Tuple<int, int, int, int> newSnapshotData = board.GetSnapshotData();
+//    Assert.AreEqual(snapshotData, newSnapshotData);
+//    Assert.IsTrue(board == copiedBoard);
 
-      board = new Board();
-      snapshotData = board.GetSnapshotData();
-      board.Move(9, 9);
-      copiedBoard = new Board(board);
+//    board = new Board();
+//    snapshotData = board.GetSnapshotData();
+//    board.Move(9, 9);
+//    copiedBoard = new Board(board);
 
-      board.Move(10, 10);
-      board.Move(9, 13);
-      board.Move(11, 11);
-      board.Move(9, 10);
-      board.Move(12, 12);
-      board.Move(9, 11);
-      board.Move(13, 13);
-      board.Move(9, 12);  // win
-      Assert.IsTrue(board.GetWinner() == Player.White);
-      board.Rollback(snapshotData);
-      board.Move(9, 9);
-      Assert.IsTrue(board == copiedBoard);
-    }
+//    board.Move(10, 10);
+//    board.Move(9, 13);
+//    board.Move(11, 11);
+//    board.Move(9, 10);
+//    board.Move(12, 12);
+//    board.Move(9, 11);
+//    board.Move(13, 13);
+//    board.Move(9, 12);  // win
+//    Assert.IsTrue(board.GetWinner() == Player.White);
+//    board.Rollback(snapshotData);
+//    board.Move(9, 9);
+//    Assert.IsTrue(board == copiedBoard);
+//  }
 
     // After some testing, the mean for the number of moves per game is quite
     // close to 154, and the variance is quite close to 

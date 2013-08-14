@@ -68,7 +68,7 @@ namespace PenteAI {
       // bench.RandomGameToCSV(1000000);
       //bench.TimeRandomGames(100000);
 
-      bench.TimeRandomGamesWithLookaheadNoPlayer(n:1000, depthLimit:100, branchingFactor:1);
+      bench.TimeRandomGamesWithLookaheadNoPlayer(n:3, depthLimit:3, branchingFactor:1);
 
     //for (int depth_dex = 0; depth_dex < 5; depth_dex++) {
     //  for (int branch_dex = 1; branch_dex < 5; branch_dex++) {
@@ -86,8 +86,8 @@ namespace PenteAI {
       Board.InitBoard();
       GameState.InitGameState();
 
-      // AI.StartGame();
-      AI.Benchmark();
+      AI.StartGame();
+      // AI.Benchmark();
     }
   }
 }

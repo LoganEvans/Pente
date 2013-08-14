@@ -21,7 +21,7 @@ namespace PenteAI {
 
     // Note: It is possible to fix the size of this by using a struct and an unsafe code block. It is possible
     // that doing so would greatly speed up code that deals with the board. Evaluate this.
-    private enum BoardRep {
+    protected enum BoardRep {
       RowsWhite = 0,
       RowsBlack = 1,
       ColsWhite = 2,
@@ -32,8 +32,22 @@ namespace PenteAI {
       DownDiagBlack = 7
     };
 
-    private int[][] _boardRepresentations;
-    private static readonly int _NUM_BOARD_REPS = 8;
+    protected static readonly int[] WhiteBoardRep = {
+      (int)BoardRep.RowsWhite,
+      (int)BoardRep.ColsWhite,
+      (int)BoardRep.UpDiagWhite,
+      (int)BoardRep.DownDiagWhite
+    };
+
+    protected static readonly int[] BlackBoardRep = {
+      (int)BoardRep.RowsBlack,
+      (int)BoardRep.ColsBlack,
+      (int)BoardRep.UpDiagBlack,
+      (int)BoardRep.DownDiagBlack
+    };
+
+    protected int[][] _boardRepresentations;
+    protected static readonly int _NUM_BOARD_REPS = 8;
 
     public struct _snapEntry {
       public int row;
@@ -42,9 +56,9 @@ namespace PenteAI {
       public Player oldValue;
     }
 
-    public _snapEntry[] _snapLog;
-    private int _snapIdx;
-    private const int _SNAP_LOG_LENGTH = ROWS * COLS + 2 * 2 * WIN_CAPS;
+    protected _snapEntry[] _snapLog;
+    protected int _snapIdx;
+    protected const int _SNAP_LOG_LENGTH = ROWS * COLS + 2 * 2 * WIN_CAPS;
 
     private Player _winner;
     private int _plyNumber;
@@ -53,9 +67,9 @@ namespace PenteAI {
 
     public const int NUM_DIRECTIONS = 4;
     public enum Direction {ByRow = 0, ByCol = 1, ByUpDiag = 2, ByDownDiag = 3};
-    private static Tuple<int, int>[] _directionIncrements = null;
+    protected static Tuple<int, int>[] _directionIncrements = null;
     protected static Tuple<int, int>[] DirectionIncrements { get { return _directionIncrements; } }
-    private static Direction[] _allDirections = null;
+    protected static Direction[] _allDirections = null;
     protected static Direction[] AllDirections { get { return _allDirections; } }
 
     // This should be called early on.
@@ -110,11 +124,11 @@ namespace PenteAI {
 
       // 2 players, 2 board modifications per capture, WIN_CAPS captures per player.
 
-      _snapIdx = 0;
-      _snapLog = new _snapEntry[_SNAP_LOG_LENGTH];
-      for (int i = 0; i < _SNAP_LOG_LENGTH; i++) {
-        _snapLog[i] = new _snapEntry();
-      }
+//    _snapIdx = 0;
+//    _snapLog = new _snapEntry[_SNAP_LOG_LENGTH];
+//    for (int i = 0; i < _SNAP_LOG_LENGTH; i++) {
+//      _snapLog[i] = new _snapEntry();
+//    }
     }
 
     public Board(BoardInterface copyFrom) {
@@ -127,11 +141,11 @@ namespace PenteAI {
       _capturesWhite = copyFrom.GetCaptures(Player.White);
       _capturesBlack = copyFrom.GetCaptures(Player.Black);
 
-      _snapLog = new _snapEntry[_SNAP_LOG_LENGTH];
-      for (int i = 0; i < _SNAP_LOG_LENGTH; i++) {
-        _snapLog[i] = new _snapEntry();
-      }
-      _snapIdx = 0;
+//    _snapLog = new _snapEntry[_SNAP_LOG_LENGTH];
+//    for (int i = 0; i < _SNAP_LOG_LENGTH; i++) {
+//      _snapLog[i] = new _snapEntry();
+//    }
+//    _snapIdx = 0;
     }
 
     public Board(Board copyFrom) {
@@ -144,15 +158,15 @@ namespace PenteAI {
       _capturesWhite = copyFrom._capturesWhite;
       _capturesBlack = copyFrom._capturesBlack;
 
-      _snapLog = new _snapEntry[_SNAP_LOG_LENGTH];
-      for (int i = 0; i < _SNAP_LOG_LENGTH; i++) {
-        _snapLog[i] = new _snapEntry();
-      }
-      for (int i = 0; i < copyFrom._snapIdx; i++) {
-        // Structs are copy on assign.
-        _snapLog[i] = copyFrom._snapLog[i];
-      }
-      _snapIdx = copyFrom._snapIdx;
+//    _snapLog = new _snapEntry[_SNAP_LOG_LENGTH];
+//    for (int i = 0; i < _SNAP_LOG_LENGTH; i++) {
+//      _snapLog[i] = new _snapEntry();
+//    }
+//    for (int i = 0; i < copyFrom._snapIdx; i++) {
+//      // Structs are copy on assign.
+//      _snapLog[i] = copyFrom._snapLog[i];
+//    }
+//    _snapIdx = copyFrom._snapIdx;
     }
 
     public Board(Player nextPlayer, int capturesWhite, int capturesBlack, String boardStr) {
@@ -168,11 +182,11 @@ namespace PenteAI {
 
       // We can't really roll back any farther than this if we're initializing
       // from a raw board.
-      _snapLog = new _snapEntry[_SNAP_LOG_LENGTH];
-      for (int i = 0; i < _SNAP_LOG_LENGTH; i++) {
-        _snapLog[i] = new _snapEntry();
-      }
-      _snapIdx = 0;
+//    _snapLog = new _snapEntry[_SNAP_LOG_LENGTH];
+//    for (int i = 0; i < _SNAP_LOG_LENGTH; i++) {
+//      _snapLog[i] = new _snapEntry();
+//    }
+//    _snapIdx = 0;
 
       Player color;
       for (int row_dex = 0; row_dex < ROWS; row_dex++) {
@@ -384,16 +398,20 @@ namespace PenteAI {
     }
 
     public bool IsLegal(Tuple<int, int> move) {
-      return IsLegal(move.Item1, move.Item2);
+      if (move != null) {
+        return IsLegal(move.Item1, move.Item2);
+      } else {
+        return false;
+      }
     }
 
-    public Tuple<int, int, int, int> GetSnapshotData() {
+    public virtual Tuple<int, int, int, int> GetSnapshotData() {
       return Tuple.Create(_plyNumber, _capturesWhite, _capturesBlack, _snapIdx);
     }
 
     // Caution: A Rollback WILL clear the _winner field, so don't use it if the board is already
     // in that state.
-    public void Rollback(Tuple<int, int, int, int> snapshotData) {
+    public virtual void Rollback(Tuple<int, int, int, int> snapshotData) {
       _winner = Player.Neither;
       _plyNumber = snapshotData.Item1;
       _capturesWhite = snapshotData.Item2;
@@ -407,18 +425,18 @@ namespace PenteAI {
     }
 
     private void SetSpot(int row, int col, Player color, bool disableSnap = false) {
-      if (!disableSnap) {
-        _snapLog[_snapIdx].row = row;
-        _snapLog[_snapIdx].col = col;
-        _snapLog[_snapIdx].newValue = color;
-        // If color == Player.Neither, we just made a capture.
-        if (color == Player.Neither) {
-          _snapLog[_snapIdx].oldValue = GetSpot(row, col);
-        } else {
-          _snapLog[_snapIdx].oldValue = Player.Neither;
-        }
-        _snapIdx++;
-      }
+//    if (!disableSnap) {
+//      _snapLog[_snapIdx].row = row;
+//      _snapLog[_snapIdx].col = col;
+//      _snapLog[_snapIdx].newValue = color;
+//      // If color == Player.Neither, we just made a capture.
+//      if (color == Player.Neither) {
+//        _snapLog[_snapIdx].oldValue = GetSpot(row, col);
+//      } else {
+//        _snapLog[_snapIdx].oldValue = Player.Neither;
+//      }
+//      _snapIdx++;
+//    }
 
       if (color == Player.White) {
         _boardRepresentations[(int)BoardRep.RowsWhite][row] |= SPOT_MASKS[col];
