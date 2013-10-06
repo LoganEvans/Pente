@@ -14,7 +14,7 @@ namespace PenteAI {
   public class PlayerAI : PlayerBase {
     public GameState _gameState;
     protected Player _color;
-    protected int _lookahead = 1;
+    protected int _lookahead = 3;
     protected AutoResetEvent _waitOnOpponent;
 
     public PlayerAI() {}

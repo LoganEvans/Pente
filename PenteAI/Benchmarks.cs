@@ -49,24 +49,6 @@ namespace PenteAI {
       }
       return retval;
     }
-
-    public override Heuristic GetHeuristicValue(int row, int col) {
-      return new Heuristic(0, 0);
-    }
-
-    protected override Heuristic GetHeuristicForMove(Tuple<int, int> move, int depthLimit, Heuristic alpha, Heuristic beta) {
-      Tuple<Tuple<int, int, int, int>, int> snapshotData = GetSnapshotData();
-      Move(move);
-      Heuristic retval = Minimax(depthLimit - 1, alpha, beta, out move);
-      Rollback(snapshotData);
-      return retval;
-
- //   GameStateBenchmark child = new GameStateBenchmark(this);
- //   child.Move(move);
- //   Heuristic retval = child.Minimax(depthLimit - 1, alpha, beta, out move);
- //   _pliesEvaluated += child._pliesEvaluated;
- //   return retval;
-    }
   }
 
   public class PlayerBenchmark : PlayerAI {

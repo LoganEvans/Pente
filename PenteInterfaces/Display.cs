@@ -13,12 +13,14 @@ namespace PenteInterfaces {
     public const int COLS = 19;
     public const int PAD_H = 40;
     public const int PAD_W = 10;
-    private BoardInterface mBoard;
+    private int _showDebug;
+    private BoardInterface _board;
 
     public event EventHandler<MoveSelectedEventArgs> MoveSelectedByClick;
 
     public Display(BoardInterface board, PlayerBase playerWhite, PlayerBase playerBlack) {
       InitializeComponent();
+      _showDebug = 0;
 
       SetBoard(board);
       playerWhite.MoveSelected += MoveSelectedEventHandler;
@@ -26,25 +28,25 @@ namespace PenteInterfaces {
     }
 
     private void SetText() {
-      this.Text = "Pente -- Turn: " + mBoard.GetPlyNumber() +
-                  " White captures: " + mBoard.GetCaptures(Player.White) +
-                  " Black captures: " + mBoard.GetCaptures(Player.Black);
+      this.Text = "Pente -- Turn: " + _board.GetPlyNumber() +
+                  " White captures: " + _board.GetCaptures(Player.White) +
+                  " Black captures: " + _board.GetCaptures(Player.Black);
     }
 
     public void MoveSelectedEventHandler(object sender, MoveSelectedEventArgs args) {
-      mBoard.Move(args.row, args.col);
+      _board.Move(args.row, args.col);
       Invalidate();
-      if (mBoard.GetWinner() != Player.Neither) {
-        MessageBox.Show("Winner: " + mBoard.GetWinner());
+      if (_board.GetWinner() != Player.Neither) {
+        MessageBox.Show("Winner: " + _board.GetWinner());
       }
     }
 
     public void SetBoard(BoardInterface board) {
-      mBoard = board;
+      _board = board;
     }
 
     public BoardInterface GetBoard() {
-      return mBoard;
+      return _board;
     }
 
     private void Display_Paint(object sender, PaintEventArgs e) {
@@ -52,6 +54,7 @@ namespace PenteInterfaces {
       SetText();
       DrawBoardLines(g);
       DrawStones(g);
+      DrawHeuristicValues(g);
     }
 
     private void DrawBoardLines(Graphics g) {
@@ -99,6 +102,9 @@ namespace PenteInterfaces {
       }
     }
 
+    private void DrawHeuristicValues(Graphics g) {
+    }
+
     // Handles the board click.
     private void OnClick(object sender, EventArgs e) {
       int width = this.Size.Width;
@@ -139,7 +145,7 @@ namespace PenteInterfaces {
       MoveSelectedEventArgs args = new MoveSelectedEventArgs();
       args.row = clicked_row;
       args.col = clicked_col;
-      args.player = mBoard.GetCurrentPlayer();
+      args.player = _board.GetCurrentPlayer();
       OnMoveSelectedByClick(args);
     }
 

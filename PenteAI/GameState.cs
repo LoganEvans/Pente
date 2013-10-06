@@ -9,6 +9,7 @@ namespace PenteAI {
   public class GameState : Board {
     private int[] _influenceMap;
     private static int _baseDepth;
+    public double[][] _topLevelHeuristics;
 
     protected int _pliesEvaluated;
 
@@ -80,11 +81,22 @@ namespace PenteAI {
       _baseDepth = GetPlyNumber();
       Tuple<int, int> move;
    // Heuristic heuristic = Minimax(depthLimit, null, null, out move);
-      double heur = Negamax(depthLimit, -9001, 9001, 1, out move);
+      _topLevelHeuristics = new double[ROWS][];
+      for (int row_idx = 0; row_idx < ROWS; row_idx++) {
+        _topLevelHeuristics[row_idx] = new double[COLS];
+      }
+        
+      double heur = Negamax(depthLimit, -9001, 9001, 1, out move, topOfSearchTree: true);
+
+      Console.WriteLine("==========");
+      Console.WriteLine(GetHeuristicStr(_topLevelHeuristics));
+      Console.WriteLine("==========");
+      Console.WriteLine("plies evaluated: {0}", GetPliesEvaluated());
       return move;
     }
 
-    protected virtual double Negamax(int depthLimit, double alpha, double beta, int color, out Tuple<int, int> bestMove) {
+    protected virtual double Negamax(int depthLimit, double alpha, double beta, int color, out Tuple<int, int> bestMove,
+                                     bool topOfSearchTree=false) {
       double value = 0.0;
       Tuple<int, int> move = null;
       bestMove = move;
@@ -107,6 +119,11 @@ namespace PenteAI {
         GameState child = new GameState(this);
         child.Move(candidateMove);
         value = -child.Negamax(depthLimit - 1, -beta, -alpha, -color, out move);
+
+        if (topOfSearchTree) {
+          _topLevelHeuristics[candidateMove.Item1][candidateMove.Item2] = value;
+        }
+
         if (!this.IsLegal(bestMove)) {
           bestMove = candidateMove;
         }
@@ -130,80 +147,29 @@ namespace PenteAI {
       return alpha;
     }
 
-    protected virtual Heuristic Minimax(int depthLimit, Heuristic heuristicAlpha, Heuristic heuristicBeta, out Tuple<int, int> bestMove) {
-      Heuristic champHeur = null;
-      Heuristic chumpHeur;
-      bestMove = null;
-
-      if (GetWinner() != Player.Neither) {
-        return Heuristic.GetWinHeuristic(IsMaxLevel());
-      }
-      bool maxLevel = IsMaxLevel();
-
-      if (IsMaxLevel()) {
-        foreach (Tuple<int, int> candidateMove in GetCandidateMoves()) {
-          _pliesEvaluated++;
-          if (depthLimit > 0) {
-            chumpHeur = GetHeuristicForMove(move:candidateMove, depthLimit:depthLimit,
-                                            alpha:champHeur, beta:heuristicBeta);
-          } else {
-            chumpHeur = GetHeuristicValue(candidateMove.Item1, candidateMove.Item2);
-          }
-
-          // Max level, so pick max.
-          if (champHeur == null || champHeur < chumpHeur) {
-            champHeur = chumpHeur;
-            bestMove = candidateMove;
-            if (heuristicBeta != null && champHeur > heuristicBeta) {
-              // Beta prune.
-              break;
-            }
-          }
-        }
-      } else {
-        foreach (Tuple<int, int> candidateMove in GetCandidateMoves()) {
-          _pliesEvaluated++;
-          if (depthLimit > 0) {
-            chumpHeur = GetHeuristicForMove(move: candidateMove, depthLimit: depthLimit,
-                                            alpha: heuristicAlpha, beta: champHeur);
-          } else {
-            chumpHeur = GetHeuristicValue(candidateMove.Item1, candidateMove.Item2);
-          }
-
-          // Min level, so pick min.
-          if (champHeur == null || champHeur > chumpHeur) {
-            champHeur = chumpHeur;
-            bestMove = candidateMove;
-            if (heuristicAlpha != null && champHeur < heuristicAlpha) {
-              // Beta prune.
-              break;
-            }
-          }
-        }
-      }
-      champHeur.AddValue(GetHeuristicValue(bestMove.Item1, bestMove.Item2).GetValue());
-      return champHeur;
-    }
-
-    // This is split out from the rest of Minimax so that GameStateBenchmark can override it
-    // and make sure that the child is still a GameStateHeuristic object.
-    protected virtual Heuristic GetHeuristicForMove(Tuple<int, int> move, int depthLimit, Heuristic alpha, Heuristic beta) {
-      GameState child = new GameState(this);
-      child.Move(move);
-      Heuristic retval = child.Minimax(depthLimit - 1, alpha, beta, out move);
-      _pliesEvaluated += child._pliesEvaluated;
-      return retval;
-    }
-
     protected virtual List<Tuple<int, int>> GetCandidateMoves() {
+    //for (int row_idx = 0; row_idx < ROWS; row_idx++) {
+    //  for (int col_idx = 1; col_idx < (1 << COLS); col_idx <<= 1) {
+    //    if ((_influenceMap[row_idx] & col_idx) != 0) {
+    //      Console.Write("  *");
+    //    } else {
+    //      Console.Write("  .");
+    //    }
+    //  }
+    //  Console.WriteLine();
+    //}
+    //Console.WriteLine();
+
       Tuple<int, int> spot;
       List<Tuple<int, int>> candidates = new List<Tuple<int, int>>();
       for (int row_dex = 0; row_dex < ROWS; row_dex++) {
         for (int col_dex = 0; col_dex < COLS; col_dex++) {
+          // Trim illegal
           if (!IsLegal(row_dex, col_dex)) {
             continue;
           }
 
+          // Use the influence map
           if (IsOnMap(row_dex, col_dex, _influenceMap)) {
             spot = Tuple.Create(row_dex, col_dex);
             candidates.Add(spot);
@@ -211,10 +177,13 @@ namespace PenteAI {
         }
       }
 
+      // If the influence map was empty...
       if (candidates.Count == 0) {
         if (GetPlyNumber() == 0) {
+          // White's first move.
           candidates.Add(Tuple.Create(ROWS / 2, COLS / 2));
-        }  else if (GetPlyNumber() == 1) {
+        } else if (GetPlyNumber() == 2) {
+          // White's second move.
           for (int row_dex = 0; row_dex < ROWS; row_dex++) {
             for (int col_dex = 0; col_dex < COLS; col_dex++) {
               if (Math.Abs(row_dex - 9) <= 3 && Math.Abs(col_dex - 9) <= 3) {
@@ -241,7 +210,7 @@ namespace PenteAI {
         }
       }
 
-      Console.WriteLine("This: {0}", candidates.Count);
+      //Console.WriteLine("Candidates: {0} Depth: {1}", candidates.Count, GetPlyNumber());
       return candidates;
     }
 
@@ -259,12 +228,12 @@ namespace PenteAI {
 
       for (int row_dex = 0; row_dex < ROWS; row_dex++) {
         for (int col_dex = 0; col_dex < COLS; col_dex++) {
-          UpdateMaps(row_dex, col_dex, disableSnap: true);
+          UpdateMaps(row_dex, col_dex);
         }
       }
     }
 
-    private void UpdateMaps(int row, int col, bool disableSnap = false) {
+    private void UpdateMaps(int row, int col) {
       if (IsOnMap(row, col, _influenceMap)) {
         return;
       }
@@ -273,12 +242,7 @@ namespace PenteAI {
       heurVal = GetHeuristicValue(row, col);
 
       if (heurVal.GetPriority() <= Heuristic.PROXIMITY_PRIORITY) {
-//      _snapInfluenceLog[_snapInfluenceIdx].row = row;
-//      _snapInfluenceLog[_snapInfluenceIdx].col = col;
-//      _influenceMap[row] |= SPOT_MASKS[col];
-//      if (!disableSnap) {
-//        _snapInfluenceIdx++;
-//      }
+        _influenceMap[row] |= SPOT_MASKS[col];
       }
     }
 
@@ -306,37 +270,58 @@ namespace PenteAI {
 
     public virtual double GetAdjHeuristicValue() {
       int acc;
+      int bitsSet;
       int majiq;
       int score = 0;
+      int toAdd;
 
       for (int inARow = 2; inARow < 5; inARow++) {
         foreach (int board_dex in WhiteBoardRep) {
           foreach (int line in _boardRepresentations[board_dex]) {
             acc = line;
-            for (int shift_dex = 1; shift_dex < inARow; shift_dex++) {
-              acc <<= shift_dex;
+            for (int shift_dex = 1; shift_dex <= inARow; shift_dex++) {
+              acc = acc & (acc << shift_dex);
             }
+
+            if (acc != 0) {
+              Console.WriteLine("acc: 0x{0} line: 0x{1}", acc.ToString("X"), line.ToString("X"));
+            }
+
+            bitsSet = 0; // c accumulates the total bits set in v
+            while (acc != 0) {
+              bitsSet++;
+              acc &= acc - 1;
+            }
+            toAdd = inARow * bitsSet;
 
             // This counts the number of set bits.
             // http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel
-            majiq = acc - ((acc >> 1) & 0x55555555);
-            majiq = (majiq & 0x33333333) + ((majiq >> 2) & 0x33333333);
-            score += inARow * (((majiq + (majiq >> 4) & 0xF0F0F0F) * 0x1010101) >> 24);
+       //   majiq = acc - ((acc >> 1) & 0x55555555);
+       //   majiq = (majiq & 0x33333333) + ((majiq >> 2) & 0x33333333);
+       //   toAdd = inARow * (((majiq + (majiq >> 4) & 0xF0F0F0F) * 0x1010101) >> 24);
+            if (toAdd > 0) {
+              Console.WriteLine(GetBoardStateStr());
+              Console.WriteLine("toAdd: {0} line: 0x{1}", toAdd, line.ToString("X"));
+              Console.ReadLine();
+            }
+            score += toAdd;
           }
         }
 
         foreach (int board_dex in BlackBoardRep) {
           foreach (int line in _boardRepresentations[board_dex]) {
             acc = line;
-            for (int shift_dex = 1; shift_dex < inARow; shift_dex++) {
-              acc <<= shift_dex;
+            for (int shift_dex = 1; shift_dex <= inARow; shift_dex++) {
+              acc = acc & (acc << shift_dex);
             }
 
-            // This counts the number of set bits.
-            // http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel
-            majiq = acc - ((acc >> 1) & 0x55555555);
-            majiq = (majiq & 0x33333333) + ((majiq >> 2) & 0x33333333);
-            score -= inARow * (((majiq + (majiq >> 4) & 0xF0F0F0F) * 0x1010101) >> 24);
+            if (acc != 0) {
+              // This counts the number of set bits.
+              // http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel
+              majiq = acc - ((acc >> 1) & 0x55555555);
+              majiq = (majiq & 0x33333333) + ((majiq >> 2) & 0x33333333);
+              score -= inARow * (((majiq + (majiq >> 4) & 0xF0F0F0F) * 0x1010101) >> 24);
+            }
           }
         }
       }
@@ -405,5 +390,32 @@ namespace PenteAI {
         _influenceMap[_snapInfluenceLog[_snapInfluenceIdx].row] &= ~SPOT_MASKS[_snapInfluenceLog[_snapInfluenceIdx].row];
       }
     }
+
+    public string GetHeuristicStr(double[][] heuristics) {
+      StringBuilder sb = new StringBuilder();
+      sb.Append(String.Format("turn: {0} white: {1} black: {2} winner: {3}",
+                GetPlyNumber(), GetCaptures(Player.White), GetCaptures(Player.Black), GetWinner()));
+      sb.Append(Environment.NewLine);
+      for (int row_dex = 0; row_dex < ROWS; row_dex++) {
+        for (int col_dex = 0; col_dex < COLS; col_dex++) {
+          if (GetSpot(row_dex, col_dex) == Player.White) {
+            sb.Append("  W");
+          } else if (GetSpot(row_dex, col_dex) == Player.Black) {
+            sb.Append("  B");
+          } else {
+            sb.Append(String.Format("{0,3}", heuristics[row_dex][col_dex]));
+          }
+        }
+        sb.Append(" | ");
+        sb.Append(row_dex.ToString());
+        sb.Append(Environment.NewLine);
+      }
+      for (int col_dex = 0; col_dex < COLS; col_dex++) {
+        sb.Append(String.Format("{0,3}", col_dex));
+      }
+      sb.Append(Environment.NewLine);
+      return sb.ToString();
+    }
+
   }
 }
